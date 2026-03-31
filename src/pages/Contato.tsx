@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MapPin, Phone, Mail, Clock } from 'lucide-react'
+import { MapPin, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -13,124 +13,99 @@ export default function Contato() {
     setLoading(true)
     setTimeout(() => {
       setLoading(false)
-      toast({
-        title: 'Mensagem enviada!',
-        description: 'Entraremos em contato em breve.',
-        className: 'bg-primary text-primary-foreground border-none',
-      })
+      toast({ title: 'Mensagem enviada', description: 'Entraremos em contato em breve.' })
       ;(e.target as HTMLFormElement).reset()
     }, 1000)
   }
 
   return (
-    <div className="container mx-auto px-4 py-16 md:py-24 max-w-6xl">
+    <div className="container mx-auto px-4 py-16 max-w-[1200px]">
       <div className="text-center mb-16 animate-fade-in-up">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 font-heading">Fale Conosco</h1>
-        <p className="text-muted-foreground font-subheading">
-          Estamos aqui para tirar suas dúvidas e ajudar no seu planejamento.
+        <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4 text-primary">
+          Fale com a Adriana
+        </h1>
+        <p className="text-muted-foreground font-subheading text-lg">
+          Agende sua consulta ou tire suas dúvidas.
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-12 lg:gap-24">
-        {/* Contact Info */}
-        <div className="space-y-10 animate-fade-in-up animation-delay-100">
-          <div>
-            <h3 className="text-2xl font-bold mb-6">Informações de Contato</h3>
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                  <Phone className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="font-semibold">WhatsApp / Telefone</p>
-                  <p className="text-muted-foreground text-sm">+55 (11) 99999-9999</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                  <Mail className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="font-semibold">E-mail</p>
-                  <p className="text-muted-foreground text-sm">contato@guialowcarb.com.br</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                  <MapPin className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="font-semibold">Atendimento Presencial e Online</p>
-                  <p className="text-muted-foreground text-sm">
-                    Av. Paulista, 1000 - Bela Vista, São Paulo - SP
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                  <Clock className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="font-semibold">Horário de Atendimento</p>
-                  <p className="text-muted-foreground text-sm">Segunda a Sexta, das 09h às 18h</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-muted p-6 rounded-xl border border-border/50">
-            <h4 className="font-semibold mb-2">Já é aluno?</h4>
-            <p className="text-sm text-muted-foreground mb-4">
-              Para suporte relacionado aos cursos ou área de membros, utilize o email específico de
-              suporte ou abra um chamado na plataforma Hotmart.
-            </p>
-          </div>
-        </div>
-
-        {/* Form */}
-        <div className="bg-card p-8 md:p-10 rounded-2xl shadow-soft border animate-fade-in-up animation-delay-200">
-          <h3 className="text-2xl font-bold mb-6">Envie uma Mensagem</h3>
-          <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="grid md:grid-cols-2 gap-16 max-w-4xl mx-auto">
+        <div className="bg-card p-8 rounded-2xl shadow-soft">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium">
-                Nome Completo
-              </label>
-              <Input id="name" required placeholder="Ex: João da Silva" />
+              <label className="text-sm font-medium">Nome</label>
+              <Input required placeholder="Seu nome completo" className="bg-muted/50 border-none" />
             </div>
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                E-mail
-              </label>
-              <Input id="email" type="email" required placeholder="Ex: joao@email.com" />
+              <label className="text-sm font-medium">E-mail</label>
+              <Input
+                type="email"
+                required
+                placeholder="Seu melhor e-mail"
+                className="bg-muted/50 border-none"
+              />
             </div>
             <div className="space-y-2">
-              <label htmlFor="subject" className="text-sm font-medium">
-                Assunto
-              </label>
-              <select
-                id="subject"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="consultoria">Consultoria Nutricional</option>
-                <option value="seguros">Seguros e Consórcios</option>
-                <option value="duvida">Dúvida Geral</option>
-                <option value="parceria">Parcerias</option>
-              </select>
+              <label className="text-sm font-medium">WhatsApp</label>
+              <Input
+                type="tel"
+                required
+                placeholder="(00) 00000-0000"
+                className="bg-muted/50 border-none"
+              />
             </div>
             <div className="space-y-2">
-              <label htmlFor="message" className="text-sm font-medium">
-                Mensagem
-              </label>
-              <Textarea id="message" required placeholder="Como podemos ajudar?" rows={5} />
+              <label className="text-sm font-medium">Mensagem</label>
+              <Textarea
+                required
+                placeholder="Como posso te ajudar?"
+                rows={4}
+                className="bg-muted/50 border-none"
+              />
             </div>
             <Button
               type="submit"
-              className="w-full bg-primary hover:bg-primary/90"
+              className="w-full bg-primary hover:bg-[#158A68] text-white rounded-full h-12 text-lg"
               disabled={loading}
             >
-              {loading ? 'Enviando...' : 'Enviar Mensagem'}
+              {loading ? 'Enviando...' : 'Agendar Teleconsulta'}
             </Button>
           </form>
+        </div>
+
+        <div className="flex flex-col justify-center space-y-8">
+          <div>
+            <h3 className="font-heading text-2xl font-bold mb-6">Atendimento Direto</h3>
+            <a
+              href="https://wa.me/5511999999999"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-4 text-foreground hover:text-primary transition-colors"
+            >
+              <div className="w-12 h-12 rounded-full bg-[#25D366]/10 flex items-center justify-center text-[#25D366]">
+                <MessageCircle size={24} />
+              </div>
+              <div>
+                <p className="font-semibold">WhatsApp</p>
+                <p className="text-muted-foreground text-sm">Clique para conversar agora</p>
+              </div>
+            </a>
+          </div>
+
+          <div>
+            <h3 className="font-heading text-2xl font-bold mb-6">Localização</h3>
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <MapPin size={24} />
+              </div>
+              <div>
+                <p className="font-semibold">Uberaba – MG</p>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Atendimento presencial e online (teleconsulta) para todo o Brasil e exterior.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

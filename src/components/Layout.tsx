@@ -55,9 +55,11 @@ export default function Layout() {
       >
         <div className="container mx-auto px-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group">
-            <span className="font-heading text-2xl font-bold text-primary group-hover:text-secondary transition-colors">
-              Guia Low Carb
-            </span>
+            <img
+              src="https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Guia%20Low%20Carb/Logo/Guia%20Low%20Carb%20nova%20logo%20transp.svg"
+              alt="Guia Low Carb"
+              className="h-10 w-auto"
+            />
           </Link>
 
           {/* Desktop Nav */}
@@ -76,9 +78,9 @@ export default function Layout() {
             ))}
             <Button
               asChild
-              className="rounded-full px-6 bg-gradient-to-r from-secondary to-primary border-0 hover:scale-105 transition-transform"
+              className="rounded-full px-6 bg-primary hover:bg-[#158A68] text-white transition-colors"
             >
-              <Link to="/dashboard">Área do Aluno</Link>
+              <Link to="/vendas-cursos">Saiba Mais</Link>
             </Button>
           </nav>
 
@@ -106,8 +108,11 @@ export default function Layout() {
                     </Link>
                   ))}
                   <div className="mt-4 pt-4 border-t">
-                    <Button asChild className="w-full rounded-full bg-primary hover:bg-primary/90">
-                      <Link to="/dashboard">Área do Aluno</Link>
+                    <Button
+                      asChild
+                      className="w-full rounded-full bg-primary hover:bg-[#158A68] text-white"
+                    >
+                      <Link to="/vendas-cursos">Saiba Mais</Link>
                     </Button>
                   </div>
                 </nav>
@@ -127,8 +132,12 @@ export default function Layout() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
             <div className="md:col-span-1">
-              <Link to="/" className="font-heading text-2xl font-bold text-primary block mb-4">
-                Guia Low Carb
+              <Link to="/" className="block mb-4">
+                <img
+                  src="https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Guia%20Low%20Carb/Logo/Guia%20Low%20Carb%20nova%20logo%20transp.svg"
+                  alt="Guia Low Carb"
+                  className="h-10 w-auto"
+                />
               </Link>
               <p className="text-muted-foreground text-sm font-subheading mb-6">
                 Ciência que transforma. Amor que inspira.

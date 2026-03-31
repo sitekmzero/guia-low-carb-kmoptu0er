@@ -14,7 +14,7 @@
     --secondary: 33 93% 54%;
     --secondary-foreground: 0 0% 100%;
 
-    --background: 210 20% 98%; /* #F8F9FA slightly cooler */
+    --background: 0 0% 100%; /* #FFFFFF */
     --foreground: 0 0% 10%; /* #1A1A1A Deep Gray */
 
     --card: 0 0% 100%;
@@ -23,7 +23,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
 
-    --muted: 210 40% 96.1%;
+    --muted: 0 0% 97%; /* #F8F8F8 */
     --muted-foreground: 215.4 16.3% 46.9%;
 
     --accent: 162 71% 95%;
