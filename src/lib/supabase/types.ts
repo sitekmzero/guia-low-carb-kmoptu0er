@@ -1,0 +1,994 @@
+// AVOID UPDATING THIS FILE DIRECTLY. It is automatically generated.
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.4"
+  }
+  public: {
+    Tables: {
+      ab_tests: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          test_name: string
+          variant_a_text: string
+          variant_b_text: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          test_name: string
+          variant_a_text: string
+          variant_b_text: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          test_name?: string
+          variant_a_text?: string
+          variant_b_text?: string
+        }
+        Relationships: []
+      }
+      access_logs: {
+        Row: {
+          id: string
+          ip_address: string | null
+          login_attempt_time: string
+          success: boolean
+          user_email: string
+        }
+        Insert: {
+          id?: string
+          ip_address?: string | null
+          login_attempt_time?: string
+          success: boolean
+          user_email: string
+        }
+        Update: {
+          id?: string
+          ip_address?: string | null
+          login_attempt_time?: string
+          success?: boolean
+          user_email?: string
+        }
+        Relationships: []
+      }
+      avaliacoes: {
+        Row: {
+          ativo: boolean
+          avatar_url: string | null
+          comentario: string
+          created_at: string
+          data_avaliacao: string
+          id: string
+          nome_cliente: string
+          nota: number
+          social_url: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          avatar_url?: string | null
+          comentario: string
+          created_at?: string
+          data_avaliacao: string
+          id?: string
+          nome_cliente: string
+          nota: number
+          social_url?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          avatar_url?: string | null
+          comentario?: string
+          created_at?: string
+          data_avaliacao?: string
+          id?: string
+          nome_cliente?: string
+          nota?: number
+          social_url?: string | null
+        }
+        Relationships: []
+      }
+      candidatos: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string | null
+          name: string
+          resume_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message?: string | null
+          name: string
+          resume_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string | null
+          name?: string
+          resume_url?: string | null
+        }
+        Relationships: []
+      }
+      clients: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      conversion_events: {
+        Row: {
+          event_type: string
+          id: string
+          lead_id: string
+          metadata: Json | null
+          timestamp: string
+        }
+        Insert: {
+          event_type: string
+          id?: string
+          lead_id: string
+          metadata?: Json | null
+          timestamp?: string
+        }
+        Update: {
+          event_type?: string
+          id?: string
+          lead_id?: string
+          metadata?: Json | null
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversion_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      corretora_config: {
+        Row: {
+          address: string | null
+          aggilizador_integration: string | null
+          cnpj: string | null
+          color_blue: string | null
+          color_gold: string | null
+          contact_email: string | null
+          id: string
+          logo_url: string | null
+          name: string | null
+          phone: string | null
+          resend_integration: string | null
+          slack_integration: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          aggilizador_integration?: string | null
+          cnpj?: string | null
+          color_blue?: string | null
+          color_gold?: string | null
+          contact_email?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string | null
+          phone?: string | null
+          resend_integration?: string | null
+          slack_integration?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          aggilizador_integration?: string | null
+          cnpj?: string | null
+          color_blue?: string | null
+          color_gold?: string | null
+          contact_email?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string | null
+          phone?: string | null
+          resend_integration?: string | null
+          slack_integration?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      cotacoes: {
+        Row: {
+          created_at: string
+          detalhes: Json | null
+          id: string
+          lead_id: string
+          quote_value: number | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          detalhes?: Json | null
+          id?: string
+          lead_id: string
+          quote_value?: number | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          detalhes?: Json | null
+          id?: string
+          lead_id?: string
+          quote_value?: number | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cotacoes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          birth_date: string | null
+          created_at: string
+          email: string
+          gender: string | null
+          id: string
+          insurance_subtype: string | null
+          message: string | null
+          name: string
+          phone: string | null
+          product_type: string
+          profession: string | null
+          status: string
+          user_id: string | null
+          variant_used: string | null
+          vehicle_brand: string | null
+          vehicle_model: string | null
+          vehicle_plate: string | null
+          vehicle_usage: string | null
+          vehicle_year: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          birth_date?: string | null
+          created_at?: string
+          email: string
+          gender?: string | null
+          id?: string
+          insurance_subtype?: string | null
+          message?: string | null
+          name: string
+          phone?: string | null
+          product_type: string
+          profession?: string | null
+          status?: string
+          user_id?: string | null
+          variant_used?: string | null
+          vehicle_brand?: string | null
+          vehicle_model?: string | null
+          vehicle_plate?: string | null
+          vehicle_usage?: string | null
+          vehicle_year?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          birth_date?: string | null
+          created_at?: string
+          email?: string
+          gender?: string | null
+          id?: string
+          insurance_subtype?: string | null
+          message?: string | null
+          name?: string
+          phone?: string | null
+          product_type?: string
+          profession?: string | null
+          status?: string
+          user_id?: string | null
+          variant_used?: string | null
+          vehicle_brand?: string | null
+          vehicle_model?: string | null
+          vehicle_plate?: string | null
+          vehicle_usage?: string | null
+          vehicle_year?: string | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          estimated_price: number
+          id: string
+          image_url: string | null
+          name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          estimated_price: number
+          id?: string
+          image_url?: string | null
+          name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          estimated_price?: number
+          id?: string
+          image_url?: string | null
+          name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reactivation_requests: {
+        Row: {
+          id: string
+          request_date: string
+          status: string
+          user_email: string
+        }
+        Insert: {
+          id?: string
+          request_date?: string
+          status?: string
+          user_email: string
+        }
+        Update: {
+          id?: string
+          request_date?: string
+          status?: string
+          user_email?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          full_name: string
+          id: string
+          is_admin: boolean
+        }
+        Insert: {
+          avatar_url?: string | null
+          full_name: string
+          id: string
+          is_admin?: boolean
+        }
+        Update: {
+          avatar_url?: string | null
+          full_name?: string
+          id?: string
+          is_admin?: boolean
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
+
+
+// ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
+// This section contains actual PostgreSQL column types, constraints, RLS policies,
+// functions, triggers, indexes and materialized views not present in the type definitions above.
+// IMPORTANT: The TypeScript types above map UUID, TEXT, VARCHAR all to "string".
+// Use the COLUMN TYPES section below to know the real PostgreSQL type for each column.
+// Always use the correct PostgreSQL type when writing SQL migrations.
+
+// --- COLUMN TYPES (actual PostgreSQL types) ---
+// Use this to know the real database type when writing migrations.
+// "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: ab_tests
+//   id: uuid (not null, default: gen_random_uuid())
+//   test_name: text (not null)
+//   variant_a_text: text (not null)
+//   variant_b_text: text (not null)
+//   active: boolean (not null, default: true)
+//   created_at: timestamp with time zone (not null, default: now())
+// Table: access_logs
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_email: text (not null)
+//   login_attempt_time: timestamp with time zone (not null, default: now())
+//   success: boolean (not null)
+//   ip_address: text (nullable)
+// Table: avaliacoes
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome_cliente: text (not null)
+//   nota: integer (not null)
+//   comentario: text (not null)
+//   data_avaliacao: date (not null)
+//   ativo: boolean (not null, default: true)
+//   created_at: timestamp with time zone (not null, default: now())
+//   avatar_url: text (nullable)
+//   social_url: text (nullable)
+// Table: candidatos
+//   id: uuid (not null, default: gen_random_uuid())
+//   name: text (not null)
+//   email: text (not null)
+//   message: text (nullable)
+//   resume_url: text (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+// Table: clients
+//   id: uuid (not null)
+//   email: text (not null)
+//   name: text (not null)
+//   status: text (not null, default: 'active'::text)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
+// Table: conversion_events
+//   id: uuid (not null, default: gen_random_uuid())
+//   lead_id: uuid (not null)
+//   event_type: text (not null)
+//   timestamp: timestamp with time zone (not null, default: now())
+//   metadata: jsonb (nullable)
+// Table: corretora_config
+//   id: uuid (not null, default: gen_random_uuid())
+//   name: text (nullable)
+//   contact_email: text (nullable)
+//   phone: text (nullable)
+//   address: text (nullable)
+//   cnpj: text (nullable)
+//   logo_url: text (nullable)
+//   color_gold: text (nullable, default: '#C8A24A'::text)
+//   color_blue: text (nullable, default: '#0B1F3B'::text)
+//   slack_integration: text (nullable)
+//   resend_integration: text (nullable)
+//   aggilizador_integration: text (nullable)
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: cotacoes
+//   id: uuid (not null, default: gen_random_uuid())
+//   lead_id: uuid (not null)
+//   quote_value: numeric (nullable)
+//   detalhes: jsonb (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+//   status: text (nullable, default: 'pending'::text)
+// Table: leads
+//   id: uuid (not null, default: gen_random_uuid())
+//   created_at: timestamp with time zone (not null, default: now())
+//   name: text (not null)
+//   email: text (not null)
+//   phone: text (nullable)
+//   product_type: text (not null)
+//   message: text (nullable)
+//   status: text (not null, default: 'novo'::text)
+//   variant_used: text (nullable)
+//   user_id: uuid (nullable)
+//   insurance_subtype: text (nullable)
+//   vehicle_brand: text (nullable)
+//   vehicle_model: text (nullable)
+//   vehicle_year: text (nullable)
+//   vehicle_plate: text (nullable)
+//   vehicle_usage: text (nullable)
+//   birth_date: date (nullable)
+//   zip_code: text (nullable)
+//   gender: text (nullable)
+//   profession: text (nullable)
+// Table: products
+//   id: uuid (not null, default: gen_random_uuid())
+//   name: text (not null)
+//   description: text (not null)
+//   estimated_price: numeric (not null)
+//   category: text (not null)
+//   image_url: text (nullable)
+//   status: text (not null, default: 'ativo'::text)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
+// Table: reactivation_requests
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_email: text (not null)
+//   request_date: timestamp with time zone (not null, default: now())
+//   status: text (not null, default: 'pending'::text)
+// Table: user_profiles
+//   id: uuid (not null)
+//   full_name: text (not null)
+//   avatar_url: text (nullable)
+//   is_admin: boolean (not null, default: false)
+
+// --- CONSTRAINTS ---
+// Table: ab_tests
+//   PRIMARY KEY ab_tests_pkey: PRIMARY KEY (id)
+// Table: access_logs
+//   PRIMARY KEY access_logs_pkey: PRIMARY KEY (id)
+// Table: avaliacoes
+//   CHECK avaliacoes_nota_check: CHECK (((nota >= 1) AND (nota <= 5)))
+//   PRIMARY KEY avaliacoes_pkey: PRIMARY KEY (id)
+// Table: candidatos
+//   PRIMARY KEY candidatos_pkey: PRIMARY KEY (id)
+// Table: clients
+//   UNIQUE clients_email_key: UNIQUE (email)
+//   PRIMARY KEY clients_pkey: PRIMARY KEY (id)
+//   CHECK clients_status_check: CHECK ((status = ANY (ARRAY['pending'::text, 'active'::text, 'inactive'::text])))
+// Table: conversion_events
+//   CHECK conversion_events_event_type_check: CHECK ((event_type = ANY (ARRAY['form_submitted'::text, 'iframe_loaded'::text, 'iframe_error'::text])))
+//   FOREIGN KEY conversion_events_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
+//   PRIMARY KEY conversion_events_pkey: PRIMARY KEY (id)
+// Table: corretora_config
+//   PRIMARY KEY corretora_config_pkey: PRIMARY KEY (id)
+// Table: cotacoes
+//   FOREIGN KEY cotacoes_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
+//   PRIMARY KEY cotacoes_pkey: PRIMARY KEY (id)
+// Table: leads
+//   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY leads_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL
+// Table: products
+//   PRIMARY KEY products_pkey: PRIMARY KEY (id)
+//   CHECK products_status_check: CHECK ((status = ANY (ARRAY['ativo'::text, 'inativo'::text])))
+// Table: reactivation_requests
+//   PRIMARY KEY reactivation_requests_pkey: PRIMARY KEY (id)
+//   CHECK reactivation_requests_status_check: CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text])))
+// Table: user_profiles
+//   FOREIGN KEY user_profiles_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   PRIMARY KEY user_profiles_pkey: PRIMARY KEY (id)
+
+// --- ROW LEVEL SECURITY POLICIES ---
+// Table: ab_tests
+//   Policy "Allow admin all ab_tests" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "Allow public read ab_tests" (SELECT, PERMISSIVE) roles={public}
+//     USING: true
+// Table: access_logs
+//   Policy "Allow admin to select access_logs" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "Allow public insert on access_logs" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: true
+// Table: avaliacoes
+//   Policy "Allow admin all avaliacoes" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "Allow authenticated full access to avaliacoes" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+//   Policy "Allow public read access to active avaliacoes" (SELECT, PERMISSIVE) roles={public}
+//     USING: (ativo = true)
+//   Policy "Allow public read active avaliacoes" (SELECT, PERMISSIVE) roles={public}
+//     USING: (ativo = true)
+// Table: candidatos
+//   Policy "Allow admin reads on candidatos" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "Allow anon inserts on candidatos" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: true
+// Table: clients
+//   Policy "Allow admin to select clients" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "Allow admin to update clients" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "Allow users to read own client data" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = id)
+// Table: conversion_events
+//   Policy "Allow admin select on conversion_events" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "Allow public insert on conversion_events" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: true
+// Table: corretora_config
+//   Policy "Admin full access on corretora_config" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//     WITH CHECK: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+// Table: cotacoes
+//   Policy "Allow authenticated all on cotacoes" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: leads
+//   Policy "Allow anon insert on leads" (INSERT, PERMISSIVE) roles={anon}
+//     WITH CHECK: true
+//   Policy "Allow authenticated insert on leads" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Allow users to delete own leads" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((auth.uid() = user_id) OR (EXISTS ( SELECT 1    FROM user_profiles up   WHERE ((up.id = auth.uid()) AND (up.is_admin = true)))))
+//   Policy "Allow users to select own leads" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((auth.uid() = user_id) OR (user_id IS NULL) OR (EXISTS ( SELECT 1    FROM user_profiles up   WHERE ((up.id = auth.uid()) AND (up.is_admin = true)))))
+//   Policy "Allow users to update own leads" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((auth.uid() = user_id) OR (EXISTS ( SELECT 1    FROM user_profiles up   WHERE ((up.id = auth.uid()) AND (up.is_admin = true)))))
+// Table: products
+//   Policy "Allow admin full access to products" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//     WITH CHECK: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "Allow public read access to products" (SELECT, PERMISSIVE) roles={public}
+//     USING: true
+// Table: reactivation_requests
+//   Policy "Allow admin delete on reactivation_requests" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "Allow admin select on reactivation_requests" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "Allow admin update on reactivation_requests" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "Allow public insert on reactivation_requests" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: true
+// Table: user_profiles
+//   Policy "Allow admins to read all profiles" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles up   WHERE ((up.id = auth.uid()) AND (up.is_admin = true))))
+//   Policy "Allow users to read own profile" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = id)
+
+// --- DATABASE FUNCTIONS ---
+// FUNCTION handle_new_user()
+//   CREATE OR REPLACE FUNCTION public.handle_new_user()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     -- Insert into user_profiles
+//     INSERT INTO public.user_profiles (id, full_name)
+//     VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'full_name', 'Cliente'))
+//     ON CONFLICT (id) DO NOTHING;
+//   
+//     -- Insert into clients
+//     INSERT INTO public.clients (id, email, name, status)
+//     VALUES (
+//       NEW.id,
+//       NEW.email,
+//       COALESCE(NEW.raw_user_meta_data->>'full_name', 'Cliente'),
+//       'pending'
+//     )
+//     ON CONFLICT (id) DO NOTHING;
+//   
+//     RETURN NEW;
+//   END;
+//   $function$
+//   
+// FUNCTION notify_admin_login_failure()
+//   CREATE OR REPLACE FUNCTION public.notify_admin_login_failure()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     failed_count integer;
+//   BEGIN
+//     IF NEW.success = false THEN
+//       SELECT COUNT(*)
+//       INTO failed_count
+//       FROM public.access_logs
+//       WHERE user_email = NEW.user_email
+//         AND success = false
+//         AND login_attempt_time >= NOW() - INTERVAL '30 minutes';
+//   
+//       -- Trigger exactly on the 6th failure to avoid spamming the admin
+//       IF failed_count = 6 THEN
+//         PERFORM net.http_post(
+//           url := 'https://idtvwxzbmnqjcyxquqdk.supabase.co/functions/v1/send-admin-notification',
+//           body := json_build_object(
+//             'event_type', 'login_attempt_failed',
+//             'payload', json_build_object(
+//               'email', NEW.user_email,
+//               'count', failed_count
+//             )
+//           )::jsonb,
+//           headers := '{"Content-Type": "application/json"}'::jsonb
+//         );
+//       END IF;
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//   
+// FUNCTION notify_admin_new_signup()
+//   CREATE OR REPLACE FUNCTION public.notify_admin_new_signup()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     IF NEW.status = 'pending' THEN
+//       PERFORM net.http_post(
+//         url := 'https://idtvwxzbmnqjcyxquqdk.supabase.co/functions/v1/send-admin-notification',
+//         body := json_build_object(
+//           'event_type', 'new_signup',
+//           'payload', json_build_object(
+//             'email', NEW.email,
+//             'name', NEW.name
+//           )
+//         )::jsonb,
+//         headers := '{"Content-Type": "application/json"}'::jsonb
+//       );
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//   
+// FUNCTION notify_admin_reactivation_request()
+//   CREATE OR REPLACE FUNCTION public.notify_admin_reactivation_request()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     IF NEW.status = 'pending' THEN
+//       PERFORM net.http_post(
+//         url := 'https://idtvwxzbmnqjcyxquqdk.supabase.co/functions/v1/send-admin-notification',
+//         body := json_build_object(
+//           'event_type', 'reactivation_request',
+//           'payload', json_build_object(
+//             'email', NEW.user_email
+//           )
+//         )::jsonb,
+//         headers := '{"Content-Type": "application/json"}'::jsonb
+//       );
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//   
+// FUNCTION notify_error_webhook()
+//   CREATE OR REPLACE FUNCTION public.notify_error_webhook()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     IF NEW.event_type = 'iframe_error' THEN
+//       PERFORM net.http_post(
+//         url := 'https://idtvwxzbmnqjcyxquqdk.supabase.co/functions/v1/monitor-quotation-errors',
+//         body := json_build_object('type', 'INSERT', 'record', row_to_json(NEW))::jsonb,
+//         headers := '{"Content-Type": "application/json"}'::jsonb
+//       );
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//   
+// FUNCTION notify_lead_webhook()
+//   CREATE OR REPLACE FUNCTION public.notify_lead_webhook()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     PERFORM net.http_post(
+//       url := 'https://idtvwxzbmnqjcyxquqdk.supabase.co/functions/v1/notify-lead',
+//       body := json_build_object(
+//         'type', 'INSERT',
+//         'record', row_to_json(NEW)
+//       )::jsonb,
+//       headers := '{"Content-Type": "application/json"}'::jsonb
+//     );
+//     RETURN NEW;
+//   END;
+//   $function$
+//   
+// FUNCTION notify_new_candidate()
+//   CREATE OR REPLACE FUNCTION public.notify_new_candidate()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     PERFORM net.http_post(
+//       url := 'https://idtvwxzbmnqjcyxquqdk.supabase.co/functions/v1/notify-new-candidate',
+//       body := json_build_object(
+//         'type', 'INSERT',
+//         'record', row_to_json(NEW)
+//       )::jsonb,
+//       headers := '{"Content-Type": "application/json"}'::jsonb
+//     );
+//     RETURN NEW;
+//   END;
+//   $function$
+//   
+// FUNCTION set_current_timestamp_updated_at()
+//   CREATE OR REPLACE FUNCTION public.set_current_timestamp_updated_at()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//     NEW.updated_at = NOW();
+//     RETURN NEW;
+//   END;
+//   $function$
+//   
+
+// --- TRIGGERS ---
+// Table: access_logs
+//   on_login_failure: CREATE TRIGGER on_login_failure AFTER INSERT ON public.access_logs FOR EACH ROW EXECUTE FUNCTION notify_admin_login_failure()
+// Table: candidatos
+//   on_candidate_inserted: CREATE TRIGGER on_candidate_inserted AFTER INSERT ON public.candidatos FOR EACH ROW EXECUTE FUNCTION notify_new_candidate()
+// Table: clients
+//   on_client_signup: CREATE TRIGGER on_client_signup AFTER INSERT ON public.clients FOR EACH ROW EXECUTE FUNCTION notify_admin_new_signup()
+// Table: conversion_events
+//   on_conversion_error: CREATE TRIGGER on_conversion_error AFTER INSERT ON public.conversion_events FOR EACH ROW EXECUTE FUNCTION notify_error_webhook()
+// Table: leads
+//   on_lead_inserted: CREATE TRIGGER on_lead_inserted AFTER INSERT ON public.leads FOR EACH ROW EXECUTE FUNCTION notify_lead_webhook()
+// Table: products
+//   set_products_updated_at: CREATE TRIGGER set_products_updated_at BEFORE UPDATE ON public.products FOR EACH ROW EXECUTE FUNCTION set_current_timestamp_updated_at()
+// Table: reactivation_requests
+//   on_reactivation_request: CREATE TRIGGER on_reactivation_request AFTER INSERT ON public.reactivation_requests FOR EACH ROW EXECUTE FUNCTION notify_admin_reactivation_request()
+
+// --- INDEXES ---
+// Table: access_logs
+//   CREATE INDEX idx_access_logs_user_email ON public.access_logs USING btree (user_email)
+// Table: clients
+//   CREATE UNIQUE INDEX clients_email_key ON public.clients USING btree (email)
+//   CREATE INDEX clients_status_idx ON public.clients USING btree (status)
+// Table: reactivation_requests
+//   CREATE INDEX idx_reactivation_requests_status ON public.reactivation_requests USING btree (status)
+//   CREATE INDEX idx_reactivation_requests_user_email ON public.reactivation_requests USING btree (user_email)
+
