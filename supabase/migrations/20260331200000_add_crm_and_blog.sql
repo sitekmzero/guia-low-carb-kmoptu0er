@@ -1,4 +1,4 @@
-DO $
+DO $$
 BEGIN
   CREATE TABLE IF NOT EXISTS public.leads_cursos (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -68,7 +68,7 @@ BEGIN
   INSERT INTO storage.buckets (id, name, public) 
   VALUES ('materiais', 'materiais', false)
   ON CONFLICT (id) DO NOTHING;
-END $;
+END $$;
 
 ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.leads_cursos ENABLE ROW LEVEL SECURITY;
