@@ -642,21 +642,33 @@ export type Database = {
       user_profiles: {
         Row: {
           avatar_url: string | null
+          created_at: string | null
+          email: string | null
           full_name: string
           id: string
           is_admin: boolean
+          role: string | null
+          updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
           full_name: string
           id: string
           is_admin?: boolean
+          role?: string | null
+          updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
           full_name?: string
           id?: string
           is_admin?: boolean
+          role?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -692,7 +704,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
@@ -1005,6 +1017,10 @@ export const Constants = {
 //   full_name: text (not null)
 //   avatar_url: text (nullable)
 //   is_admin: boolean (not null, default: false)
+//   email: text (nullable)
+//   role: text (nullable, default: 'user'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: vendas
 //   id: uuid (not null, default: gen_random_uuid())
 //   product_name: text (not null)
@@ -1186,10 +1202,12 @@ export const Constants = {
 //   Policy "public_read_settings" (SELECT, PERMISSIVE) roles={public}
 //     USING: true
 // Table: user_profiles
-//   Policy "Allow admins to read all profiles" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (EXISTS ( SELECT 1    FROM user_profiles up   WHERE ((up.id = auth.uid()) AND (up.is_admin = true))))
-//   Policy "Allow users to read own profile" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (auth.uid() = id)
+//   Policy "admin_all_user_profiles" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//   Policy "auth_read_own_profile" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (id = auth.uid())
+//   Policy "public_read_user_profiles" (SELECT, PERMISSIVE) roles={public}
+//     USING: (is_admin = false)
 // Table: vendas
 //   Policy "admin_all_vendas" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
@@ -1219,6 +1237,15 @@ export const Constants = {
 //
 //     RETURN NEW;
 //   END;
+//   $function$
+//
+// FUNCTION is_admin()
+//   CREATE OR REPLACE FUNCTION public.is_admin()
+//    RETURNS boolean
+//    LANGUAGE sql
+//    SECURITY DEFINER
+//   AS $function$
+//     SELECT COALESCE((SELECT is_admin FROM public.user_profiles WHERE id = auth.uid() LIMIT 1), false);
 //   $function$
 //
 // FUNCTION notify_admin_login_failure()

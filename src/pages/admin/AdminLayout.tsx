@@ -1,5 +1,14 @@
 import { Link, Outlet, Navigate, useLocation } from 'react-router-dom'
-import { LayoutDashboard, FileText, Settings, Shield, Mail, LogOut, Users } from 'lucide-react'
+import {
+  LayoutDashboard,
+  FileText,
+  Settings,
+  Shield,
+  Mail,
+  LogOut,
+  Users,
+  CalendarDays,
+} from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
@@ -7,6 +16,7 @@ import { Button } from '@/components/ui/button'
 
 const NAV = [
   { name: 'CRM', path: '/admin', icon: LayoutDashboard },
+  { name: 'Agendamentos', path: '/admin/agendamentos', icon: CalendarDays },
   { name: 'Blog/Posts', path: '/admin/posts', icon: FileText },
   { name: 'Tema/Aparência', path: '/admin/settings', icon: Settings },
   { name: 'Segurança', path: '/admin/security', icon: Shield },

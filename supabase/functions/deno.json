@@ -1,10 +1,15 @@
 {
   "_versions": {
-    "monitor-quotation-errors": 4,
-    "validate-password": 4,
-    "notify-admin-reactivation": 1,
-    "functions": 2,
-    "notify-client-status": 1,
-    "send-admin-notification": 1
+    "monitor-quotation-errors": 11,
+    "validate-password": 11,
+    "notify-admin-reactivation": 8,
+    "functions": 10,
+    "notify-client-status": 8,
+    "send-admin-notification": 8,
+    "notify-lead": 10,
+    "validate-captcha": 8,
+    "notify-new-candidate": 8,
+    "integrate-brevo": 1,
+    "hotmart-sync": 1
   }
 }

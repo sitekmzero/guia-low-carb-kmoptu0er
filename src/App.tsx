@@ -20,6 +20,10 @@ import AdminLayout from './pages/admin/AdminLayout'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminPosts from './pages/admin/AdminPosts'
 import AdminSettings from './pages/admin/AdminSettings'
+import EbooksPagos from './pages/EbooksPagos'
+import Cursos from './pages/Cursos'
+import Teleconsulta from './pages/Teleconsulta'
+import AdminAgendamentos from './pages/admin/AdminAgendamentos'
 import { AuthProvider } from './hooks/use-auth'
 
 const App = () => (
@@ -41,11 +45,15 @@ const App = () => (
             <Route path="/vendas-cursos" element={<VendasCursos />} />
             <Route path="/ebook-gratuito" element={<EbookGratuito />} />
             <Route path="/obrigado-ebook" element={<ObrigadoEbook />} />
+            <Route path="/ebooks-pagos" element={<EbooksPagos />} />
+            <Route path="/cursos" element={<Cursos />} />
+            <Route path="/teleconsulta" element={<Teleconsulta />} />
           </Route>
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="posts" element={<AdminPosts />} />
+            <Route path="agendamentos" element={<AdminAgendamentos />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
           <Route path="*" element={<NotFound />} />
