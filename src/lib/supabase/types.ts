@@ -150,6 +150,48 @@ export type Database = {
         }
         Relationships: []
       }
+      consultations: {
+        Row: {
+          consultation_type: string | null
+          created_at: string | null
+          duration_minutes: number | null
+          id: string
+          notes: string | null
+          scheduled_date: string | null
+          scheduled_time: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+          zoom_link: string | null
+        }
+        Insert: {
+          consultation_type?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          notes?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          zoom_link?: string | null
+        }
+        Update: {
+          consultation_type?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          notes?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          zoom_link?: string | null
+        }
+        Relationships: []
+      }
       conversion_events: {
         Row: {
           event_type: string
@@ -265,6 +307,39 @@ export type Database = {
           },
         ]
       }
+      email_subscriptions: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          name: string | null
+          subscribed_at: string | null
+          subscription_status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          name?: string | null
+          subscribed_at?: string | null
+          subscription_status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string | null
+          subscribed_at?: string | null
+          subscription_status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           birth_date: string | null
@@ -273,12 +348,16 @@ export type Database = {
           gender: string | null
           id: string
           insurance_subtype: string | null
+          lead_source: string | null
+          lead_status: string | null
           message: string | null
           name: string
+          notes: string | null
           phone: string | null
           product_type: string
           profession: string | null
           status: string
+          updated_at: string | null
           user_id: string | null
           variant_used: string | null
           vehicle_brand: string | null
@@ -295,12 +374,16 @@ export type Database = {
           gender?: string | null
           id?: string
           insurance_subtype?: string | null
+          lead_source?: string | null
+          lead_status?: string | null
           message?: string | null
           name: string
+          notes?: string | null
           phone?: string | null
           product_type: string
           profession?: string | null
           status?: string
+          updated_at?: string | null
           user_id?: string | null
           variant_used?: string | null
           vehicle_brand?: string | null
@@ -317,12 +400,16 @@ export type Database = {
           gender?: string | null
           id?: string
           insurance_subtype?: string | null
+          lead_source?: string | null
+          lead_status?: string | null
           message?: string | null
           name?: string
+          notes?: string | null
           phone?: string | null
           product_type?: string
           profession?: string | null
           status?: string
+          updated_at?: string | null
           user_id?: string | null
           variant_used?: string | null
           vehicle_brand?: string | null
@@ -387,6 +474,7 @@ export type Database = {
       }
       posts: {
         Row: {
+          author: string | null
           category: string
           content: string
           created_at: string
@@ -394,6 +482,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          author?: string | null
           category: string
           content: string
           created_at?: string
@@ -401,6 +490,7 @@ export type Database = {
           title: string
         }
         Update: {
+          author?: string | null
           category?: string
           content?: string
           created_at?: string
@@ -415,10 +505,16 @@ export type Database = {
           created_at: string
           description: string
           estimated_price: number
+          file_url: string | null
+          hotmart_id: string | null
           id: string
           image_url: string | null
+          is_active: boolean | null
           name: string
+          price: number | null
+          product_type: string | null
           status: string
+          stripe_product_id: string | null
           updated_at: string
         }
         Insert: {
@@ -426,10 +522,16 @@ export type Database = {
           created_at?: string
           description: string
           estimated_price: number
+          file_url?: string | null
+          hotmart_id?: string | null
           id?: string
           image_url?: string | null
+          is_active?: boolean | null
           name: string
+          price?: number | null
+          product_type?: string | null
           status?: string
+          stripe_product_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -437,13 +539,66 @@ export type Database = {
           created_at?: string
           description?: string
           estimated_price?: number
+          file_url?: string | null
+          hotmart_id?: string | null
           id?: string
           image_url?: string | null
+          is_active?: boolean | null
           name?: string
+          price?: number | null
+          product_type?: string | null
           status?: string
+          stripe_product_id?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      purchases: {
+        Row: {
+          amount_paid: number | null
+          created_at: string | null
+          id: string
+          payment_method: string | null
+          product_id: string | null
+          purchased_at: string | null
+          status: string | null
+          transaction_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount_paid?: number | null
+          created_at?: string | null
+          id?: string
+          payment_method?: string | null
+          product_id?: string | null
+          purchased_at?: string | null
+          status?: string | null
+          transaction_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount_paid?: number | null
+          created_at?: string | null
+          id?: string
+          payment_method?: string | null
+          product_id?: string | null
+          purchased_at?: string | null
+          status?: string | null
+          transaction_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'purchases_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'products'
+            referencedColumns: ['id']
+          },
+        ]
       }
       reactivation_requests: {
         Row: {
@@ -508,6 +663,7 @@ export type Database = {
       vendas: {
         Row: {
           amount: number
+          buyer_email: string | null
           created_at: string
           id: string
           product_name: string
@@ -515,6 +671,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          buyer_email?: string | null
           created_at?: string
           id?: string
           product_name: string
@@ -522,6 +679,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          buyer_email?: string | null
           created_at?: string
           id?: string
           product_name?: string
@@ -713,6 +871,18 @@ export const Constants = {
 //   status: text (not null, default: 'active'::text)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
+// Table: consultations
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (nullable)
+//   consultation_type: text (nullable)
+//   scheduled_date: timestamp with time zone (nullable)
+//   scheduled_time: text (nullable)
+//   duration_minutes: integer (nullable, default: 60)
+//   status: text (nullable)
+//   notes: text (nullable)
+//   zoom_link: text (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: conversion_events
 //   id: uuid (not null, default: gen_random_uuid())
 //   lead_id: uuid (not null)
@@ -740,6 +910,15 @@ export const Constants = {
 //   detalhes: jsonb (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
 //   status: text (nullable, default: 'pending'::text)
+// Table: email_subscriptions
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (nullable)
+//   email: text (not null)
+//   name: text (nullable)
+//   subscription_status: text (nullable)
+//   subscribed_at: timestamp with time zone (nullable, default: now())
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: leads
 //   id: uuid (not null, default: gen_random_uuid())
 //   created_at: timestamp with time zone (not null, default: now())
@@ -761,6 +940,10 @@ export const Constants = {
 //   zip_code: text (nullable)
 //   gender: text (nullable)
 //   profession: text (nullable)
+//   lead_source: text (nullable)
+//   lead_status: text (nullable, default: 'new'::text)
+//   notes: text (nullable)
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: leads_cursos
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -780,6 +963,7 @@ export const Constants = {
 //   content: text (not null)
 //   category: text (not null)
 //   created_at: timestamp with time zone (not null, default: now())
+//   author: text (nullable, default: 'Adriana'::text)
 // Table: products
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -790,6 +974,23 @@ export const Constants = {
 //   status: text (not null, default: 'ativo'::text)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
+//   price: numeric (nullable)
+//   product_type: text (nullable)
+//   file_url: text (nullable)
+//   hotmart_id: text (nullable)
+//   stripe_product_id: text (nullable)
+//   is_active: boolean (nullable, default: true)
+// Table: purchases
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (nullable)
+//   product_id: uuid (nullable)
+//   amount_paid: numeric (nullable)
+//   payment_method: text (nullable)
+//   transaction_id: text (nullable)
+//   status: text (nullable)
+//   purchased_at: timestamp with time zone (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: reactivation_requests
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_email: text (not null)
@@ -810,6 +1011,7 @@ export const Constants = {
 //   amount: numeric (not null)
 //   status: text (not null, default: 'pago'::text)
 //   created_at: timestamp with time zone (not null, default: now())
+//   buyer_email: text (nullable)
 
 // --- CONSTRAINTS ---
 // Table: ab_tests
@@ -825,6 +1027,11 @@ export const Constants = {
 //   UNIQUE clients_email_key: UNIQUE (email)
 //   PRIMARY KEY clients_pkey: PRIMARY KEY (id)
 //   CHECK clients_status_check: CHECK ((status = ANY (ARRAY['pending'::text, 'active'::text, 'inactive'::text])))
+// Table: consultations
+//   CHECK consultations_consultation_type_check: CHECK ((consultation_type = ANY (ARRAY['nutrition'::text, 'protection'::text, 'bundle'::text])))
+//   PRIMARY KEY consultations_pkey: PRIMARY KEY (id)
+//   CHECK consultations_status_check: CHECK ((status = ANY (ARRAY['pending'::text, 'confirmed'::text, 'completed'::text, 'cancelled'::text])))
+//   FOREIGN KEY consultations_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: conversion_events
 //   CHECK conversion_events_event_type_check: CHECK ((event_type = ANY (ARRAY['form_submitted'::text, 'iframe_loaded'::text, 'iframe_error'::text])))
 //   FOREIGN KEY conversion_events_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
@@ -834,6 +1041,11 @@ export const Constants = {
 // Table: cotacoes
 //   FOREIGN KEY cotacoes_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
 //   PRIMARY KEY cotacoes_pkey: PRIMARY KEY (id)
+// Table: email_subscriptions
+//   UNIQUE email_subscriptions_email_key: UNIQUE (email)
+//   PRIMARY KEY email_subscriptions_pkey: PRIMARY KEY (id)
+//   CHECK email_subscriptions_subscription_status_check: CHECK ((subscription_status = ANY (ARRAY['active'::text, 'unsubscribed'::text])))
+//   FOREIGN KEY email_subscriptions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: leads
 //   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY leads_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL
@@ -846,6 +1058,12 @@ export const Constants = {
 // Table: products
 //   PRIMARY KEY products_pkey: PRIMARY KEY (id)
 //   CHECK products_status_check: CHECK ((status = ANY (ARRAY['ativo'::text, 'inativo'::text])))
+// Table: purchases
+//   CHECK purchases_payment_method_check: CHECK ((payment_method = ANY (ARRAY['stripe'::text, 'mercado_pago'::text, 'hotmart'::text])))
+//   PRIMARY KEY purchases_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY purchases_product_id_fkey: FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+//   CHECK purchases_status_check: CHECK ((status = ANY (ARRAY['pending'::text, 'completed'::text, 'failed'::text, 'refunded'::text])))
+//   FOREIGN KEY purchases_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: reactivation_requests
 //   PRIMARY KEY reactivation_requests_pkey: PRIMARY KEY (id)
 //   CHECK reactivation_requests_status_check: CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text])))
@@ -891,6 +1109,11 @@ export const Constants = {
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
 //   Policy "Allow users to read own client data" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = id)
+// Table: consultations
+//   Policy "consultations_admin_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "consultations_user_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (user_id = auth.uid())
 // Table: conversion_events
 //   Policy "Allow admin select on conversion_events" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
@@ -904,6 +1127,11 @@ export const Constants = {
 //   Policy "Allow authenticated all on cotacoes" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: email_subscriptions
+//   Policy "email_subscriptions_admin_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "email_subscriptions_user_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: ((user_id = auth.uid()) OR (email = auth.email()))
 // Table: leads
 //   Policy "Allow anon insert on leads" (INSERT, PERMISSIVE) roles={anon}
 //     WITH CHECK: true
@@ -936,6 +1164,13 @@ export const Constants = {
 //     WITH CHECK: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
 //   Policy "Allow public read access to products" (SELECT, PERMISSIVE) roles={public}
 //     USING: true
+//   Policy "products_public_select" (SELECT, PERMISSIVE) roles={public}
+//     USING: true
+// Table: purchases
+//   Policy "purchases_admin_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "purchases_user_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (user_id = auth.uid())
 // Table: reactivation_requests
 //   Policy "Allow admin delete on reactivation_requests" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
@@ -1159,6 +1394,8 @@ export const Constants = {
 // Table: clients
 //   CREATE UNIQUE INDEX clients_email_key ON public.clients USING btree (email)
 //   CREATE INDEX clients_status_idx ON public.clients USING btree (status)
+// Table: email_subscriptions
+//   CREATE UNIQUE INDEX email_subscriptions_email_key ON public.email_subscriptions USING btree (email)
 // Table: reactivation_requests
 //   CREATE INDEX idx_reactivation_requests_status ON public.reactivation_requests USING btree (status)
 //   CREATE INDEX idx_reactivation_requests_user_email ON public.reactivation_requests USING btree (user_email)
