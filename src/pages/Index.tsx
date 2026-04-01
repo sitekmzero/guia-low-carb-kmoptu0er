@@ -1,91 +1,60 @@
 import { Link } from 'react-router-dom'
-import {
-  ArrowRight,
-  ShieldCheck,
-  HeartPulse,
-  Home,
-  Car,
-  Building2,
-  Briefcase,
-  Landmark,
-} from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 
 export default function Index() {
-  const products = [
-    { name: 'Seguro de Vida Mulher/Homem', icon: HeartPulse },
-    { name: 'Seguro Residência', icon: Home },
-    { name: 'Previdência', icon: Landmark },
-    { name: 'Seguro Auto', icon: Car },
-    { name: 'Seguro Empresa', icon: Building2 },
-    { name: 'Seguro Saúde', icon: ShieldCheck },
-    { name: 'Consórcios', icon: Briefcase },
-  ]
-
   return (
-    <div className="flex flex-col w-full bg-background">
-      <section className="relative min-h-[90vh] flex items-center pt-24 pb-20">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center gap-12 max-w-[1200px]">
-          <div className="w-full md:w-1/2 animate-fade-in-up z-10">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold mb-6 text-primary leading-tight">
-              Saúde que Liberta. Proteção que Permanece.
-            </h1>
-            <p className="text-lg md:text-xl text-foreground/80 mb-8 font-subheading leading-relaxed">
-              Nutrição clínica que transforma seu metabolismo — e a visão de quem entende que
-              proteger a saúde e o patrimônio são dois lados da mesma decisão inteligente.
-            </p>
-            <Button
-              asChild
-              size="lg"
-              className="rounded-full bg-secondary hover:bg-[#158A68] text-white text-lg px-8 h-14 shadow-soft transition-all hover:scale-105"
-            >
-              <Link to="/vendas-seguros">
-                Quero minha cotação <ArrowRight className="ml-2 w-5 h-5" />
-              </Link>
-            </Button>
-          </div>
-
-          <div className="w-full md:w-1/2 flex justify-center animate-fade-in-up animation-delay-200">
-            <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-[3/4] max-w-md w-full">
-              <img
-                src="https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Guia%20Low%20Carb/Imagens%20Adriana/Adriana%20jaleco%20rosto.jpeg"
-                alt="Adriana Araújo"
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-24 bg-muted">
+    <div className="flex flex-col min-h-screen">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-muted/50 to-background pt-16 md:pt-28 pb-24 md:pb-32">
         <div className="container mx-auto px-4 max-w-[1200px]">
-          <div className="text-center max-w-2xl mx-auto mb-16 animate-fade-in-up">
-            <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4 text-foreground">
-              Soluções Km Zero
-            </h2>
-            <p className="text-muted-foreground font-subheading">
-              Proteja seu presente e garanta seu futuro com nossas soluções completas.
-            </p>
-          </div>
+          <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-20">
+            <div className="w-full md:w-1/2 space-y-8 animate-fade-in-up">
+              <span className="inline-block py-1.5 px-4 rounded-full bg-primary/10 text-primary text-sm font-bold tracking-wider uppercase border border-primary/20">
+                Nutrição Clínica baseada em Ciência
+              </span>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-extrabold text-foreground leading-tight tracking-tight">
+                Transforme seu <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-[#158A68]">
+                  Metabolismo
+                </span>{' '}
+                <br />
+                sem fome nem culpa.
+              </h1>
+              <p className="text-lg md:text-xl text-muted-foreground font-subheading leading-relaxed max-w-lg">
+                Descubra por que 95% das dietas convencionais falham e como a estratégia Low Carb
+                correta pode restaurar sua saúde, energia e composição corporal de forma definitiva.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <Link to="/servicos">
+                  <Button
+                    size="lg"
+                    className="w-full sm:w-auto text-lg h-14 px-8 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all hover:-translate-y-1"
+                  >
+                    Agendar Consulta
+                  </Button>
+                </Link>
+                <Link to="/ebook-gratuito">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="w-full sm:w-auto text-lg h-14 px-8 rounded-full border-2 border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all"
+                  >
+                    Baixar E-book Grátis
+                  </Button>
+                </Link>
+              </div>
+            </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products.map((product, i) => {
-              const Icon = product.icon
-              return (
-                <Card
-                  key={i}
-                  className="group hover:shadow-md transition-all duration-300 border-none bg-card hover:bg-primary/5"
-                >
-                  <CardContent className="p-6 flex flex-col items-center text-center gap-4">
-                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                      <Icon size={28} strokeWidth={1.5} />
-                    </div>
-                    <h3 className="font-semibold text-sm md:text-base">{product.name}</h3>
-                  </CardContent>
-                </Card>
-              )
-            })}
+            <div className="w-full md:w-1/2 flex justify-center animate-fade-in-up animation-delay-200">
+              <div className="relative w-full max-w-md aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-2xl border-[6px] border-white/50 backdrop-blur-sm">
+                <img
+                  src="https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Guia%20Low%20Carb/Imagens%20Adriana/AdrianaA.jpeg"
+                  alt="Adriana Araújo - Nutricionista Clínica"
+                  loading="lazy"
+                  className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-700"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>

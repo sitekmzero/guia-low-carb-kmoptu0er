@@ -334,6 +334,81 @@ export type Database = {
         }
         Relationships: []
       }
+      leads_cursos: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      leads_seguros: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          interest: string | null
+          name: string
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          interest?: string | null
+          name: string
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          interest?: string | null
+          name?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      posts: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          id: string
+          title: string
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string
+          id?: string
+          title: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string
@@ -391,6 +466,24 @@ export type Database = {
         }
         Relationships: []
       }
+      settings: {
+        Row: {
+          id: string
+          key: string
+          value: Json
+        }
+        Insert: {
+          id?: string
+          key: string
+          value: Json
+        }
+        Update: {
+          id?: string
+          key?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           avatar_url: string | null
@@ -409,6 +502,30 @@ export type Database = {
           full_name?: string
           id?: string
           is_admin?: boolean
+        }
+        Relationships: []
+      }
+      vendas: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          product_name: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          product_name: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          product_name?: string
+          status?: string
         }
         Relationships: []
       }
@@ -644,6 +761,25 @@ export const Constants = {
 //   zip_code: text (nullable)
 //   gender: text (nullable)
 //   profession: text (nullable)
+// Table: leads_cursos
+//   id: uuid (not null, default: gen_random_uuid())
+//   name: text (not null)
+//   email: text (not null)
+//   whatsapp: text (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+// Table: leads_seguros
+//   id: uuid (not null, default: gen_random_uuid())
+//   name: text (not null)
+//   email: text (not null)
+//   whatsapp: text (nullable)
+//   interest: text (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+// Table: posts
+//   id: uuid (not null, default: gen_random_uuid())
+//   title: text (not null)
+//   content: text (not null)
+//   category: text (not null)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: products
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -659,11 +795,21 @@ export const Constants = {
 //   user_email: text (not null)
 //   request_date: timestamp with time zone (not null, default: now())
 //   status: text (not null, default: 'pending'::text)
+// Table: settings
+//   id: uuid (not null, default: gen_random_uuid())
+//   key: text (not null)
+//   value: jsonb (not null)
 // Table: user_profiles
 //   id: uuid (not null)
 //   full_name: text (not null)
 //   avatar_url: text (nullable)
 //   is_admin: boolean (not null, default: false)
+// Table: vendas
+//   id: uuid (not null, default: gen_random_uuid())
+//   product_name: text (not null)
+//   amount: numeric (not null)
+//   status: text (not null, default: 'pago'::text)
+//   created_at: timestamp with time zone (not null, default: now())
 
 // --- CONSTRAINTS ---
 // Table: ab_tests
@@ -691,15 +837,26 @@ export const Constants = {
 // Table: leads
 //   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY leads_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL
+// Table: leads_cursos
+//   PRIMARY KEY leads_cursos_pkey: PRIMARY KEY (id)
+// Table: leads_seguros
+//   PRIMARY KEY leads_seguros_pkey: PRIMARY KEY (id)
+// Table: posts
+//   PRIMARY KEY posts_pkey: PRIMARY KEY (id)
 // Table: products
 //   PRIMARY KEY products_pkey: PRIMARY KEY (id)
 //   CHECK products_status_check: CHECK ((status = ANY (ARRAY['ativo'::text, 'inativo'::text])))
 // Table: reactivation_requests
 //   PRIMARY KEY reactivation_requests_pkey: PRIMARY KEY (id)
 //   CHECK reactivation_requests_status_check: CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text])))
+// Table: settings
+//   UNIQUE settings_key_key: UNIQUE (key)
+//   PRIMARY KEY settings_pkey: PRIMARY KEY (id)
 // Table: user_profiles
 //   FOREIGN KEY user_profiles_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY user_profiles_pkey: PRIMARY KEY (id)
+// Table: vendas
+//   PRIMARY KEY vendas_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
 // Table: ab_tests
@@ -758,6 +915,21 @@ export const Constants = {
 //     USING: ((auth.uid() = user_id) OR (user_id IS NULL) OR (EXISTS ( SELECT 1    FROM user_profiles up   WHERE ((up.id = auth.uid()) AND (up.is_admin = true)))))
 //   Policy "Allow users to update own leads" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: ((auth.uid() = user_id) OR (EXISTS ( SELECT 1    FROM user_profiles up   WHERE ((up.id = auth.uid()) AND (up.is_admin = true)))))
+// Table: leads_cursos
+//   Policy "admin_all_leads_cursos" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "public_insert_leads_cursos" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: true
+// Table: leads_seguros
+//   Policy "admin_all_leads_seguros" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "public_insert_leads_seguros" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: true
+// Table: posts
+//   Policy "admin_all_posts" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "public_read_posts" (SELECT, PERMISSIVE) roles={public}
+//     USING: true
 // Table: products
 //   Policy "Allow admin full access to products" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
@@ -773,11 +945,19 @@ export const Constants = {
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
 //   Policy "Allow public insert on reactivation_requests" (INSERT, PERMISSIVE) roles={public}
 //     WITH CHECK: true
+// Table: settings
+//   Policy "admin_all_settings" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "public_read_settings" (SELECT, PERMISSIVE) roles={public}
+//     USING: true
 // Table: user_profiles
 //   Policy "Allow admins to read all profiles" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles up   WHERE ((up.id = auth.uid()) AND (up.is_admin = true))))
 //   Policy "Allow users to read own profile" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = id)
+// Table: vendas
+//   Policy "admin_all_vendas" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
 
 // --- DATABASE FUNCTIONS ---
 // FUNCTION handle_new_user()
@@ -982,3 +1162,5 @@ export const Constants = {
 // Table: reactivation_requests
 //   CREATE INDEX idx_reactivation_requests_status ON public.reactivation_requests USING btree (status)
 //   CREATE INDEX idx_reactivation_requests_user_email ON public.reactivation_requests USING btree (user_email)
+// Table: settings
+//   CREATE UNIQUE INDEX settings_key_key ON public.settings USING btree (key)
