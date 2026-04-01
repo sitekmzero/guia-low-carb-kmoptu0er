@@ -1,4 +1,4 @@
-DO $ 
+DO $$ 
 BEGIN
     -- Enhance existing products table
     ALTER TABLE public.products ADD COLUMN IF NOT EXISTS price NUMERIC(12,2);
@@ -19,7 +19,7 @@ BEGIN
 
     -- Enhance existing vendas table
     ALTER TABLE public.vendas ADD COLUMN IF NOT EXISTS buyer_email TEXT;
-END $;
+END $$;
 
 -- TABLE 2: purchases
 CREATE TABLE IF NOT EXISTS public.purchases (

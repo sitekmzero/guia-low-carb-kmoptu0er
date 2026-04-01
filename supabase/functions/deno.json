@@ -8,6 +8,8 @@
     "send-admin-notification": 8,
     "notify-lead": 10,
     "validate-captcha": 8,
-    "notify-new-candidate": 8
+    "notify-new-candidate": 8,
+    "integrate-brevo": 1,
+    "hotmart-sync": 1
   }
 }
