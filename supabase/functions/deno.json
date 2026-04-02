@@ -1,17 +1,17 @@
 {
   "_versions": {
-    "monitor-quotation-errors": 11,
-    "validate-password": 11,
-    "notify-admin-reactivation": 8,
-    "functions": 10,
-    "notify-client-status": 8,
-    "send-admin-notification": 8,
-    "notify-lead": 10,
-    "validate-captcha": 8,
-    "notify-new-candidate": 8,
-    "integrate-brevo": 2,
-    "hotmart-sync": 1,
-    "send-brevo-email": 1,
-    "send-whatsapp-message": 1
+    "monitor-quotation-errors": 12,
+    "validate-password": 12,
+    "notify-admin-reactivation": 9,
+    "functions": 11,
+    "notify-client-status": 9,
+    "send-admin-notification": 9,
+    "notify-lead": 11,
+    "validate-captcha": 9,
+    "notify-new-candidate": 9,
+    "integrate-brevo": 3,
+    "hotmart-sync": 2,
+    "send-brevo-email": 2,
+    "send-whatsapp-message": 2
   }
 }

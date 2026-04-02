@@ -34,6 +34,8 @@ const ConsultaNutricional = lazy(() => import('./pages/ConsultaNutricional'))
 const AdminCampaigns = lazy(() => import('./pages/admin/AdminCampaigns'))
 const AdminABTests = lazy(() => import('./pages/admin/AdminABTests'))
 const AdminCROMetrics = lazy(() => import('./pages/admin/AdminCROMetrics'))
+const AdminSecurity = lazy(() => import('./pages/admin/AdminSecurity'))
+const AdminSMTP = lazy(() => import('./pages/admin/AdminSMTP'))
 
 const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
   <Suspense
@@ -134,6 +136,22 @@ const App = () => (
               element={
                 <SuspenseWrapper>
                   <AdminCROMetrics />
+                </SuspenseWrapper>
+              }
+            />
+            <Route
+              path="security"
+              element={
+                <SuspenseWrapper>
+                  <AdminSecurity />
+                </SuspenseWrapper>
+              }
+            />
+            <Route
+              path="smtp"
+              element={
+                <SuspenseWrapper>
+                  <AdminSMTP />
                 </SuspenseWrapper>
               }
             />
