@@ -33,6 +33,13 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
+import {
+  trackEvent,
+  trackGoogleAdsConversion,
+  trackMetaPixelConversion,
+} from '@/services/analytics'
+import { getUTMParams } from '@/services/utm'
+import { useSEO } from '@/services/seo'
 
 const formSchema = z.object({
   type: z.string().min(1, 'Selecione um tipo'),
@@ -45,6 +52,11 @@ const TIME_SLOTS = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00']
 
 export default function Teleconsulta() {
   const [processing, setProcessing] = useState(false)
+
+  useSEO(
+    'Teleconsulta Nutricional: Consulta Personalizada Online',
+    'Agende sua teleconsulta com nutricionista clínica. Plano personalizado para seus objetivos.',
+  )
   const [showPayment, setShowPayment] = useState(false)
   const { session } = useAuth()
   const navigate = useNavigate()
@@ -88,6 +100,18 @@ export default function Teleconsulta() {
           user_data: { date: format(values.date, 'dd/MM/yyyy'), time: values.time },
         },
       })
+
+      const price = values.type === 'bundle' ? 250 : 150
+      trackEvent('consultation_booked', {
+        consultation_type: values.type,
+        scheduled_date: values.date.toISOString(),
+        price,
+        user_id: session?.user.id,
+        timestamp: Date.now(),
+        ...getUTMParams(),
+      })
+      trackGoogleAdsConversion(price)
+      trackMetaPixelConversion('Purchase', price, `Consulta ${values.type}`)
 
       toast({ title: 'Sucesso!', description: 'Consulta agendada com sucesso!' })
       setShowPayment(false)
@@ -237,7 +261,16 @@ export default function Teleconsulta() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full h-12 text-base font-bold">
+              <Button
+                type="submit"
+                className="w-full h-12 text-base font-bold min-h-[48px]"
+                onClick={() =>
+                  trackEvent('cta_click', {
+                    cta_text: 'Agendar e Pagar',
+                    page_path: '/teleconsulta',
+                  })
+                }
+              >
                 Agendar e Pagar
               </Button>
             </form>

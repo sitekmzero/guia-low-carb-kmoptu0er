@@ -15,7 +15,15 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { toast } from '@/hooks/use-toast'
-import { Loader2 } from 'lucide-react'
+import { Loader2, CheckCircle, ShieldCheck } from 'lucide-react'
+import {
+  trackEvent,
+  trackGoogleAdsConversion,
+  trackMetaPixelConversion,
+} from '@/services/analytics'
+import { getUTMParams } from '@/services/utm'
+import { useSEO } from '@/services/seo'
+import { ABTestVariant } from '@/components/ABTestVariant'
 
 const formSchema = z.object({
   name: z.string().min(3, 'O nome deve ter no mínimo 3 caracteres'),
@@ -25,6 +33,11 @@ const formSchema = z.object({
 
 export default function EbookGratuito() {
   const [loading, setLoading] = useState(false)
+
+  useSEO(
+    'Guia Completo Low-Carb para Iniciantes - Grátis',
+    'Baixe seu e-book gratuito sobre nutrição low-carb. Receitas, dicas e guia prático.',
+  )
   const navigate = useNavigate()
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -56,6 +69,16 @@ export default function EbookGratuito() {
         },
       })
 
+      trackEvent('lead_capture', {
+        email: values.email,
+        name: values.name,
+        lead_source: 'ebook-free',
+        timestamp: Date.now(),
+        ...getUTMParams(),
+      })
+      trackGoogleAdsConversion(500)
+      trackMetaPixelConversion('Lead', 500, 'E-book Gratuito')
+
       toast({ title: 'Sucesso!', description: 'E-book enviado para seu e-mail!' })
 
       setTimeout(() => {
@@ -84,15 +107,19 @@ export default function EbookGratuito() {
             Baixe seu e-book gratuito agora
           </p>
 
-          <div className="bg-card p-8 rounded-2xl shadow-xl border border-primary/10">
+          <div className="bg-card p-8 rounded-2xl shadow-xl border border-primary/10 relative">
+            <div className="absolute top-4 right-4 text-xs text-muted-foreground">Passo 1 de 1</div>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
+                <p className="text-sm text-muted-foreground text-right mb-2">
+                  * campos obrigatórios
+                </p>
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nome</FormLabel>
+                      <FormLabel>Nome *</FormLabel>
                       <FormControl>
                         <Input placeholder="Seu nome completo" className="h-11" {...field} />
                       </FormControl>
@@ -105,7 +132,7 @@ export default function EbookGratuito() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>E-mail</FormLabel>
+                      <FormLabel>E-mail *</FormLabel>
                       <FormControl>
                         <Input
                           type="email"
@@ -118,29 +145,54 @@ export default function EbookGratuito() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>WhatsApp (Opcional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="(00) 00000-0000" className="h-11" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                <ABTestVariant
+                  testName="ebook-form-fields"
+                  variants={{
+                    A: (
+                      <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>WhatsApp (Opcional)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="(00) 00000-0000" className="h-11" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ),
+                    B: <div className="hidden" />,
+                  }}
                 />
                 <Button
                   type="submit"
                   disabled={loading}
                   className="w-full h-12 mt-4 bg-primary hover:bg-[#158A68] text-white font-bold text-lg shadow-md transition-transform hover:-translate-y-0.5"
+                  onClick={() =>
+                    trackEvent('cta_click', {
+                      cta_text: 'Receber E-book Gratuito',
+                      page_path: '/ebook-gratuito',
+                    })
+                  }
                 >
                   {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                  {!loading && <CheckCircle className="mr-2 h-5 w-5" />}
                   Receber E-book Gratuito
                 </Button>
               </form>
             </Form>
+
+            <div className="mt-6 pt-4 border-t flex flex-col items-center justify-center gap-2 text-muted-foreground text-sm">
+              <div className="flex items-center gap-1">
+                <ShieldCheck className="w-4 h-4 text-green-500" />
+                <span>Seus dados estão 100% seguros.</span>
+              </div>
+              <p className="font-medium text-foreground">
+                Mais de 5.000 pessoas já baixaram este e-book
+              </p>
+            </div>
           </div>
         </div>
 
@@ -150,6 +202,9 @@ export default function EbookGratuito() {
             alt="Preview do E-book"
             className="rounded-2xl shadow-2xl object-cover w-full max-h-[600px]"
             loading="lazy"
+            width="800"
+            height="600"
+            srcSet="https://img.usecurling.com/p/480/600?q=diet 480w, https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Guia%20Low%20Carb/Imagens%20Adriana/AdrianaA.jpeg 800w"
           />
         </div>
       </div>

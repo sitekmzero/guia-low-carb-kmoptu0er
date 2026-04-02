@@ -96,6 +96,54 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_posts: {
+        Row: {
+          author: string | null
+          category: string | null
+          content: string | null
+          created_at: string | null
+          excerpt: string | null
+          featured_image_url: string | null
+          id: string
+          published: boolean | null
+          slug: string
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          views: number | null
+        }
+        Insert: {
+          author?: string | null
+          category?: string | null
+          content?: string | null
+          created_at?: string | null
+          excerpt?: string | null
+          featured_image_url?: string | null
+          id?: string
+          published?: boolean | null
+          slug: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          views?: number | null
+        }
+        Update: {
+          author?: string | null
+          category?: string | null
+          content?: string | null
+          created_at?: string | null
+          excerpt?: string | null
+          featured_image_url?: string | null
+          id?: string
+          published?: boolean | null
+          slug?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          views?: number | null
+        }
+        Relationships: []
+      }
       candidatos: {
         Row: {
           created_at: string
@@ -306,6 +354,36 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
+      }
+      ebooks: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          file_url: string | null
+          id: string
+          is_free: boolean | null
+          title: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          is_free?: boolean | null
+          title: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          is_free?: boolean | null
+          title?: string
+        }
+        Relationships: []
       }
       email_subscriptions: {
         Row: {
@@ -639,6 +717,44 @@ export type Database = {
         }
         Relationships: []
       }
+      user_courses: {
+        Row: {
+          access_until: string | null
+          course_id: string | null
+          created_at: string | null
+          enrolled_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          access_until?: string | null
+          course_id?: string | null
+          created_at?: string | null
+          enrolled_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          access_until?: string | null
+          course_id?: string | null
+          created_at?: string | null
+          enrolled_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'user_courses_course_id_fkey'
+            columns: ['course_id']
+            isOneToOne: false
+            referencedRelation: 'products'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       user_profiles: {
         Row: {
           avatar_url: string | null
@@ -869,6 +985,20 @@ export const Constants = {
 //   created_at: timestamp with time zone (not null, default: now())
 //   avatar_url: text (nullable)
 //   social_url: text (nullable)
+// Table: blog_posts
+//   id: uuid (not null, default: gen_random_uuid())
+//   title: text (not null)
+//   slug: text (not null)
+//   excerpt: text (nullable)
+//   content: text (nullable)
+//   category: text (nullable)
+//   tags: _text (nullable)
+//   author: text (nullable)
+//   featured_image_url: text (nullable)
+//   published: boolean (nullable, default: false)
+//   views: integer (nullable, default: 0)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: candidatos
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -922,6 +1052,14 @@ export const Constants = {
 //   detalhes: jsonb (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
 //   status: text (nullable, default: 'pending'::text)
+// Table: ebooks
+//   id: uuid (not null, default: gen_random_uuid())
+//   title: text (not null)
+//   description: text (nullable)
+//   file_url: text (nullable)
+//   category: text (nullable)
+//   is_free: boolean (nullable, default: true)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: email_subscriptions
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (nullable)
@@ -1012,6 +1150,14 @@ export const Constants = {
 //   id: uuid (not null, default: gen_random_uuid())
 //   key: text (not null)
 //   value: jsonb (not null)
+// Table: user_courses
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (nullable)
+//   course_id: uuid (nullable)
+//   enrolled_at: timestamp with time zone (nullable, default: now())
+//   access_until: timestamp with time zone (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: user_profiles
 //   id: uuid (not null)
 //   full_name: text (not null)
@@ -1037,6 +1183,9 @@ export const Constants = {
 // Table: avaliacoes
 //   CHECK avaliacoes_nota_check: CHECK (((nota >= 1) AND (nota <= 5)))
 //   PRIMARY KEY avaliacoes_pkey: PRIMARY KEY (id)
+// Table: blog_posts
+//   PRIMARY KEY blog_posts_pkey: PRIMARY KEY (id)
+//   UNIQUE blog_posts_slug_key: UNIQUE (slug)
 // Table: candidatos
 //   PRIMARY KEY candidatos_pkey: PRIMARY KEY (id)
 // Table: clients
@@ -1057,6 +1206,8 @@ export const Constants = {
 // Table: cotacoes
 //   FOREIGN KEY cotacoes_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
 //   PRIMARY KEY cotacoes_pkey: PRIMARY KEY (id)
+// Table: ebooks
+//   PRIMARY KEY ebooks_pkey: PRIMARY KEY (id)
 // Table: email_subscriptions
 //   UNIQUE email_subscriptions_email_key: UNIQUE (email)
 //   PRIMARY KEY email_subscriptions_pkey: PRIMARY KEY (id)
@@ -1086,6 +1237,10 @@ export const Constants = {
 // Table: settings
 //   UNIQUE settings_key_key: UNIQUE (key)
 //   PRIMARY KEY settings_pkey: PRIMARY KEY (id)
+// Table: user_courses
+//   FOREIGN KEY user_courses_course_id_fkey: FOREIGN KEY (course_id) REFERENCES products(id) ON DELETE CASCADE
+//   PRIMARY KEY user_courses_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY user_courses_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: user_profiles
 //   FOREIGN KEY user_profiles_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY user_profiles_pkey: PRIMARY KEY (id)
@@ -1113,6 +1268,11 @@ export const Constants = {
 //     USING: (ativo = true)
 //   Policy "Allow public read active avaliacoes" (SELECT, PERMISSIVE) roles={public}
 //     USING: (ativo = true)
+// Table: blog_posts
+//   Policy "blog_posts_admin" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "blog_posts_public" (SELECT, PERMISSIVE) roles={public}
+//     USING: (published = true)
 // Table: candidatos
 //   Policy "Allow admin reads on candidatos" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
@@ -1143,6 +1303,11 @@ export const Constants = {
 //   Policy "Allow authenticated all on cotacoes" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: ebooks
+//   Policy "ebooks_admin" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "ebooks_public" (SELECT, PERMISSIVE) roles={public}
+//     USING: true
 // Table: email_subscriptions
 //   Policy "email_subscriptions_admin_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
@@ -1201,6 +1366,11 @@ export const Constants = {
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
 //   Policy "public_read_settings" (SELECT, PERMISSIVE) roles={public}
 //     USING: true
+// Table: user_courses
+//   Policy "user_courses_admin" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "user_courses_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (user_id = auth.uid())
 // Table: user_profiles
 //   Policy "admin_all_user_profiles" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()
@@ -1418,6 +1588,8 @@ export const Constants = {
 // --- INDEXES ---
 // Table: access_logs
 //   CREATE INDEX idx_access_logs_user_email ON public.access_logs USING btree (user_email)
+// Table: blog_posts
+//   CREATE UNIQUE INDEX blog_posts_slug_key ON public.blog_posts USING btree (slug)
 // Table: clients
 //   CREATE UNIQUE INDEX clients_email_key ON public.clients USING btree (email)
 //   CREATE INDEX clients_status_idx ON public.clients USING btree (status)

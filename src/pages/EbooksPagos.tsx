@@ -20,9 +20,22 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
 import { Loader2, BookOpen } from 'lucide-react'
+import {
+  trackEvent,
+  trackGoogleAdsConversion,
+  trackMetaPixelConversion,
+} from '@/services/analytics'
+import { getUTMParams } from '@/services/utm'
+import { useSEO } from '@/services/seo'
+import { ExitIntentPopup } from '@/components/ExitIntentPopup'
 
 export default function EbooksPagos() {
   const [ebooks, setEbooks] = useState<any[]>([])
+
+  useSEO(
+    'E-books Premium: Nutrição Clínica e Esportiva',
+    'Adquira e-books especializados sobre nutrição clínica para diabetes e nutrição esportiva.',
+  )
   const [loading, setLoading] = useState(true)
   const [selectedEbook, setSelectedEbook] = useState<any>(null)
   const [processing, setProcessing] = useState(false)
@@ -75,6 +88,20 @@ export default function EbooksPagos() {
         },
       })
 
+      trackEvent('purchase', {
+        product_name: selectedEbook.name,
+        product_id: selectedEbook.id,
+        price: selectedEbook.price,
+        currency: 'BRL',
+        payment_method: method,
+        user_id: session?.user.id,
+        timestamp: Date.now(),
+        product_type: 'ebook-paid',
+        ...getUTMParams(),
+      })
+      trackGoogleAdsConversion(selectedEbook.price)
+      trackMetaPixelConversion('Purchase', selectedEbook.price, selectedEbook.name)
+
       toast({ title: 'Sucesso!', description: 'Compra realizada. Verifique seu e-mail.' })
       setSelectedEbook(null)
     } catch (err) {
@@ -86,6 +113,7 @@ export default function EbooksPagos() {
 
   return (
     <div className="container mx-auto px-4 py-16 max-w-[1200px]">
+      <ExitIntentPopup />
       <div className="text-center mb-16 animate-fade-in-up">
         <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4 text-primary">
           E-books Premium
@@ -128,8 +156,14 @@ export default function EbooksPagos() {
               </CardContent>
               <CardFooter>
                 <Button
-                  onClick={() => handleBuy(ebook)}
-                  className="w-full h-11 text-base font-semibold rounded-full"
+                  onClick={() => {
+                    trackEvent('cta_click', {
+                      cta_text: 'Comprar Agora',
+                      page_path: '/ebooks-pagos',
+                    })
+                    handleBuy(ebook)
+                  }}
+                  className="w-full h-11 text-base font-semibold rounded-full min-h-[44px]"
                 >
                   Comprar Agora
                 </Button>

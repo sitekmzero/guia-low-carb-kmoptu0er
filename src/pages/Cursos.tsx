@@ -20,9 +20,22 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
 import { Loader2, MonitorPlay, CheckCircle } from 'lucide-react'
+import {
+  trackEvent,
+  trackGoogleAdsConversion,
+  trackMetaPixelConversion,
+} from '@/services/analytics'
+import { getUTMParams } from '@/services/utm'
+import { useSEO } from '@/services/seo'
+import { SocialProof } from '@/components/SocialProof'
 
 export default function Cursos() {
   const [cursos, setCursos] = useState<any[]>([])
+
+  useSEO(
+    'Cursos Online: Nutrição Low-Carb Completo',
+    'Aprenda nutrição low-carb com especialista. Cursos online com certificado.',
+  )
   const [loading, setLoading] = useState(true)
   const [selectedCurso, setSelectedCurso] = useState<any>(null)
   const [showPayment, setShowPayment] = useState(false)
@@ -91,6 +104,17 @@ export default function Cursos() {
         },
       })
 
+      trackEvent('course_enrolled', {
+        course_name: selectedCurso.name,
+        course_id: selectedCurso.id,
+        price: selectedCurso.price,
+        user_id: session?.user.id,
+        timestamp: Date.now(),
+        ...getUTMParams(),
+      })
+      trackGoogleAdsConversion(selectedCurso.price)
+      trackMetaPixelConversion('Purchase', selectedCurso.price, selectedCurso.name)
+
       toast({ title: 'Sucesso!', description: 'Inscrição realizada com sucesso!' })
       setShowPayment(false)
       setSelectedCurso(null)
@@ -147,8 +171,14 @@ export default function Cursos() {
               </CardContent>
               <CardFooter>
                 <Button
-                  onClick={() => handleEnroll(curso)}
-                  className="w-full h-12 text-base font-bold rounded-full"
+                  onClick={() => {
+                    trackEvent('cta_click', {
+                      cta_text: 'Ver Detalhes e Inscrever-se',
+                      page_path: '/cursos',
+                    })
+                    handleEnroll(curso)
+                  }}
+                  className="w-full h-12 text-base font-bold rounded-full min-h-[44px]"
                 >
                   Ver Detalhes e Inscrever-se
                 </Button>
@@ -200,6 +230,13 @@ export default function Cursos() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <div className="mt-24 max-w-4xl mx-auto">
+        <h2 className="text-3xl font-heading font-bold text-center mb-8 text-primary">
+          O que nossos alunos dizem
+        </h2>
+        <SocialProof />
+      </div>
 
       <Dialog open={showPayment} onOpenChange={setShowPayment}>
         <DialogContent>
