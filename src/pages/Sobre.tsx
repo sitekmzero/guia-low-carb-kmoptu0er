@@ -55,19 +55,19 @@ const timeline = [
   {
     t: 'O Dia do Basta',
     s: 'Quando a vida nos força a escolher',
-    c: "Em julho de 2014, sentada em um consultório ao lado do meu filho Gabriel, com 14 anos, recebi uma notícia que mudou tudo: ambos estávamos diabéticos tipo 2. Naquele momento, uma voz disse: 'você falhou. Precisa mudar'. Aquele foi meu dia do BASTA. Não nascemos diabéticos. Essa consciência me colocou em movimento.",
+    c: 'Em 2015, o chão se abriu debaixo dos meus pés. Sentada no consultório de uma endocrinologista com meu filho Gabriel, então com pouco mais de 20 anos e quase 25 quilos acima do peso, ouvimos: síndrome metabólica. A palavra que eu ouvi foi: falha. Naquele dia tomei uma decisão: eu não ia aceitar aquilo. Fui para casa e comecei a estudar.',
     i: Activity,
   },
   {
     t: 'A Virada Científica',
     s: 'Quando a curiosidade se torna expertise',
-    c: 'Não aceitei a resposta pronta. Estudei a fundo e mudei tudo: dobrei gorduras boas, aumentei proteínas, cortei açúcar. O resultado: eliminei 25 kg sem fome. Essa transformação profunda me levou à graduação em Nutrição Clínica na UFTM. Queria unir a vivência à ciência.',
+    c: 'Mergulhei fundo em pesquisas sobre Low Carb. Testei em mim mesma e eliminei 14 quilos em três meses sem fome. Gabriel seguiu o caminho e eliminou quase 30 quilos em seis meses, revertendo a síndrome metabólica. Essa experiência transformadora me motivou a ir além: em 2022, formei-me em Nutrição Clínica pela UFTM.',
     i: GraduationCap,
   },
   {
     t: 'A Transformação de Gabriel',
     s: 'Quando a ciência encontra o amor de mãe',
-    c: 'Gabriel acompanhou meus resultados e pediu para fazer o mesmo. Ele eliminou 36 quilos em seis meses, curou a esteatose e o diabetes. Entendi que verdadeira proteção não é só patrimonial, é blindar a saúde e o futuro da família com ciência e amor.',
+    c: 'Gabriel me disse que achava que estava fadado a ser gordo para sempre, até que finalmente entendeu que não era verdade. Essa jornada me mostrou que a verdadeira proteção não é só patrimonial, mas também blindar a saúde e o futuro da família com ciência e amor. Não por currículo. Por missão.',
     i: Heart,
   },
 ]
@@ -98,7 +98,7 @@ export default function Sobre() {
         <div className="absolute inset-0 z-0 bg-black/40 dark:bg-black/60">
           <img
             src="https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Guia%20Low%20Carb/Imagens%20Adriana/Adriana%20jaleco%20fundo%20branco.jpeg"
-            alt="Adriana Araújo"
+            alt="Adriana de Freitas Oliveira Araújo"
             className="w-full h-full object-cover mix-blend-overlay"
           />
         </div>

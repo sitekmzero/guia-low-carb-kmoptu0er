@@ -3,6 +3,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { lazy, Suspense } from 'react'
+import { Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import Index from './pages/Index'
 import Sobre from './pages/Sobre'
@@ -18,7 +19,6 @@ import EbookGratuito from './pages/EbookGratuito'
 import ObrigadoEbook from './pages/ObrigadoEbook'
 import AdminLogin from './pages/admin/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
-import AdminPosts from './pages/admin/AdminPosts'
 import AdminSettings from './pages/admin/AdminSettings'
 import EbooksPagos from './pages/EbooksPagos'
 import AdminAgendamentos from './pages/admin/AdminAgendamentos'
@@ -36,6 +36,7 @@ const AdminABTests = lazy(() => import('./pages/admin/AdminABTests'))
 const AdminCROMetrics = lazy(() => import('./pages/admin/AdminCROMetrics'))
 const AdminSecurity = lazy(() => import('./pages/admin/AdminSecurity'))
 const AdminSMTP = lazy(() => import('./pages/admin/AdminSMTP'))
+const AdminBlog = lazy(() => import('./pages/admin/AdminBlog'))
 
 const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
   <Suspense
@@ -113,7 +114,15 @@ const App = () => (
             }
           >
             <Route index element={<AdminDashboard />} />
-            <Route path="posts" element={<AdminPosts />} />
+            <Route
+              path="blog"
+              element={
+                <SuspenseWrapper>
+                  <AdminBlog />
+                </SuspenseWrapper>
+              }
+            />
+            <Route path="posts" element={<Navigate replace to="/admin/blog" />} />
             <Route path="agendamentos" element={<AdminAgendamentos />} />
             <Route
               path="campaigns"
