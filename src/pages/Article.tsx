@@ -1,123 +1,109 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import {
+  Clock,
   Calendar,
   User,
-  Clock,
   Facebook,
   Twitter,
   Linkedin,
   Mail,
+  Link as LinkIcon,
   Share2,
-  ArrowLeft,
 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { toast } from '@/hooks/use-toast'
 
 export default function Article() {
   const { slug } = useParams()
   const [post, setPost] = useState<any>(null)
   const [related, setRelated] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [progress, setProgress] = useState(0)
-
-  useEffect(() => {
-    async function fetchPost() {
-      setLoading(true)
-      const { data } = await supabase.from('blog_posts').select('*').eq('slug', slug).single()
-      if (data) {
-        setPost(data)
-        // Fetch related
-        const { data: relData } = await supabase
-          .from('blog_posts')
-          .select(
-            'id, title, slug, excerpt, featured_image_url, category, author, published_date, reading_time_minutes',
-          )
-          .eq('category', data.category)
-          .neq('slug', slug)
-          .eq('published', true)
-          .limit(3)
-        if (relData) setRelated(relData)
-
-        // Increment views safely (RPC)
-        supabase.rpc('increment_blog_view', { post_slug: slug }).catch(console.error)
-      }
-      setLoading(false)
-      window.scrollTo(0, 0)
-    }
-    if (slug) fetchPost()
-  }, [slug])
+  const [scrollProgress, setScrollProgress] = useState(0)
 
   useEffect(() => {
     const handleScroll = () => {
       const totalScroll = document.documentElement.scrollTop
       const windowHeight =
         document.documentElement.scrollHeight - document.documentElement.clientHeight
-      const scroll = `${totalScroll / windowHeight}`
-      setProgress(Number(scroll) * 100)
+      const scroll = `${(totalScroll / windowHeight) * 100}`
+      setScrollProgress(Number(scroll))
     }
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const parsedContent = useMemo(() => {
-    if (!post?.content) return { html: '', toc: [] }
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(post.content, 'text/html')
-    const headings = Array.from(doc.querySelectorAll('h2'))
-    const toc = headings.map((h, i) => {
-      const id = `heading-${i}`
-      h.id = id
-      return { id, text: h.textContent || '' }
-    })
-    return { html: doc.body.innerHTML, toc }
-  }, [post?.content])
+  useEffect(() => {
+    const fetchPost = async () => {
+      if (!slug) return
+      setLoading(true)
+      const { data } = await supabase.from('blog_posts').select('*').eq('slug', slug).single()
 
-  const shareUrl = window.location.href
-  const shareText = post?.title || 'Artigo Guia Low Carb'
+      if (data) {
+        setPost(data)
+        // Increment views safely using RPC or update
+        supabase.rpc('increment_blog_view', { post_slug: slug }).then()
+
+        // Fetch related
+        const { data: rel } = await supabase
+          .from('blog_posts')
+          .select('id, title, slug, featured_image_url, category, excerpt')
+          .eq('category', data.category)
+          .neq('id', data.id)
+          .limit(3)
+        if (rel) setRelated(rel)
+      }
+      setLoading(false)
+      window.scrollTo(0, 0)
+    }
+    fetchPost()
+  }, [slug])
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(window.location.href)
+    toast({ title: 'Link copiado!', description: 'Compartilhe com seus amigos.' })
+  }
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center py-32 min-h-[60vh]">
-        <div className="w-10 h-10 border-4 border-[#2D6A4F] border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    )
+    return <div className="min-h-screen flex items-center justify-center">Carregando artigo...</div>
   }
 
   if (!post) {
     return (
-      <div className="container mx-auto px-4 py-32 text-center min-h-[60vh]">
-        <h2 className="text-2xl font-bold mb-4 text-[#2D6A4F]">Artigo não encontrado</h2>
-        <Button asChild className="bg-[#2D6A4F] hover:bg-[#1f4a37]">
-          <Link to="/blog">Voltar para o Blog</Link>
-        </Button>
-      </div>
+      <div className="min-h-screen flex items-center justify-center">Artigo não encontrado.</div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background relative pb-20">
+    <div className="min-h-screen bg-background pb-16">
+      {/* Progress Bar */}
       <div
-        className="fixed top-0 left-0 h-1 bg-[#2D6A4F] z-50 transition-all duration-150"
-        style={{ width: `${progress}%` }}
+        className="fixed top-0 left-0 h-1 bg-primary z-50 transition-all duration-150"
+        style={{ width: `${scrollProgress}%` }}
       />
 
       {/* Hero */}
-      <section className="relative h-[300px] md:h-[500px] w-full animate-fade-in">
-        <img
-          src={post.featured_image_url || 'https://img.usecurling.com/p/1200/600?q=article'}
-          alt={post.title}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 container mx-auto text-white">
-          <span className="inline-block bg-[#2D6A4F] text-white px-3 py-1 rounded text-xs font-semibold uppercase tracking-wider mb-4">
+      <section className="relative h-[300px] md:h-[500px] w-full flex items-end overflow-hidden animate-fade-in">
+        <div className="absolute inset-0 bg-muted">
+          {post.featured_image_url && (
+            <img
+              src={post.featured_image_url}
+              alt={post.title}
+              className="w-full h-full object-cover"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+        </div>
+        <div className="relative container max-w-4xl px-4 md:px-8 pb-10 text-white z-10">
+          <Badge className="bg-primary hover:bg-primary/90 text-white mb-4 border-none">
             {post.category}
-          </span>
-          <h1 className="text-[32px] md:text-[48px] font-heading font-bold text-white mb-4 leading-tight">
+          </Badge>
+          <h1 className="text-3xl md:text-5xl font-bold font-heading leading-tight mb-4">
             {post.title}
           </h1>
-          <div className="flex flex-wrap gap-4 text-sm text-gray-300">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-white/80">
             <span className="flex items-center gap-1">
               <User className="w-4 h-4" /> {post.author}
             </span>
@@ -132,122 +118,113 @@ export default function Article() {
         </div>
       </section>
 
-      {/* Content */}
-      <div className="max-w-[800px] mx-auto px-4 md:px-5 py-10 animate-fade-in-up">
-        {/* Share Buttons */}
-        <div className="flex flex-wrap gap-3 mb-10 animate-fade-in-up animation-delay-200">
-          <a
-            href={`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`}
-            target="_blank"
-            rel="noreferrer"
-            className="w-11 h-11 rounded-full bg-[#25D366] text-white flex items-center justify-center hover:scale-110 transition-transform"
-          >
-            <Share2 className="w-5 h-5" />
-          </a>
-          <a
-            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
-            target="_blank"
-            rel="noreferrer"
-            className="w-11 h-11 rounded-full bg-[#1877F2] text-white flex items-center justify-center hover:scale-110 transition-transform"
-          >
-            <Facebook className="w-5 h-5" />
-          </a>
-          <a
-            href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`}
-            target="_blank"
-            rel="noreferrer"
-            className="w-11 h-11 rounded-full bg-[#1DA1F2] text-white flex items-center justify-center hover:scale-110 transition-transform"
-          >
-            <Twitter className="w-5 h-5" />
-          </a>
-          <a
-            href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
-            target="_blank"
-            rel="noreferrer"
-            className="w-11 h-11 rounded-full bg-[#0A66C2] text-white flex items-center justify-center hover:scale-110 transition-transform"
-          >
-            <Linkedin className="w-5 h-5" />
-          </a>
-          <a
-            href={`mailto:?subject=${encodeURIComponent(shareText)}&body=${encodeURIComponent(shareUrl)}`}
-            className="w-11 h-11 rounded-full bg-gray-500 text-white flex items-center justify-center hover:scale-110 transition-transform"
-          >
-            <Mail className="w-5 h-5" />
-          </a>
+      {/* Content Container */}
+      <div className="container max-w-4xl px-4 md:px-8 mt-10">
+        <div className="flex flex-col lg:flex-row gap-10">
+          {/* Article Body */}
+          <article className="flex-1 prose prose-lg md:prose-xl max-w-none prose-headings:font-heading prose-headings:text-primary prose-a:text-primary prose-a:no-underline hover:prose-a:underline animate-fade-in-up">
+            <div dangerouslySetInnerHTML={{ __html: post.content || '' }} />
+          </article>
         </div>
 
-        {/* TOC */}
-        {parsedContent.toc.length > 0 && (
-          <div className="bg-[#F8F4EF] p-6 rounded-lg mb-8">
-            <h3 className="text-base font-semibold text-[#2D6A4F] mb-3">Neste artigo:</h3>
-            <ul className="space-y-2 list-none">
-              {parsedContent.toc.map((h) => (
-                <li key={h.id}>
-                  <a
-                    href={`#${h.id}`}
-                    className="text-sm text-[#636E72] hover:text-[#2D6A4F] hover:underline transition-colors"
-                  >
-                    {h.text}
-                  </a>
-                </li>
-              ))}
-            </ul>
+        {/* Share Actions */}
+        <div className="mt-12 py-6 border-y flex flex-col sm:flex-row items-center justify-between gap-4">
+          <span className="font-semibold text-lg flex items-center gap-2">
+            <Share2 className="w-5 h-5" /> Compartilhar:
+          </span>
+          <div className="flex gap-2">
+            <Button size="icon" variant="outline" className="rounded-full" onClick={copyLink}>
+              <LinkIcon className="w-4 h-4" />
+            </Button>
+            <a
+              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Button
+                size="icon"
+                variant="outline"
+                className="rounded-full bg-blue-600 text-white border-none hover:bg-blue-700"
+              >
+                <Facebook className="w-4 h-4" />
+              </Button>
+            </a>
+            <a
+              href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(post.title)}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Button
+                size="icon"
+                variant="outline"
+                className="rounded-full bg-sky-500 text-white border-none hover:bg-sky-600"
+              >
+                <Twitter className="w-4 h-4" />
+              </Button>
+            </a>
+            <a
+              href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(window.location.href)}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Button
+                size="icon"
+                variant="outline"
+                className="rounded-full bg-blue-700 text-white border-none hover:bg-blue-800"
+              >
+                <Linkedin className="w-4 h-4" />
+              </Button>
+            </a>
           </div>
-        )}
-
-        {/* HTML Body */}
-        <div
-          className="prose prose-lg md:prose-xl max-w-none text-[#2D3436] font-sans leading-[1.8] prose-h2:text-[#2D6A4F] prose-h2:text-[32px] prose-h2:font-semibold prose-h2:mt-10 prose-h2:mb-4 prose-h3:text-[#52A86A] prose-h3:text-[24px] prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-p:mb-4 prose-blockquote:border-l-4 prose-blockquote:border-[#2D6A4F] prose-blockquote:pl-4 prose-blockquote:ml-0 prose-blockquote:text-[#636E72] prose-blockquote:font-style-italic prose-li:mb-2 prose-a:text-[#2D6A4F] prose-a:underline hover:prose-a:text-[#1f4a37]"
-          dangerouslySetInnerHTML={{ __html: parsedContent.html }}
-        />
+        </div>
 
         {/* Author Bio */}
-        <div className="bg-[#F8F4EF] p-6 rounded-lg mt-12 flex flex-col sm:flex-row gap-6 items-center sm:items-start text-center sm:text-left">
-          <img
-            src="https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Guia%20Low%20Carb/Imagens%20Adriana/Adriana%20jaleco%20fundo%20branco.jpeg"
-            alt={post.author}
-            className="w-[100px] h-[100px] rounded-full object-cover shrink-0"
-          />
-          <div className="flex-1">
-            <h4 className="text-[18px] font-semibold text-[#2D6A4F]">{post.author}</h4>
-            <p className="text-[14px] text-[#636E72] mt-1">
-              Nutricionista Clínica (CRN 28762) & CEO Km Zero
+        <div className="mt-12 bg-secondary/5 rounded-xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-center sm:items-start border border-secondary/10">
+          <div className="w-24 h-24 rounded-full overflow-hidden shrink-0 border-4 border-white shadow-md">
+            <img
+              src="https://img.usecurling.com/p/200/200?q=nutritionist&seed=1"
+              alt="Adriana Araújo"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="flex-1 text-center sm:text-left">
+            <h3 className="text-xl font-bold text-primary mb-1">
+              {post.author || 'Adriana Araújo'}
+            </h3>
+            <p className="text-sm font-medium text-secondary mb-3">
+              Especialista em Nutrição e Proteção Integrada
             </p>
-            <p className="text-[14px] text-[#2D3436] mt-2 leading-[1.6]">
-              Especialista em Nutrição Clínica e Proteção Patrimonial, unindo ciência rigorosa e
-              cuidado humano para blindar a saúde e o futuro da sua família. Ciência que transforma.
-              Amor que inspira.
+            <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
+              Com formação em Nutrição, transformo vidas aliando saúde metabólica e planejamento
+              estratégico de vida. Meu foco é entregar resultados reais baseados em evidência.
             </p>
-            <Button asChild className="mt-4 bg-[#2D6A4F] hover:bg-[#1f4a37]">
-              <Link to="/teleconsulta">Agendar Consulta</Link>
-            </Button>
+            <Link to="/teleconsulta">
+              <Button className="bg-primary hover:bg-primary/90">Agendar Teleconsulta</Button>
+            </Link>
           </div>
         </div>
 
         {/* Related Posts */}
         {related.length > 0 && (
-          <div className="mt-12 pt-8 border-t border-[#E0E0E0]">
-            <h3 className="text-[24px] font-semibold text-[#2D6A4F] mb-6">Artigos Relacionados</h3>
+          <div className="mt-16">
+            <h3 className="text-2xl font-bold text-primary mb-6 font-heading border-b pb-4">
+              Leia também
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {related.map((rel) => (
-                <Link
-                  to={`/blog/${rel.slug}`}
-                  key={rel.id}
-                  className="group bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.1)] overflow-hidden hover:shadow-[0_8px_16px_rgba(0,0,0,0.15)] hover:-translate-y-1 transition-all duration-300 flex flex-col"
-                >
-                  <img
-                    src={rel.featured_image_url || 'https://img.usecurling.com/p/400/300?q=article'}
-                    alt={rel.title}
-                    className="h-[120px] w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="p-4 flex flex-col flex-grow">
-                    <span className="text-[10px] bg-[#2D6A4F]/10 text-[#2D6A4F] px-2 py-1 rounded font-semibold uppercase self-start mb-2">
-                      {rel.category}
-                    </span>
-                    <h4 className="font-semibold text-sm text-[#2D6A4F] line-clamp-2">
-                      {rel.title}
-                    </h4>
+                <Link to={`/blog/${rel.slug}`} key={rel.id} className="group flex flex-col gap-3">
+                  <div className="h-40 rounded-lg overflow-hidden bg-muted relative">
+                    {rel.featured_image_url && (
+                      <img
+                        src={rel.featured_image_url}
+                        alt={rel.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    )}
                   </div>
+                  <h4 className="font-bold text-base leading-tight group-hover:text-primary transition-colors line-clamp-2">
+                    {rel.title}
+                  </h4>
                 </Link>
               ))}
             </div>

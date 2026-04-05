@@ -37,6 +37,18 @@ const AdminCROMetrics = lazy(() => import('./pages/admin/AdminCROMetrics'))
 const AdminSecurity = lazy(() => import('./pages/admin/AdminSecurity'))
 const AdminSMTP = lazy(() => import('./pages/admin/AdminSMTP'))
 const AdminBlog = lazy(() => import('./pages/admin/AdminBlog'))
+const AdminCRM = lazy(() => import('./pages/admin/AdminCRM'))
+const AdminExecutiveDashboard = lazy(() => import('./pages/admin/AdminExecutiveDashboard'))
+const AdminPurchases = lazy(() => import('./pages/admin/AdminPurchases'))
+const AdminReports = lazy(() => import('./pages/admin/AdminReports'))
+const AdminForms = lazy(() => import('./pages/admin/AdminForms'))
+const AdminLeadAnalytics = lazy(() => import('./pages/admin/AdminLeadAnalytics'))
+
+const StudentLogin = lazy(() => import('./pages/auth/StudentLogin'))
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'))
+const ChangePassword = lazy(() => import('./pages/auth/ChangePassword'))
+const StudentProfile = lazy(() => import('./pages/StudentProfile'))
 
 const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
   <Suspense
@@ -71,6 +83,46 @@ const App = () => (
             <Route path="/ebook-gratuito" element={<EbookGratuito />} />
             <Route path="/obrigado-ebook" element={<ObrigadoEbook />} />
             <Route path="/ebooks-pagos" element={<EbooksPagos />} />
+            <Route
+              path="/login"
+              element={
+                <SuspenseWrapper>
+                  <StudentLogin />
+                </SuspenseWrapper>
+              }
+            />
+            <Route
+              path="/forgot-password"
+              element={
+                <SuspenseWrapper>
+                  <ForgotPassword />
+                </SuspenseWrapper>
+              }
+            />
+            <Route
+              path="/reset-password"
+              element={
+                <SuspenseWrapper>
+                  <ResetPassword />
+                </SuspenseWrapper>
+              }
+            />
+            <Route
+              path="/change-password"
+              element={
+                <SuspenseWrapper>
+                  <ChangePassword />
+                </SuspenseWrapper>
+              }
+            />
+            <Route
+              path="/dashboard/profile"
+              element={
+                <SuspenseWrapper>
+                  <StudentProfile />
+                </SuspenseWrapper>
+              }
+            />
             <Route
               path="/cursos"
               element={
@@ -124,6 +176,54 @@ const App = () => (
             />
             <Route path="posts" element={<Navigate replace to="/admin/blog" />} />
             <Route path="agendamentos" element={<AdminAgendamentos />} />
+            <Route
+              path="crm"
+              element={
+                <SuspenseWrapper>
+                  <AdminCRM />
+                </SuspenseWrapper>
+              }
+            />
+            <Route
+              path="dashboard-executivo"
+              element={
+                <SuspenseWrapper>
+                  <AdminExecutiveDashboard />
+                </SuspenseWrapper>
+              }
+            />
+            <Route
+              path="purchases"
+              element={
+                <SuspenseWrapper>
+                  <AdminPurchases />
+                </SuspenseWrapper>
+              }
+            />
+            <Route
+              path="reports"
+              element={
+                <SuspenseWrapper>
+                  <AdminReports />
+                </SuspenseWrapper>
+              }
+            />
+            <Route
+              path="forms"
+              element={
+                <SuspenseWrapper>
+                  <AdminForms />
+                </SuspenseWrapper>
+              }
+            />
+            <Route
+              path="lead-analytics"
+              element={
+                <SuspenseWrapper>
+                  <AdminLeadAnalytics />
+                </SuspenseWrapper>
+              }
+            />
             <Route
               path="campaigns"
               element={

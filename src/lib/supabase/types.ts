@@ -96,6 +96,36 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_categories: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           author: string | null
@@ -106,6 +136,8 @@ export type Database = {
           featured_image_url: string | null
           id: string
           published: boolean | null
+          published_date: string | null
+          reading_time_minutes: number | null
           slug: string
           tags: string[] | null
           title: string
@@ -121,6 +153,8 @@ export type Database = {
           featured_image_url?: string | null
           id?: string
           published?: boolean | null
+          published_date?: string | null
+          reading_time_minutes?: number | null
           slug: string
           tags?: string[] | null
           title: string
@@ -136,6 +170,8 @@ export type Database = {
           featured_image_url?: string | null
           id?: string
           published?: boolean | null
+          published_date?: string | null
+          reading_time_minutes?: number | null
           slug?: string
           tags?: string[] | null
           title?: string
@@ -820,6 +856,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      increment_blog_view: { Args: { post_slug: string }; Returns: undefined }
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
@@ -985,6 +1022,14 @@ export const Constants = {
 //   created_at: timestamp with time zone (not null, default: now())
 //   avatar_url: text (nullable)
 //   social_url: text (nullable)
+// Table: blog_categories
+//   id: uuid (not null, default: gen_random_uuid())
+//   name: text (not null)
+//   slug: text (not null)
+//   description: text (nullable)
+//   color: text (nullable)
+//   icon: text (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: blog_posts
 //   id: uuid (not null, default: gen_random_uuid())
 //   title: text (not null)
@@ -999,6 +1044,8 @@ export const Constants = {
 //   views: integer (nullable, default: 0)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
+//   published_date: timestamp with time zone (nullable, default: now())
+//   reading_time_minutes: integer (nullable, default: 0)
 // Table: candidatos
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -1183,6 +1230,10 @@ export const Constants = {
 // Table: avaliacoes
 //   CHECK avaliacoes_nota_check: CHECK (((nota >= 1) AND (nota <= 5)))
 //   PRIMARY KEY avaliacoes_pkey: PRIMARY KEY (id)
+// Table: blog_categories
+//   UNIQUE blog_categories_name_key: UNIQUE (name)
+//   PRIMARY KEY blog_categories_pkey: PRIMARY KEY (id)
+//   UNIQUE blog_categories_slug_key: UNIQUE (slug)
 // Table: blog_posts
 //   PRIMARY KEY blog_posts_pkey: PRIMARY KEY (id)
 //   UNIQUE blog_posts_slug_key: UNIQUE (slug)
@@ -1268,6 +1319,11 @@ export const Constants = {
 //     USING: (ativo = true)
 //   Policy "Allow public read active avaliacoes" (SELECT, PERMISSIVE) roles={public}
 //     USING: (ativo = true)
+// Table: blog_categories
+//   Policy "blog_categories_admin" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
+//   Policy "blog_categories_public" (SELECT, PERMISSIVE) roles={public}
+//     USING: true
 // Table: blog_posts
 //   Policy "blog_posts_admin" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
@@ -1406,6 +1462,19 @@ export const Constants = {
 //     ON CONFLICT (id) DO NOTHING;
 //
 //     RETURN NEW;
+//   END;
+//   $function$
+//
+// FUNCTION increment_blog_view(text)
+//   CREATE OR REPLACE FUNCTION public.increment_blog_view(post_slug text)
+//    RETURNS void
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     UPDATE public.blog_posts
+//     SET views = views + 1
+//     WHERE slug = post_slug;
 //   END;
 //   $function$
 //
@@ -1588,6 +1657,9 @@ export const Constants = {
 // --- INDEXES ---
 // Table: access_logs
 //   CREATE INDEX idx_access_logs_user_email ON public.access_logs USING btree (user_email)
+// Table: blog_categories
+//   CREATE UNIQUE INDEX blog_categories_name_key ON public.blog_categories USING btree (name)
+//   CREATE UNIQUE INDEX blog_categories_slug_key ON public.blog_categories USING btree (slug)
 // Table: blog_posts
 //   CREATE UNIQUE INDEX blog_posts_slug_key ON public.blog_posts USING btree (slug)
 // Table: clients
