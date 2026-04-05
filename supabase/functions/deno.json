@@ -12,6 +12,12 @@
     "integrate-brevo": 3,
     "hotmart-sync": 2,
     "send-brevo-email": 2,
-    "send-whatsapp-message": 2
+    "send-whatsapp-message": 2,
+    "process-purchase": 1,
+    "generate-report": 1,
+    "update-lead-score": 1,
+    "sync-lead-to-brevo": 1,
+    "nurture-lead": 1,
+    "schedule-reports": 1
   }
 }
