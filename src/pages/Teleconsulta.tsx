@@ -33,11 +33,8 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
-import {
-  trackEvent,
-  trackGoogleAdsConversion,
-  trackMetaPixelConversion,
-} from '@/services/analytics'
+import { trackEvent } from '@/services/analytics'
+import { trackingService } from '@/services/trackingService'
 import { getUTMParams } from '@/services/utm'
 import { useSEO } from '@/services/seo'
 
@@ -110,8 +107,8 @@ export default function Teleconsulta() {
         timestamp: Date.now(),
         ...getUTMParams(),
       })
-      trackGoogleAdsConversion(price)
-      trackMetaPixelConversion('Purchase', price, `Consulta ${values.type}`)
+
+      trackingService.trackConsultationBooked(values.type || 'nutrition', price || 197)
 
       toast({ title: 'Sucesso!', description: 'Consulta agendada com sucesso!' })
       setShowPayment(false)

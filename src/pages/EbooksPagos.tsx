@@ -20,11 +20,8 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
 import { Loader2, BookOpen } from 'lucide-react'
-import {
-  trackEvent,
-  trackGoogleAdsConversion,
-  trackMetaPixelConversion,
-} from '@/services/analytics'
+import { trackEvent } from '@/services/analytics'
+import { trackingService } from '@/services/trackingService'
 import { getUTMParams } from '@/services/utm'
 import { useSEO } from '@/services/seo'
 import { ExitIntentPopup } from '@/components/ExitIntentPopup'
@@ -99,8 +96,8 @@ export default function EbooksPagos() {
         product_type: 'ebook-paid',
         ...getUTMParams(),
       })
-      trackGoogleAdsConversion(selectedEbook.price)
-      trackMetaPixelConversion('Purchase', selectedEbook.price, selectedEbook.name)
+
+      trackingService.trackPurchase(selectedEbook.price, 'BRL', selectedEbook.id)
 
       toast({ title: 'Sucesso!', description: 'Compra realizada. Verifique seu e-mail.' })
       setSelectedEbook(null)
@@ -160,6 +157,12 @@ export default function EbooksPagos() {
                     trackEvent('cta_click', {
                       cta_text: 'Comprar Agora',
                       page_path: '/ebooks-pagos',
+                    })
+                    trackingService.trackEvent('ViewContent', {
+                      content_name: ebook.name,
+                      content_type: 'product',
+                      value: ebook.price,
+                      currency: 'BRL',
                     })
                     handleBuy(ebook)
                   }}

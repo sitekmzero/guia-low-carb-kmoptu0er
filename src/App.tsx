@@ -24,6 +24,7 @@ import EbooksPagos from './pages/EbooksPagos'
 import AdminAgendamentos from './pages/admin/AdminAgendamentos'
 import { AuthProvider } from './hooks/use-auth'
 import { PageTracker } from './components/PageTracker'
+import { TrackingInitializer } from './components/TrackingInitializer'
 import { Loader2 } from 'lucide-react'
 
 const Cursos = lazy(() => import('./pages/Cursos'))
@@ -43,6 +44,7 @@ const AdminPurchases = lazy(() => import('./pages/admin/AdminPurchases'))
 const AdminReports = lazy(() => import('./pages/admin/AdminReports'))
 const AdminForms = lazy(() => import('./pages/admin/AdminForms'))
 const AdminLeadAnalytics = lazy(() => import('./pages/admin/AdminLeadAnalytics'))
+const AdminTracking = lazy(() => import('./pages/admin/AdminTracking'))
 
 const StudentLogin = lazy(() => import('./pages/auth/StudentLogin'))
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'))
@@ -65,6 +67,7 @@ const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
 const App = () => (
   <AuthProvider>
     <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
+      <TrackingInitializer />
       <PageTracker />
       <TooltipProvider>
         <Toaster />
@@ -253,6 +256,14 @@ const App = () => (
               element={
                 <SuspenseWrapper>
                   <AdminSecurity />
+                </SuspenseWrapper>
+              }
+            />
+            <Route
+              path="tracking"
+              element={
+                <SuspenseWrapper>
+                  <AdminTracking />
                 </SuspenseWrapper>
               }
             />

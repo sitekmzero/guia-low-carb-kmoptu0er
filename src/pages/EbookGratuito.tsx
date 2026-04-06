@@ -16,11 +16,8 @@ import {
 } from '@/components/ui/form'
 import { toast } from '@/hooks/use-toast'
 import { Loader2, CheckCircle, ShieldCheck } from 'lucide-react'
-import {
-  trackEvent,
-  trackGoogleAdsConversion,
-  trackMetaPixelConversion,
-} from '@/services/analytics'
+import { trackEvent } from '@/services/analytics'
+import { trackingService } from '@/services/trackingService'
 import { getUTMParams } from '@/services/utm'
 import { useSEO } from '@/services/seo'
 import { ABTestVariant } from '@/components/ABTestVariant'
@@ -76,8 +73,8 @@ export default function EbookGratuito() {
         timestamp: Date.now(),
         ...getUTMParams(),
       })
-      trackGoogleAdsConversion(500)
-      trackMetaPixelConversion('Lead', 500, 'E-book Gratuito')
+
+      trackingService.trackLead('ebook-free', 'nutrition')
 
       toast({ title: 'Sucesso!', description: 'E-book enviado para seu e-mail!' })
 

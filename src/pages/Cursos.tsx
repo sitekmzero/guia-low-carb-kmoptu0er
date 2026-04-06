@@ -20,11 +20,8 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
 import { Loader2, MonitorPlay, CheckCircle } from 'lucide-react'
-import {
-  trackEvent,
-  trackGoogleAdsConversion,
-  trackMetaPixelConversion,
-} from '@/services/analytics'
+import { trackEvent } from '@/services/analytics'
+import { trackingService } from '@/services/trackingService'
 import { getUTMParams } from '@/services/utm'
 import { useSEO } from '@/services/seo'
 import { SocialProof } from '@/components/SocialProof'
@@ -112,8 +109,8 @@ export default function Cursos() {
         timestamp: Date.now(),
         ...getUTMParams(),
       })
-      trackGoogleAdsConversion(selectedCurso.price)
-      trackMetaPixelConversion('Purchase', selectedCurso.price, selectedCurso.name)
+
+      trackingService.trackCourseEnrolled(selectedCurso.name, selectedCurso.price)
 
       toast({ title: 'Sucesso!', description: 'Inscrição realizada com sucesso!' })
       setShowPayment(false)

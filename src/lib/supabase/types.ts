@@ -391,6 +391,230 @@ export type Database = {
           },
         ]
       }
+      crm_interactions: {
+        Row: {
+          created_at: string | null
+          duration_minutes: number | null
+          id: string
+          interaction_date: string | null
+          interaction_type: string
+          lead_id: string | null
+          notes: string | null
+          outcome: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          interaction_date?: string | null
+          interaction_type: string
+          lead_id?: string | null
+          notes?: string | null
+          outcome?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          interaction_date?: string | null
+          interaction_type?: string
+          lead_id?: string | null
+          notes?: string | null
+          outcome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'crm_interactions_lead_id_fkey'
+            columns: ['lead_id']
+            isOneToOne: false
+            referencedRelation: 'crm_leads'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      crm_leads: {
+        Row: {
+          company: string | null
+          created_at: string | null
+          email: string
+          id: string
+          interest_level: string | null
+          last_contacted: string | null
+          lead_score: number | null
+          lead_source: string | null
+          lead_status: string | null
+          name: string
+          next_followup: string | null
+          notes: string | null
+          phone: string | null
+          product_interest: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          interest_level?: string | null
+          last_contacted?: string | null
+          lead_score?: number | null
+          lead_source?: string | null
+          lead_status?: string | null
+          name: string
+          next_followup?: string | null
+          notes?: string | null
+          phone?: string | null
+          product_interest?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          company?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          interest_level?: string | null
+          last_contacted?: string | null
+          lead_score?: number | null
+          lead_source?: string | null
+          lead_status?: string | null
+          name?: string
+          next_followup?: string | null
+          notes?: string | null
+          phone?: string | null
+          product_interest?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      crm_pipeline: {
+        Row: {
+          created_at: string | null
+          days_in_stage: number | null
+          deal_value: number | null
+          expected_close_date: string | null
+          id: string
+          lead_id: string | null
+          probability: number | null
+          stage: string
+          stage_entered_date: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          days_in_stage?: number | null
+          deal_value?: number | null
+          expected_close_date?: string | null
+          id?: string
+          lead_id?: string | null
+          probability?: number | null
+          stage: string
+          stage_entered_date?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          days_in_stage?: number | null
+          deal_value?: number | null
+          expected_close_date?: string | null
+          id?: string
+          lead_id?: string | null
+          probability?: number | null
+          stage?: string
+          stage_entered_date?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'crm_pipeline_lead_id_fkey'
+            columns: ['lead_id']
+            isOneToOne: false
+            referencedRelation: 'crm_leads'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      crm_tasks: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string | null
+          due_date: string
+          id: string
+          lead_id: string | null
+          status: string | null
+          task_description: string
+          task_type: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          due_date: string
+          id?: string
+          lead_id?: string | null
+          status?: string | null
+          task_description: string
+          task_type: string
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          due_date?: string
+          id?: string
+          lead_id?: string | null
+          status?: string | null
+          task_description?: string
+          task_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'crm_tasks_lead_id_fkey'
+            columns: ['lead_id']
+            isOneToOne: false
+            referencedRelation: 'crm_leads'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      download_history: {
+        Row: {
+          created_at: string | null
+          download_date: string | null
+          file_size: number | null
+          id: string
+          product_id: string | null
+          product_name: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          download_date?: string | null
+          file_size?: number | null
+          id?: string
+          product_id?: string | null
+          product_name: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          download_date?: string | null
+          file_size?: number | null
+          id?: string
+          product_id?: string | null
+          product_name?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'download_history_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'products'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       ebooks: {
         Row: {
           category: string | null
@@ -451,6 +675,45 @@ export type Database = {
           subscription_status?: string | null
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      lead_analytics: {
+        Row: {
+          average_days_to_conversion: number | null
+          average_lead_score: number | null
+          conversion_rate: number | null
+          converted_leads: number | null
+          created_at: string | null
+          date: string | null
+          id: string
+          new_leads: number | null
+          qualified_leads: number | null
+          total_leads: number | null
+        }
+        Insert: {
+          average_days_to_conversion?: number | null
+          average_lead_score?: number | null
+          conversion_rate?: number | null
+          converted_leads?: number | null
+          created_at?: string | null
+          date?: string | null
+          id?: string
+          new_leads?: number | null
+          qualified_leads?: number | null
+          total_leads?: number | null
+        }
+        Update: {
+          average_days_to_conversion?: number | null
+          average_lead_score?: number | null
+          conversion_rate?: number | null
+          converted_leads?: number | null
+          created_at?: string | null
+          date?: string | null
+          id?: string
+          new_leads?: number | null
+          qualified_leads?: number | null
+          total_leads?: number | null
         }
         Relationships: []
       }
@@ -735,6 +998,83 @@ export type Database = {
         }
         Relationships: []
       }
+      report_deliveries: {
+        Row: {
+          created_at: string | null
+          delivery_status: string | null
+          id: string
+          open_date: string | null
+          recipient_email: string
+          report_id: string | null
+          sent_date: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          delivery_status?: string | null
+          id?: string
+          open_date?: string | null
+          recipient_email: string
+          report_id?: string | null
+          sent_date?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          delivery_status?: string | null
+          id?: string
+          open_date?: string | null
+          recipient_email?: string
+          report_id?: string | null
+          sent_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'report_deliveries_report_id_fkey'
+            columns: ['report_id']
+            isOneToOne: false
+            referencedRelation: 'reports'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      reports: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_generated: string | null
+          next_scheduled: string | null
+          recipients: string[] | null
+          report_name: string
+          report_type: string
+          schedule: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_generated?: string | null
+          next_scheduled?: string | null
+          recipients?: string[] | null
+          report_name: string
+          report_type: string
+          schedule: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_generated?: string | null
+          next_scheduled?: string | null
+          recipients?: string[] | null
+          report_name?: string
+          report_type?: string
+          schedule?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       settings: {
         Row: {
           id: string
@@ -823,6 +1163,50 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      user_progress: {
+        Row: {
+          completion_percentage: number | null
+          course_id: string | null
+          created_at: string | null
+          id: string
+          last_accessed: string | null
+          module_id: string
+          time_spent_minutes: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completion_percentage?: number | null
+          course_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_accessed?: string | null
+          module_id: string
+          time_spent_minutes?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completion_percentage?: number | null
+          course_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_accessed?: string | null
+          module_id?: string
+          time_spent_minutes?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'user_progress_course_id_fkey'
+            columns: ['course_id']
+            isOneToOne: false
+            referencedRelation: 'products'
+            referencedColumns: ['id']
+          },
+        ]
       }
       vendas: {
         Row: {
@@ -1099,6 +1483,60 @@ export const Constants = {
 //   detalhes: jsonb (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
 //   status: text (nullable, default: 'pending'::text)
+// Table: crm_interactions
+//   id: uuid (not null, default: gen_random_uuid())
+//   lead_id: uuid (nullable)
+//   interaction_type: text (not null)
+//   interaction_date: timestamp with time zone (nullable, default: now())
+//   duration_minutes: integer (nullable)
+//   notes: text (nullable)
+//   outcome: text (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+// Table: crm_leads
+//   id: uuid (not null, default: gen_random_uuid())
+//   email: text (not null)
+//   name: text (not null)
+//   phone: text (nullable)
+//   company: text (nullable)
+//   lead_source: text (nullable)
+//   lead_status: text (nullable, default: 'new'::text)
+//   lead_score: integer (nullable, default: 0)
+//   interest_level: text (nullable)
+//   product_interest: _text (nullable)
+//   notes: text (nullable)
+//   last_contacted: timestamp with time zone (nullable)
+//   next_followup: timestamp with time zone (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: crm_pipeline
+//   id: uuid (not null, default: gen_random_uuid())
+//   lead_id: uuid (nullable)
+//   stage: text (not null)
+//   stage_entered_date: timestamp with time zone (nullable, default: now())
+//   days_in_stage: integer (nullable, default: 0)
+//   expected_close_date: timestamp with time zone (nullable)
+//   deal_value: numeric (nullable)
+//   probability: integer (nullable, default: 0)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: crm_tasks
+//   id: uuid (not null, default: gen_random_uuid())
+//   lead_id: uuid (nullable)
+//   task_type: text (not null)
+//   task_description: text (not null)
+//   due_date: timestamp with time zone (not null)
+//   status: text (nullable, default: 'pending'::text)
+//   assigned_to: text (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   completed_at: timestamp with time zone (nullable)
+// Table: download_history
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (nullable)
+//   product_id: uuid (nullable)
+//   product_name: text (not null)
+//   download_date: timestamp with time zone (nullable, default: now())
+//   file_size: integer (nullable, default: 0)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: ebooks
 //   id: uuid (not null, default: gen_random_uuid())
 //   title: text (not null)
@@ -1116,6 +1554,17 @@ export const Constants = {
 //   subscribed_at: timestamp with time zone (nullable, default: now())
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
+// Table: lead_analytics
+//   id: uuid (not null, default: gen_random_uuid())
+//   date: timestamp with time zone (nullable, default: now())
+//   total_leads: integer (nullable, default: 0)
+//   new_leads: integer (nullable, default: 0)
+//   qualified_leads: integer (nullable, default: 0)
+//   converted_leads: integer (nullable, default: 0)
+//   conversion_rate: numeric (nullable, default: 0)
+//   average_lead_score: numeric (nullable, default: 0)
+//   average_days_to_conversion: integer (nullable, default: 0)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: leads
 //   id: uuid (not null, default: gen_random_uuid())
 //   created_at: timestamp with time zone (not null, default: now())
@@ -1193,6 +1642,25 @@ export const Constants = {
 //   user_email: text (not null)
 //   request_date: timestamp with time zone (not null, default: now())
 //   status: text (not null, default: 'pending'::text)
+// Table: report_deliveries
+//   id: uuid (not null, default: gen_random_uuid())
+//   report_id: uuid (nullable)
+//   recipient_email: text (not null)
+//   sent_date: timestamp with time zone (nullable, default: now())
+//   delivery_status: text (nullable, default: 'sent'::text)
+//   open_date: timestamp with time zone (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+// Table: reports
+//   id: uuid (not null, default: gen_random_uuid())
+//   report_type: text (not null)
+//   report_name: text (not null)
+//   schedule: text (not null)
+//   last_generated: timestamp with time zone (nullable)
+//   next_scheduled: timestamp with time zone (nullable)
+//   recipients: _text (nullable)
+//   status: text (nullable, default: 'active'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: settings
 //   id: uuid (not null, default: gen_random_uuid())
 //   key: text (not null)
@@ -1212,6 +1680,16 @@ export const Constants = {
 //   is_admin: boolean (not null, default: false)
 //   email: text (nullable)
 //   role: text (nullable, default: 'user'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: user_progress
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (nullable)
+//   course_id: uuid (nullable)
+//   module_id: text (not null)
+//   last_accessed: timestamp with time zone (nullable, default: now())
+//   time_spent_minutes: integer (nullable, default: 0)
+//   completion_percentage: integer (nullable, default: 0)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
 // Table: vendas
@@ -1257,6 +1735,22 @@ export const Constants = {
 // Table: cotacoes
 //   FOREIGN KEY cotacoes_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
 //   PRIMARY KEY cotacoes_pkey: PRIMARY KEY (id)
+// Table: crm_interactions
+//   FOREIGN KEY crm_interactions_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES crm_leads(id) ON DELETE CASCADE
+//   PRIMARY KEY crm_interactions_pkey: PRIMARY KEY (id)
+// Table: crm_leads
+//   UNIQUE crm_leads_email_key: UNIQUE (email)
+//   PRIMARY KEY crm_leads_pkey: PRIMARY KEY (id)
+// Table: crm_pipeline
+//   FOREIGN KEY crm_pipeline_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES crm_leads(id) ON DELETE CASCADE
+//   PRIMARY KEY crm_pipeline_pkey: PRIMARY KEY (id)
+// Table: crm_tasks
+//   FOREIGN KEY crm_tasks_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES crm_leads(id) ON DELETE CASCADE
+//   PRIMARY KEY crm_tasks_pkey: PRIMARY KEY (id)
+// Table: download_history
+//   PRIMARY KEY download_history_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY download_history_product_id_fkey: FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+//   FOREIGN KEY download_history_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: ebooks
 //   PRIMARY KEY ebooks_pkey: PRIMARY KEY (id)
 // Table: email_subscriptions
@@ -1264,6 +1758,8 @@ export const Constants = {
 //   PRIMARY KEY email_subscriptions_pkey: PRIMARY KEY (id)
 //   CHECK email_subscriptions_subscription_status_check: CHECK ((subscription_status = ANY (ARRAY['active'::text, 'unsubscribed'::text])))
 //   FOREIGN KEY email_subscriptions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: lead_analytics
+//   PRIMARY KEY lead_analytics_pkey: PRIMARY KEY (id)
 // Table: leads
 //   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY leads_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL
@@ -1285,6 +1781,11 @@ export const Constants = {
 // Table: reactivation_requests
 //   PRIMARY KEY reactivation_requests_pkey: PRIMARY KEY (id)
 //   CHECK reactivation_requests_status_check: CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text])))
+// Table: report_deliveries
+//   PRIMARY KEY report_deliveries_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY report_deliveries_report_id_fkey: FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE
+// Table: reports
+//   PRIMARY KEY reports_pkey: PRIMARY KEY (id)
 // Table: settings
 //   UNIQUE settings_key_key: UNIQUE (key)
 //   PRIMARY KEY settings_pkey: PRIMARY KEY (id)
@@ -1295,6 +1796,10 @@ export const Constants = {
 // Table: user_profiles
 //   FOREIGN KEY user_profiles_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY user_profiles_pkey: PRIMARY KEY (id)
+// Table: user_progress
+//   FOREIGN KEY user_progress_course_id_fkey: FOREIGN KEY (course_id) REFERENCES products(id) ON DELETE CASCADE
+//   PRIMARY KEY user_progress_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY user_progress_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: vendas
 //   PRIMARY KEY vendas_pkey: PRIMARY KEY (id)
 
@@ -1359,6 +1864,21 @@ export const Constants = {
 //   Policy "Allow authenticated all on cotacoes" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: crm_interactions
+//   Policy "admin_all_crm_interactions" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+// Table: crm_leads
+//   Policy "admin_all_crm_leads" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+// Table: crm_pipeline
+//   Policy "admin_all_crm_pipeline" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+// Table: crm_tasks
+//   Policy "admin_all_crm_tasks" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+// Table: download_history
+//   Policy "user_own_downloads" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (user_id = auth.uid())
 // Table: ebooks
 //   Policy "ebooks_admin" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
@@ -1369,6 +1889,9 @@ export const Constants = {
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
 //   Policy "email_subscriptions_user_all" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: ((user_id = auth.uid()) OR (email = auth.email()))
+// Table: lead_analytics
+//   Policy "admin_all_lead_analytics" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
 // Table: leads
 //   Policy "Allow anon insert on leads" (INSERT, PERMISSIVE) roles={anon}
 //     WITH CHECK: true
@@ -1417,6 +1940,12 @@ export const Constants = {
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
 //   Policy "Allow public insert on reactivation_requests" (INSERT, PERMISSIVE) roles={public}
 //     WITH CHECK: true
+// Table: report_deliveries
+//   Policy "admin_all_report_deliveries" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+// Table: reports
+//   Policy "admin_all_reports" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
 // Table: settings
 //   Policy "admin_all_settings" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
@@ -1434,6 +1963,9 @@ export const Constants = {
 //     USING: (id = auth.uid())
 //   Policy "public_read_user_profiles" (SELECT, PERMISSIVE) roles={public}
 //     USING: (is_admin = false)
+// Table: user_progress
+//   Policy "user_own_progress" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (user_id = auth.uid())
 // Table: vendas
 //   Policy "admin_all_vendas" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM user_profiles   WHERE ((user_profiles.id = auth.uid()) AND (user_profiles.is_admin = true))))
@@ -1665,6 +2197,8 @@ export const Constants = {
 // Table: clients
 //   CREATE UNIQUE INDEX clients_email_key ON public.clients USING btree (email)
 //   CREATE INDEX clients_status_idx ON public.clients USING btree (status)
+// Table: crm_leads
+//   CREATE UNIQUE INDEX crm_leads_email_key ON public.crm_leads USING btree (email)
 // Table: email_subscriptions
 //   CREATE UNIQUE INDEX email_subscriptions_email_key ON public.email_subscriptions USING btree (email)
 // Table: reactivation_requests
