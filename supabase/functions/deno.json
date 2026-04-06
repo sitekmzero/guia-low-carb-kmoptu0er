@@ -18,6 +18,7 @@
     "update-lead-score": 1,
     "sync-lead-to-brevo": 1,
     "nurture-lead": 1,
-    "schedule-reports": 1
+    "schedule-reports": 1,
+    "validate-tracking": 1
   }
 }
