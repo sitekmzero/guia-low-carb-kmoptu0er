@@ -7,24 +7,48 @@ export function TrackingInitializer() {
   useEffect(() => {
     try {
       if (typeof window !== 'undefined') {
-        // Initialize Meta Pixel if not already present
-        if (!window.fbq) {
-          const script = document.createElement('script')
-          script.innerHTML = `
-            !function(f,b,e,v,n,t,s)
-            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-            n.queue=[];t=b.createElement(e);t.async=!0;
-            t.src=v;s=b.getElementsByTagName(e)[0];
-            s.parentNode.insertBefore(t,s)}(window, document,'script',
-            'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', '181692372415384');
-            fbq('track', 'PageView');
-          `
-          document.head.appendChild(script)
-        } else {
-          window.fbq('track', 'PageView')
+        // Check if running in preview / iframe / dev environment
+        let isPreview = false
+        try {
+          isPreview =
+            window.self !== window.top ||
+            window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1' ||
+            window.location.hostname.includes('preview') ||
+            window.location.hostname.includes('goskip.dev') ||
+            (typeof document !== 'undefined' && document.referrer.includes('goskip.dev'))
+        } catch {
+          isPreview = true
+        }
+
+        // Initialize Meta Pixel only outside preview / iframe
+        if (!isPreview) {
+          try {
+            if (!window.fbq) {
+              const script = document.createElement('script')
+              script.innerHTML = `
+                try {
+                  !function(f,b,e,v,n,t,s)
+                  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+                  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+                  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+                  n.queue=[];t=b.createElement(e);t.async=!0;
+                  t.src=v;s=b.getElementsByTagName(e)[0];
+                  s.parentNode.insertBefore(t,s)}(window, document,'script',
+                  'https://connect.facebook.net/en_US/fbevents.js');
+                  if (window.fbq) {
+                    fbq('init', '181692372415384');
+                    fbq('track', 'PageView');
+                  }
+                } catch { /* intentionally ignored */ }
+              `
+              document.head.appendChild(script)
+            } else {
+              window.fbq('track', 'PageView')
+            }
+          } catch {
+            // Silently fail Meta Pixel errors
+          }
         }
 
         // Initialize GA4 & Google Ads if not already present

@@ -33,7 +33,15 @@ export const trackMetaPixelConversion = (
   value: number,
   contentName: string = '',
 ) => {
-  if (typeof window !== 'undefined' && (window as any).fbq) {
-    ;(window as any).fbq('track', eventName, { value, currency: 'BRL', content_name: contentName })
+  try {
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      ;(window as any).fbq('track', eventName, {
+        value,
+        currency: 'BRL',
+        content_name: contentName,
+      })
+    }
+  } catch {
+    // Silently fail
   }
 }
