@@ -13,7 +13,6 @@ import Article from './pages/Article'
 import Contato from './pages/Contato'
 import Dashboard from './pages/Dashboard'
 import NotFound from './pages/NotFound'
-import VendasSeguros from './pages/VendasSeguros'
 import VendasCursos from './pages/VendasCursos'
 import EbookGratuito from './pages/EbookGratuito'
 import ObrigadoEbook from './pages/ObrigadoEbook'
@@ -81,7 +80,7 @@ const App = () => (
             <Route path="/blog/:slug" element={<Article />} />
             <Route path="/contato" element={<Contato />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/vendas-seguros" element={<VendasSeguros />} />
+            <Route path="/vendas-seguros" element={<Navigate replace to="/servicos" />} />
             <Route path="/vendas-cursos" element={<VendasCursos />} />
             <Route path="/ebook-gratuito" element={<EbookGratuito />} />
             <Route path="/obrigado-ebook" element={<ObrigadoEbook />} />

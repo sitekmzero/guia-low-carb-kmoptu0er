@@ -67,7 +67,7 @@ const timeline = [
   {
     t: 'A Transformação de Gabriel',
     s: 'Quando a ciência encontra o amor de mãe',
-    c: 'Gabriel me disse que achava que estava fadado a ser gordo para sempre, até que finalmente entendeu que não era verdade. Essa jornada me mostrou que a verdadeira proteção não é só patrimonial, mas também blindar a saúde e o futuro da família com ciência e amor. Não por currículo. Por missão.',
+    c: 'Gabriel me disse que achava que estava fadado a ser gordo para sempre, até que finalmente entendeu que não era verdade. Essa jornada me mostrou que a verdadeira proteção é blindar a saúde e a longevidade da família com ciência, acolhimento e amor. Não por currículo. Por missão.',
     i: Heart,
   },
 ]
@@ -75,17 +75,17 @@ const timeline = [
 const pilares = [
   {
     t: 'Saúde Metabólica',
-    c: 'Nutrição clínica com foco em diabetes, emagrecimento sustentável e longevidade. Embasamento com mais de 20 anos de pesquisa.',
+    c: 'Nutrição clínica com foco em resistência insulínica, diabetes, emagrecimento sustentável e longevidade com embasamento científico.',
     i: Heart,
   },
   {
-    t: 'Proteção Patrimonial',
-    c: 'Corretora SUSEP há mais de 20 anos. Soluções completas e seguras em seguros de vida, saúde, automóvel e empresarial.',
+    t: 'Comportamento Alimentar',
+    c: 'Compreensão profunda da relação entre mente e metabolismo, promovendo autonomia alimentar sem dietas punitivas.',
     i: Shield,
   },
   {
-    t: 'Visão de Risco',
-    c: 'Abordagem integrada única: protegemos o corpo através da saúde e blindamos a estabilidade financeira e o futuro da sua família.',
+    t: 'Prevenção & Longevidade',
+    c: 'Abordagem clínica focada em prevenir doenças crônicas, restaurar marcadores inflamatórios e garantir vitalidade.',
     i: Activity,
   },
 ]
@@ -94,28 +94,45 @@ export default function Sobre() {
   return (
     <div className="flex flex-col w-full min-h-screen">
       {/* Hero Section */}
-      <section className="relative min-h-[400px] md:min-h-[600px] flex items-center justify-center bg-gradient-to-b from-primary/90 to-background/5 dark:to-background px-6 pt-24 overflow-hidden">
-        <div className="absolute inset-0 z-0 bg-black/40 dark:bg-black/60">
-          <img
-            src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Fotos/Adriana%20consultorio.png"
-            alt="Adriana de Freitas Oliveira Araújo"
-            className="w-full h-full object-cover mix-blend-overlay"
-          />
-        </div>
-        <div className="relative z-10 text-center max-w-3xl animate-fade-in-up">
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 drop-shadow-md">
-            Não por currículo. Por missão.
-          </h1>
-          <p className="text-lg md:text-2xl text-white/90 font-medium mb-10 drop-shadow">
-            Ciência que transforma. Amor que inspira.
-          </p>
-          <Button
-            size="lg"
-            className="bg-primary text-white hover:bg-primary/80 rounded-full px-8 py-6 text-lg transition-transform hover:scale-105"
-            asChild
-          >
-            <a href="#historia">Conheça minha história</a>
-          </Button>
+      <section className="relative min-h-[580px] md:min-h-[680px] flex items-center justify-center bg-gradient-to-b from-primary/95 via-primary/85 to-background dark:to-background px-6 pt-28 pb-20 overflow-hidden">
+        <div className="container max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+          <div className="w-full md:w-3/5 text-center md:text-left animate-fade-in-up">
+            <div className="inline-block mb-4 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md text-white text-sm font-semibold border border-white/20">
+              Nutrição Clínica & Ciência Metabólica
+            </div>
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 drop-shadow-md font-heading">
+              Não por currículo. Por missão.
+            </h1>
+            <p className="text-lg md:text-2xl text-white/90 font-medium mb-8 drop-shadow">
+              Ciência que transforma. Amor que inspira.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+              <Button
+                size="lg"
+                className="bg-white text-primary hover:bg-white/90 font-bold rounded-full px-8 py-6 text-lg transition-transform hover:scale-105 shadow-xl"
+                asChild
+              >
+                <a href="#historia">Conheça Minha História</a>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="rounded-full px-8 py-6 text-lg border-white text-white hover:bg-white/10"
+                asChild
+              >
+                <Link to="/teleconsulta">Agendar Consulta</Link>
+              </Button>
+            </div>
+          </div>
+          <div className="w-full md:w-2/5 flex justify-center animate-fade-in-up animation-delay-200">
+            <div className="relative w-full max-w-xs md:max-w-sm rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white/30 bg-primary-foreground/10 backdrop-blur-sm">
+              <img
+                src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Fotos/Adriana%20consultorio.png"
+                alt="Adriana de Freitas Oliveira Araújo"
+                className="w-full h-auto object-contain object-top"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -154,9 +171,11 @@ export default function Sobre() {
       {/* Diferencial */}
       <Section alt>
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">O Diferencial Único</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
+            Pilares do Cuidado Clínico
+          </h2>
           <h3 className="text-xl text-muted-foreground font-medium">
-            Onde nutrição clínica encontra proteção patrimonial
+            Nutrição baseada em evidências e humanização individualizada
           </h3>
         </div>
         <div className="grid md:grid-cols-3 gap-8">
@@ -175,49 +194,46 @@ export default function Sobre() {
         </div>
       </Section>
 
-      {/* Credenciais */}
+      {/* Credenciais e Foto */}
       <Section>
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
             Formação e Credenciais
           </h2>
           <h3 className="text-xl text-muted-foreground font-medium">
-            Expertise construída ao longo de duas décadas
+            Qualificação técnica e compromisso com o Código de Ética do Nutricionista
           </h3>
         </div>
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="bg-muted/50 p-8 rounded-2xl border">
-            <h4 className="text-xl font-bold text-primary mb-6 flex items-center gap-3">
-              <Shield className="text-primary" /> Seguros & Proteção
-            </h4>
-            <ul className="space-y-4">
-              {[
-                'Habilitada pela SUSEP desde 2003',
-                'CEO Km Zero Corretora de Seguros',
-                'Bacharel em Administração (Uniube)',
-                'Especialista em Seguros de Vida, Auto e Empresarial',
-              ].map((item, j) => (
-                <li key={j} className="flex items-start gap-3 text-foreground/80">
-                  <CheckCircle2 size={20} className="text-primary shrink-0 mt-0.5" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+        <div className="grid md:grid-cols-12 gap-8 items-center">
+          <div className="md:col-span-5 flex justify-center">
+            <div className="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl border-4 border-primary/20 bg-background/50">
+              <img
+                src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Fotos/Adriana%20consultorio.png"
+                alt="Adriana Araújo Nutricionista Clínica"
+                className="w-full h-auto object-contain object-top"
+              />
+            </div>
           </div>
-          <div className="bg-muted/50 p-8 rounded-2xl border">
-            <h4 className="text-xl font-bold text-primary mb-6 flex items-center gap-3">
-              <GraduationCap className="text-primary" /> Nutrição & Ciência
+          <div className="md:col-span-7 bg-muted/50 p-8 md:p-10 rounded-2xl border space-y-6">
+            <h4 className="text-2xl font-bold text-primary flex items-center gap-3">
+              <GraduationCap className="text-primary w-7 h-7" /> Nutrição & Ciência Clínica
             </h4>
-            <ul className="space-y-4">
+            <p className="text-muted-foreground leading-relaxed">
+              Atuação pautada estritamente nas melhores práticas de nutrição clínica, respeitando a
+              individualidade bioquímica de cada paciente e aplicando estratégias Low Carb validadas
+              pela literatura internacional.
+            </p>
+            <ul className="space-y-4 pt-2">
               {[
                 'Nutricionista Clínica (CRN 28762)',
                 'Bacharel em Nutrição Clínica (UFTM)',
-                'Especialista em Diabetes e Metabolismo',
-                'Especialista em Nutrição Esportiva e Bariátrica',
+                'Especialista em Diabetes, Resistência Insulínica e Metabolismo',
+                'Especialista em Nutrição Esportiva e Acompanhamento Bariátrico',
+                'Pesquisadora contínua em estratégias Low Carb e Cetogênicas',
               ].map((item, j) => (
-                <li key={j} className="flex items-start gap-3 text-foreground/80">
+                <li key={j} className="flex items-start gap-3 text-foreground/90">
                   <CheckCircle2 size={20} className="text-primary shrink-0 mt-0.5" />
-                  <span>{item}</span>
+                  <span className="font-medium">{item}</span>
                 </li>
               ))}
             </ul>
@@ -231,31 +247,36 @@ export default function Sobre() {
           <div className="bg-primary text-white p-8 md:p-10 rounded-2xl shadow-lg">
             <h3 className="text-2xl font-bold mb-4">Nossa Missão</h3>
             <p className="text-lg text-primary-foreground/90 leading-relaxed">
-              Transformar vidas através de nutrição clínica humanizada e proteção patrimonial
-              integrada, combinando ciência rigorosa com amor genuíno pelo bem-estar.
+              Transformar vidas através de nutrição clínica humanizada, combinando ciência rigorosa
+              com acolhimento genuíno para devolver a liberdade metabólica a cada paciente.
             </p>
           </div>
           <div className="bg-card border p-8 md:p-10 rounded-2xl shadow-sm">
             <h3 className="text-2xl font-bold text-primary mb-4">Nossa Visão</h3>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              Ser referência em saúde integral e proteção financeira, criando um mundo onde cada
-              pessoa tem acesso a segurança para proteger sua família.
+              Ser referência em saúde metabólica, nutrição preventiva e longevidade no Brasil,
+              inspirando uma relação livre de culpa com a alimentação e resultados duradouros.
             </p>
           </div>
         </div>
         <div className="text-center">
           <h4 className="text-xl font-bold text-primary mb-6">Nossos Valores</h4>
           <div className="flex flex-wrap justify-center gap-3 md:gap-4">
-            {['Ética', 'Humanização', 'Ciência', 'Transparência', 'Empatia', 'Inovação'].map(
-              (v) => (
-                <span
-                  key={v}
-                  className="px-6 py-2 bg-primary/10 text-primary font-medium rounded-full text-sm md:text-base"
-                >
-                  {v}
-                </span>
-              ),
-            )}
+            {[
+              'Ética Profissional',
+              'Humanização',
+              'Ciência',
+              'Transparência',
+              'Empatia',
+              'Inovação',
+            ].map((v) => (
+              <span
+                key={v}
+                className="px-6 py-2 bg-primary/10 text-primary font-medium rounded-full text-sm md:text-base"
+              >
+                {v}
+              </span>
+            ))}
           </div>
         </div>
       </Section>
@@ -277,11 +298,12 @@ export default function Sobre() {
             </h3>
             <p className="text-lg text-primary-foreground/90 leading-relaxed mb-6">
               Sou esposa de Luiz Fernando, mãe de Lucas e Gabriel, e avó apaixonada do Arthur. Vivo
-              em Uberaba - MG e acredito que saúde e proteção não são luxos — são a base de qualquer
-              projeto de vida que vale a pena construir.
+              em Uberaba - MG e acredito que saúde integral e bem-estar não são luxos — são a base
+              de qualquer projeto de vida que vale a pena construir.
             </p>
             <p className="text-lg font-bold text-white border-l-4 border-white/30 pl-4 py-2 italic">
-              "Tudo o que fazemos é, em última análise, para proteger e cuidar de quem amamos."
+              "Tudo o que fazemos é, em última análise, para devolver vitalidade e cuidar de quem
+              amamos."
             </p>
           </div>
         </div>
@@ -293,8 +315,8 @@ export default function Sobre() {
           Vamos Transformar Seu Futuro?
         </h2>
         <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-          Você merece uma abordagem que cuida de você por inteiro, protegendo seu corpo e a sua
-          família.
+          Você merece uma abordagem que cuida do seu metabolismo por inteiro, trazendo saúde
+          duradoura e qualidade de vida.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <Button size="lg" className="rounded-full text-lg px-8 py-6" asChild>

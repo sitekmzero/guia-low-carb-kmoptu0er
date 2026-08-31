@@ -192,11 +192,12 @@ export default function Article() {
               {post.author || 'Adriana Araújo'}
             </h3>
             <p className="text-sm font-medium text-secondary mb-3">
-              Especialista em Nutrição e Proteção Integrada
+              Nutricionista Clínica Especialista em Low Carb & Metabolismo
             </p>
             <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
-              Com formação em Nutrição, transformo vidas aliando saúde metabólica e planejamento
-              estratégico de vida. Meu foco é entregar resultados reais baseados em evidência.
+              Nutricionista com foco em saúde metabólica, reversão de resistência insulínica e
+              emagrecimento definitivo. Meu trabalho é fundamentado em evidências científicas e
+              atendimento humanizado.
             </p>
             <Link to="/teleconsulta">
               <Button className="bg-primary hover:bg-primary/90">Agendar Teleconsulta</Button>

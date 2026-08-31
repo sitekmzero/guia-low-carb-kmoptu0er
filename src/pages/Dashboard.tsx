@@ -144,8 +144,8 @@ export default function Dashboard() {
               </div>
               <h2 className="text-xl font-bold">Você ainda não tem nenhum conteúdo</h2>
               <p className="text-muted-foreground max-w-md">
-                Adquira nossos cursos ou e-books para começar sua jornada de transformação e
-                proteção.
+                Adquira nossos cursos ou e-books para começar sua jornada de transformação e saúde
+                metabólica.
               </p>
               <Link to="/cursos" className="mt-4">
                 <Button className="bg-primary">Explorar Produtos</Button>

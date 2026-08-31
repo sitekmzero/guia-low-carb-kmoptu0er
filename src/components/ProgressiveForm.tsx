@@ -147,29 +147,29 @@ export function ProgressiveForm({ source = 'landing-page' }: { source?: string }
               <div className="space-y-3">
                 <div
                   className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                  onClick={() => toggleInterest('nutrition')}
+                  onClick={() => toggleInterest('emagrecimento')}
                 >
-                  <Checkbox id="int-1" checked={formData.interests.includes('nutrition')} />
+                  <Checkbox id="int-1" checked={formData.interests.includes('emagrecimento')} />
                   <Label htmlFor="int-1" className="cursor-pointer font-medium">
-                    Nutrição & Emagrecimento
+                    Emagrecimento Saudável & Low Carb
                   </Label>
                 </div>
                 <div
                   className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                  onClick={() => toggleInterest('protection')}
+                  onClick={() => toggleInterest('diabetes')}
                 >
-                  <Checkbox id="int-2" checked={formData.interests.includes('protection')} />
+                  <Checkbox id="int-2" checked={formData.interests.includes('diabetes')} />
                   <Label htmlFor="int-2" className="cursor-pointer font-medium">
-                    Proteção Financeira/Seguros
+                    Controle de Diabetes & Resistência Insulínica
                   </Label>
                 </div>
                 <div
                   className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                  onClick={() => toggleInterest('bundle')}
+                  onClick={() => toggleInterest('bariatrica')}
                 >
-                  <Checkbox id="int-3" checked={formData.interests.includes('bundle')} />
+                  <Checkbox id="int-3" checked={formData.interests.includes('bariatrica')} />
                   <Label htmlFor="int-3" className="cursor-pointer font-medium">
-                    Ambos (Saúde Integral)
+                    Acompanhamento Bariátrico & Longevidade
                   </Label>
                 </div>
               </div>

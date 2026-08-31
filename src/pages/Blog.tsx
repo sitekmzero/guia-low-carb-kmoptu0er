@@ -49,8 +49,8 @@ export default function Blog() {
             Guia Low Carb Blog
           </h1>
           <p className="text-base md:text-xl text-primary-foreground/80 max-w-2xl mx-auto">
-            Nutrição, Proteção e Transformação. Acompanhe nossos últimos artigos e descubra como
-            mudar sua vida.
+            Nutrição Clínica, Emagrecimento e Longevidade. Acompanhe nossos artigos científicos e
+            práticos para transformar sua saúde.
           </p>
         </div>
       </section>
@@ -60,7 +60,7 @@ export default function Blog() {
         <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
           {/* Tabs */}
           <div className="flex gap-2 overflow-x-auto pb-2 w-full md:w-auto">
-            {['Todos', 'Nutrição', 'Proteção', 'Disruptivo'].map((cat) => (
+            {['Todos', 'Nutrição', 'Metabolismo', 'Emagrecimento', 'Disruptivo'].map((cat) => (
               <button
                 key={cat}
                 onClick={() => {

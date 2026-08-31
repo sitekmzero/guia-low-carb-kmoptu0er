@@ -98,7 +98,12 @@ export default function Teleconsulta() {
         },
       })
 
-      const price = values.type === 'bundle' ? 250 : 150
+      const priceMap: Record<string, number> = {
+        nutrition: 150,
+        metabolic: 180,
+        program_60d: 290,
+      }
+      const price = priceMap[values.type] || 150
       trackEvent('consultation_booked', {
         consultation_type: values.type,
         scheduled_date: values.date.toISOString(),
@@ -134,9 +139,12 @@ export default function Teleconsulta() {
       <div className="grid md:grid-cols-2 gap-12 items-start">
         <div className="space-y-6 animate-fade-in-up flex flex-col h-full">
           <div className="bg-card p-6 rounded-2xl border shadow-soft flex-1">
-            <h3 className="text-2xl font-bold text-primary mb-2">Nutrição</h3>
+            <h3 className="text-2xl font-bold text-primary mb-2">
+              Consulta Nutricional Individual
+            </h3>
             <p className="text-muted-foreground mb-4">
-              Plano alimentar completo focado em resultados reais e duradouros.
+              Avaliação metabólica completa, anamnese e elaboração do plano alimentar Low Carb
+              personalizado.
             </p>
             <Button
               variant="outline"
@@ -147,25 +155,28 @@ export default function Teleconsulta() {
             </Button>
           </div>
           <div className="bg-card p-6 rounded-2xl border shadow-soft flex-1">
-            <h3 className="text-2xl font-bold text-primary mb-2">Proteção</h3>
+            <h3 className="text-2xl font-bold text-primary mb-2">
+              Acompanhamento Bariátrico / Metabólico
+            </h3>
             <p className="text-muted-foreground mb-4">
-              Consultoria especializada para proteção familiar e seguros de vida.
+              Foco em pré e pós-operatório ou reversão de resistência insulínica e pré-diabetes.
             </p>
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => form.setValue('type', 'protection')}
+              onClick={() => form.setValue('type', 'metabolic')}
             >
-              Selecionar (R$ 150)
+              Selecionar (R$ 180)
             </Button>
           </div>
           <div className="bg-primary/5 p-6 rounded-2xl border border-primary/20 shadow-soft flex-1">
-            <h3 className="text-2xl font-bold text-primary mb-2">Bundle Saúde+Proteção</h3>
+            <h3 className="text-2xl font-bold text-primary mb-2">Programa Transformação 60 Dias</h3>
             <p className="text-muted-foreground mb-4">
-              Análise 360º da sua saúde física e proteção financeira. O melhor valor.
+              2 consultas + suporte contínuo via WhatsApp + ajustes periódicos do protocolo
+              nutricional.
             </p>
-            <Button className="w-full" onClick={() => form.setValue('type', 'bundle')}>
-              Selecionar (R$ 250)
+            <Button className="w-full" onClick={() => form.setValue('type', 'program_60d')}>
+              Selecionar (R$ 290)
             </Button>
           </div>
         </div>
@@ -179,7 +190,7 @@ export default function Teleconsulta() {
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tipo de Consulta</FormLabel>
+                    <FormLabel>Tipo de Atendimento Nutricional</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="h-11">
@@ -187,9 +198,11 @@ export default function Teleconsulta() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="nutrition">Nutrição</SelectItem>
-                        <SelectItem value="protection">Proteção</SelectItem>
-                        <SelectItem value="bundle">Bundle Saúde+Proteção</SelectItem>
+                        <SelectItem value="nutrition">Consulta Nutricional Individual</SelectItem>
+                        <SelectItem value="metabolic">
+                          Acompanhamento Bariátrico / Metabólico
+                        </SelectItem>
+                        <SelectItem value="program_60d">Programa Transformação 60 Dias</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

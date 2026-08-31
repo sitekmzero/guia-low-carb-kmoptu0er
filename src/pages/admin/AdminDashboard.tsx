@@ -21,17 +21,17 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     async function fetchData() {
-      const [lc, ls, ld, v] = await Promise.all([
+      const [lc, ld, crm, v] = await Promise.all([
         supabase.from('leads_cursos').select('id, name, email, whatsapp, created_at'),
-        supabase.from('leads_seguros').select('id, name, email, whatsapp, interest, created_at'),
         supabase.from('leads').select('id, name, email, phone, created_at, product_type'),
+        supabase.from('crm_leads').select('id, name, email, phone, created_at, lead_source'),
         supabase.from('vendas').select('*', { count: 'exact' }).eq('status', 'pago'),
       ])
 
       const allLeads = [
         ...(lc.data || []).map((l) => ({ ...l, type: 'Curso' })),
-        ...(ls.data || []).map((l) => ({ ...l, type: 'Seguro' })),
-        ...(ld.data || []).map((l) => ({ ...l, type: l.product_type || 'Geral' })),
+        ...(ld.data || []).map((l) => ({ ...l, type: l.product_type || 'Nutrição Geral' })),
+        ...(crm.data || []).map((l) => ({ ...l, type: l.lead_source || 'CRM Nutrição' })),
       ]
       allLeads.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
@@ -45,7 +45,7 @@ export default function AdminDashboard() {
     try {
       const res = await supabase.functions.invoke('integrate-brevo', {
         body: {
-          email: 'adriana.araujo@kmzero.com.br',
+          email: 'contato@guialowcarb.com.br',
           nome: 'Adriana',
           mensagem: 'Teste de integração Brevo - Guia Low Carb',
         },
@@ -63,7 +63,7 @@ export default function AdminDashboard() {
       const res = await supabase.functions.invoke('hotmart-sync', {
         body: {
           product: 'E-book Low Carb Avançado',
-          buyer_email: 'adriana.araujo@kmzero.com.br',
+          buyer_email: 'contato@guialowcarb.com.br',
           status: 'pago',
           amount: 27.0,
         },
