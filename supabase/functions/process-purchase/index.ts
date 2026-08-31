@@ -1,5 +1,5 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
-import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -50,13 +50,12 @@ Deno.serve(async (req: Request) => {
       })
 
       // Se for um curso, conceder acesso de 1 ano
-      // Mock logic: assuming we check product type first
       const { data: product } = await supabase
         .from('products')
-        .select('category')
+        .select('category, product_type')
         .eq('id', product_id)
         .single()
-      if (product && product.category === 'curso') {
+      if (product && (product.product_type === 'course' || product.category === 'curso')) {
         const nextYear = new Date()
         nextYear.setFullYear(nextYear.getFullYear() + 1)
         await supabase.from('user_courses').insert({

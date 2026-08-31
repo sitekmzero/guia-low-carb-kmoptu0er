@@ -1,4 +1,4 @@
-DO $
+DO $$
 BEGIN
   -- Create tables for new functionalities
   CREATE TABLE IF NOT EXISTS public.user_courses (
@@ -86,4 +86,4 @@ BEGIN
     FOR ALL TO authenticated USING (
       EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid() AND is_admin = true)
     );
-END $;
+END $$;

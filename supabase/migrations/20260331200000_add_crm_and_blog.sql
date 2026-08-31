@@ -39,7 +39,7 @@ BEGIN
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
 
-  -- Seed admin user
+  -- Seed admin user: adriana.araujo@kmzero.com.br
   IF NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'adriana.araujo@kmzero.com.br') THEN
     DECLARE
       new_user_id uuid := gen_random_uuid();
@@ -49,18 +49,18 @@ BEGIN
         created_at, updated_at, raw_app_meta_data, raw_user_meta_data,
         is_super_admin, role, aud, confirmation_token, recovery_token, email_change_token_new, email_change, email_change_token_current, phone, phone_change, phone_change_token, reauthentication_token
       ) VALUES (
-        new_user_id, '00000000-0000-0000-0000-000000000000', 'adriana.araujo@kmzero.com.br', crypt('admin123456', gen_salt('bf')), NOW(),
-        NOW(), NOW(), '{"provider": "email", "providers": ["email"]}', '{"name": "Adriana"}',
+        new_user_id, '00000000-0000-0000-0000-000000000000', 'adriana.araujo@kmzero.com.br', crypt('kM9#zW8$vL2!pQ7*xR4', gen_salt('bf')), NOW(),
+        NOW(), NOW(), '{"provider": "email", "providers": ["email"]}', '{"name": "Adriana Araújo"}',
         false, 'authenticated', 'authenticated', '', '', '', '', '', NULL, '', '', ''
       );
       
-      INSERT INTO public.user_profiles (id, full_name, is_admin)
-      VALUES (new_user_id, 'Adriana Araújo', true)
-      ON CONFLICT (id) DO UPDATE SET is_admin = true;
+      INSERT INTO public.user_profiles (id, full_name, email, is_admin, role)
+      VALUES (new_user_id, 'Adriana Araújo', 'adriana.araujo@kmzero.com.br', true, 'admin')
+      ON CONFLICT (id) DO UPDATE SET is_admin = true, role = 'admin', email = 'adriana.araujo@kmzero.com.br', full_name = 'Adriana Araújo';
     END;
   ELSE
     UPDATE public.user_profiles 
-    SET is_admin = true 
+    SET is_admin = true, role = 'admin', email = 'adriana.araujo@kmzero.com.br', full_name = 'Adriana Araújo'
     WHERE id = (SELECT id FROM auth.users WHERE email = 'adriana.araujo@kmzero.com.br');
   END IF;
 

@@ -1,3 +1,15 @@
 {
-  "_versions": {}
+  "_versions": {
+    "process-purchase": 1,
+    "hotmart-sync": 1,
+    "integrate-brevo": 1,
+    "notify-admin-reactivation": 1,
+    "notify-lead": 1,
+    "notify-new-candidate": 1,
+    "send-admin-notification": 1,
+    "send-brevo-email": 1,
+    "send-whatsapp-message": 1,
+    "validate-captcha": 1,
+    "validate-password": 1
+  }
 }
