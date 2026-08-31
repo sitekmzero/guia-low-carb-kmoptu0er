@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase/client'
 import { Loader2, Search, Filter, Phone, Mail, User } from 'lucide-react'
+import { toast } from '@/hooks/use-toast'
 
 export default function AdminCRM() {
   const [leads, setLeads] = useState<any[]>([])
@@ -157,9 +158,36 @@ export default function AdminCRM() {
                         : '-'}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm">
-                        Ver Detalhes
-                      </Button>
+                      {lead.lead_score >= 70 ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-red-300 text-red-600 hover:bg-red-50 text-xs"
+                          onClick={async () => {
+                            try {
+                              await supabase.functions.invoke('update-lead-score', {
+                                body: { lead_id: lead.id, points: 0, action: 'manual_alert' },
+                              })
+                              toast({
+                                title: 'Alerta Enviado ao Slack',
+                                description: `Notificação de Lead Quente para ${lead.name} reenviada.`,
+                              })
+                            } catch (e: any) {
+                              toast({
+                                title: 'Erro ao notificar',
+                                description: e.message,
+                                variant: 'destructive',
+                              })
+                            }
+                          }}
+                        >
+                          Notificar Slack
+                        </Button>
+                      ) : (
+                        <Button variant="ghost" size="sm">
+                          Ver Detalhes
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

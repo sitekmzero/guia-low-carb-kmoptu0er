@@ -1,12 +1,7 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
-}
+import { corsHeaders } from '../_shared/cors.ts'
+import { sendSystemErrorAlert, sendSlackNotification } from '../_shared/slack.ts'
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -18,7 +13,6 @@ Deno.serve(async (req: Request) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
     const adminEmail = Deno.env.get('ADMIN_EMAIL')
-    const slackWebhookUrl = Deno.env.get('SLACK_WEBHOOK_URL')
 
     const supabase = createClient(supabaseUrl, supabaseKey)
 
@@ -41,7 +35,7 @@ Deno.serve(async (req: Request) => {
     if (errorCount > 5) {
       console.log('High error rate detected. Sending alerts...')
 
-      // Email Alert
+      // Email Alert via Resend
       if (resendApiKey && adminEmail) {
         await fetch('https://api.resend.com/emails', {
           method: 'POST',
@@ -52,38 +46,38 @@ Deno.serve(async (req: Request) => {
           body: JSON.stringify({
             from: 'alerts@resend.dev',
             to: adminEmail,
-            subject: 'URGENT: High Quotation Failure Rate',
-            html: `<h2>Alert: Quotation Service Instability</h2>
-                   <p>The quotation service is experiencing high failure rates.</p>
-                   <p>There have been <strong>${errorCount}</strong> iframe load errors in the last hour.</p>
-                   <p>Please check the admin dashboard for more details.</p>`,
+            subject: 'ALERTA URGENTE: Alta Taxa de Falhas no Sistema',
+            html: `<h2>Alerta: Instabilidade Detectada</h2>
+                   <p>O sistema registrou um pico anormal de erros nas últimas horas.</p>
+                   <p>Foram detectados <strong>${errorCount}</strong> erros recentes.</p>
+                   <p>Por favor, verifique o painel administrativo para mais detalhes.</p>`,
           }),
         }).catch((err) => console.error('Email alert failed', err))
       }
 
-      // Slack Alert
-      if (slackWebhookUrl) {
-        await fetch(slackWebhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            text: `🚨 *URGENT: High Quotation Failure Rate* 🚨\n\nThe quotation service is experiencing high failure rates.\nThere have been *${errorCount}* iframe load errors in the last hour.\n\n<https://km-zero-homepage-c0c96.goskip.app/admin/dashboard|Check the Admin Dashboard>`,
-          }),
-        }).catch((err) => console.error('Slack alert failed', err))
-      }
+      // Slack Alert via helper
+      await sendSystemErrorAlert({
+        system_component: 'Monitoramento de Erros / Iframe / Cotações',
+        error_message: `Alta taxa de erros detectada: ${errorCount} falhas registradas na última hora.`,
+        count: errorCount,
+      }).catch((err) => console.error('Slack alert failed:', err))
     }
 
     return new Response(JSON.stringify({ success: true, count: errorCount }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
-    console.error('Edge function error:', error)
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
-    )
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Edge function error in monitor-quotation-errors:', errorMsg)
+
+    await sendSystemErrorAlert({
+      system_component: 'monitor-quotation-errors',
+      error_message: errorMsg,
+    }).catch(() => {})
+
+    return new Response(JSON.stringify({ error: errorMsg }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   }
 })

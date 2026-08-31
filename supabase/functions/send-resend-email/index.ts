@@ -16,7 +16,9 @@ Deno.serve(async (req: Request) => {
 
     if (!to || !subject || (!html && !text)) {
       return new Response(
-        JSON.stringify({ error: 'Missing required parameters: to, subject, and html/text are required.' }),
+        JSON.stringify({
+          error: 'Missing required parameters: to, subject, and html/text are required.',
+        }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400,

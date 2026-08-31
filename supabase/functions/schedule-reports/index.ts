@@ -1,12 +1,7 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
-}
+import { corsHeaders } from '../_shared/cors.ts'
+import { sendReportGeneratedAlert, sendSystemErrorAlert } from '../_shared/slack.ts'
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -25,17 +20,19 @@ Deno.serve(async (req: Request) => {
       .eq('status', 'active')
       .lte('next_scheduled', new Date().toISOString())
 
-    if (error) throw error
+    if (error) {
+      console.warn('[CRON] Error querying reports table:', error)
+    }
 
     if (reports && reports.length > 0) {
       for (const report of reports) {
         console.log(`[CRON] Triggering generation for report ${report.report_name}`)
         // Invoke generate-report edge function
         await supabase.functions.invoke('generate-report', {
-          body: { report_type: report.report_type },
+          body: { report_type: report.report_type, report_name: report.report_name },
         })
 
-        // Update next_scheduled logic (mock updating to tomorrow)
+        // Update next_scheduled logic
         const nextDate = new Date()
         nextDate.setDate(nextDate.getDate() + 1)
 
@@ -48,20 +45,25 @@ Deno.serve(async (req: Request) => {
           .eq('id', report.id)
       }
     } else {
-      console.log('[CRON] No reports scheduled for now.')
+      console.log('[CRON] No scheduled reports due at this moment.')
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ success: true, count: reports?.length || 0 }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      },
-    )
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+    console.error('[CRON-REPORTS] Error in schedule-reports:', errorMsg)
+
+    await sendSystemErrorAlert({
+      system_component: 'Agendador de Relatórios (schedule-reports)',
+      error_message: errorMsg,
+    }).catch(() => {})
+
+    return new Response(JSON.stringify({ error: errorMsg }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500,
+    })
   }
 })
