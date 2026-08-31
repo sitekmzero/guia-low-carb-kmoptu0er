@@ -17,7 +17,7 @@ export const trackingService = {
       }
       return true
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.error('Tracking error:', error)
       }
       return false
@@ -38,7 +38,7 @@ export const trackingService = {
 
       return true
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.error('Track Purchase error:', error)
       }
       return false
@@ -66,7 +66,7 @@ export const trackingService = {
 
       return true
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.error('Track Lead error:', error)
       }
       return false
@@ -88,7 +88,7 @@ export const trackingService = {
 
       return true
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.error('Track Consultation error:', error)
       }
       return false
@@ -114,7 +114,7 @@ export const trackingService = {
 
       return true
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.error('Track Course error:', error)
       }
       return false

@@ -40,7 +40,7 @@ import { useSEO } from '@/services/seo'
 
 const formSchema = z.object({
   type: z.string().min(1, 'Selecione um tipo'),
-  date: z.date({ required_error: 'Selecione uma data' }),
+  date: z.date({ message: 'Selecione uma data' }),
   time: z.string().min(1, 'Selecione um horário'),
   notes: z.string().optional(),
 })
