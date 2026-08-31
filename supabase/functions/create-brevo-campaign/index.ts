@@ -15,13 +15,20 @@ Deno.serve(async (req: Request) => {
 
     const payload = await req.json()
 
-    const { name, subject, sender, type, htmlContent, recipients, scheduledAt } = payload
+    const {
+      name,
+      subject,
+      sender,
+      type,
+      htmlContent,
+      recipients,
+      scheduledAt,
+    } = payload
 
     if (!name || !subject || !sender || !htmlContent || !recipients) {
       return new Response(
         JSON.stringify({
-          error:
-            'Missing required campaign parameters: name, subject, sender, htmlContent, recipients are required.',
+          error: 'Missing required campaign parameters: name, subject, sender, htmlContent, recipients are required.',
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

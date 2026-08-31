@@ -17,10 +17,10 @@ Deno.serve(async (req: Request) => {
     const content = user_data?.course
       ? `Parabéns pela sua inscrição no curso: <strong>${user_data.course}</strong>!`
       : user_data?.product
-        ? `Seu pedido do material <strong>${user_data.product}</strong> foi confirmado!`
-        : user_data?.date && user_data?.time
-          ? `Sua teleconsulta foi agendada para <strong>${user_data.date}</strong> às <strong>${user_data.time}</strong>.`
-          : `Obrigado pelo seu contato! O seu material já está disponível.`
+      ? `Seu pedido do material <strong>${user_data.product}</strong> foi confirmado!`
+      : user_data?.date && user_data?.time
+      ? `Sua teleconsulta foi agendada para <strong>${user_data.date}</strong> às <strong>${user_data.time}</strong>.`
+      : `Obrigado pelo seu contato! O seu material já está disponível.`
 
     // Send via Brevo SMTP API
     const res = await fetch('https://api.brevo.com/v3/smtp/email', {
