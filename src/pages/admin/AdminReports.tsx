@@ -8,20 +8,60 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { FileText, Download, Calendar, Mail, Settings } from 'lucide-react'
+import { useState } from 'react'
+import { FileText, Download, Calendar, Mail, Settings, RefreshCw, Send } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { supabase } from '@/lib/supabase/client'
+import { toast } from '@/hooks/use-toast'
 
 export default function AdminReports() {
+  const [generating, setGenerating] = useState<string | null>(null)
+
+  const handleGenerateReport = async (reportType: string, reportName: string) => {
+    setGenerating(reportType)
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-report', {
+        body: { report_type: reportType, report_name: reportName },
+      })
+
+      if (error) throw error
+
+      toast({
+        title: 'Relatório Gerado!',
+        description: `Relatório "${reportName}" gerado e notificação enviada ao Slack com sucesso.`,
+      })
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao gerar relatório',
+        description: err.message || 'Falha na execução da edge function.',
+        variant: 'destructive',
+      })
+    } finally {
+      setGenerating(null)
+    }
+  }
+
   return (
     <div className="space-y-6 animate-fade-in pb-10">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold font-heading text-primary">Relatórios e BI</h1>
           <p className="text-muted-foreground">
-            Geração automática e agendamento de relatórios gerenciais.
+            Geração automática e agendamento de relatórios gerenciais com envio para Slack.
           </p>
         </div>
-        <Button className="bg-primary">Criar Novo Relatório</Button>
+        <Button
+          onClick={() => handleGenerateReport('relatorio_geral_bi', 'Relatório Geral Consolidado')}
+          disabled={generating !== null}
+          className="bg-primary gap-2"
+        >
+          {generating === 'relatorio_geral_bi' ? (
+            <RefreshCw className="w-4 h-4 animate-spin" />
+          ) : (
+            <Send className="w-4 h-4" />
+          )}
+          Gerar e Enviar ao Slack
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -38,8 +78,24 @@ export default function AdminReports() {
                 </span>
               </div>
               <div className="flex gap-2 mt-4">
-                <Button size="sm" variant="outline" className="flex-1">
-                  <Download className="w-4 h-4 mr-2" /> Exportar
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  disabled={generating !== null}
+                  onClick={() =>
+                    handleGenerateReport(
+                      'semanal_vendas_leads',
+                      'Relatório Semanal de Vendas e Leads',
+                    )
+                  }
+                >
+                  {generating === 'semanal_vendas_leads' ? (
+                    <RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                  ) : (
+                    <Send className="w-3.5 h-3.5 mr-1.5" />
+                  )}
+                  Disparar Agora
                 </Button>
                 <Button size="sm" variant="secondary">
                   <Settings className="w-4 h-4" />
@@ -61,8 +117,21 @@ export default function AdminReports() {
                 </span>
               </div>
               <div className="flex gap-2 mt-4">
-                <Button size="sm" variant="outline" className="flex-1">
-                  <Download className="w-4 h-4 mr-2" /> Exportar
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  disabled={generating !== null}
+                  onClick={() =>
+                    handleGenerateReport('mensal_financeiro_roi', 'Fechamento Mensal & ROI')
+                  }
+                >
+                  {generating === 'mensal_financeiro_roi' ? (
+                    <RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                  ) : (
+                    <Send className="w-3.5 h-3.5 mr-1.5" />
+                  )}
+                  Disparar Agora
                 </Button>
                 <Button size="sm" variant="secondary">
                   <Settings className="w-4 h-4" />

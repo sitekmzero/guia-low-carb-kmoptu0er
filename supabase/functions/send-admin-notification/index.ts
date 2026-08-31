@@ -1,5 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { sendSystemErrorAlert, sendSlackNotification } from '../_shared/slack.ts'
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -11,46 +12,42 @@ Deno.serve(async (req: Request) => {
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
     const adminEmail = Deno.env.get('ADMIN_EMAIL')
 
-    if (!resendApiKey || !adminEmail) {
-      console.warn('Missing RESEND_API_KEY or ADMIN_EMAIL')
-      return new Response(JSON.stringify({ error: 'Configuration missing' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
     let subject = ''
     let htmlContent = ''
 
-    const colorGold = '#C8A24A'
-    const colorNavy = '#0B1F3B'
+    const colorGreen = '#1CA67D'
+    const colorDark = '#1F2937'
 
     const baseTemplate = (title: string, body: string) => `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
-        <div style="background-color: ${colorNavy}; padding: 20px; text-align: center;">
-          <h1 style="color: ${colorGold}; margin: 0; font-size: 24px;">KM Zero Seguros</h1>
+        <div style="background-color: ${colorDark}; padding: 20px; text-align: center;">
+          <h1 style="color: ${colorGreen}; margin: 0; font-size: 24px;">Guia Low Carb</h1>
         </div>
         <div style="padding: 30px; background-color: #ffffff; color: #333333;">
-          <h2 style="color: ${colorNavy}; margin-top: 0;">${title}</h2>
+          <h2 style="color: ${colorDark}; margin-top: 0;">${title}</h2>
           ${body}
         </div>
         <div style="background-color: #f3f4f6; padding: 15px; text-align: center; font-size: 12px; color: #6b7280;">
-          <p style="margin: 0;">Este é um e-mail automático. Por favor, não responda.</p>
+          <p style="margin: 0;">Este é um e-mail automático do Guia Low Carb. Por favor, não responda.</p>
         </div>
       </div>
     `
 
     if (event_type === 'new_signup') {
-      subject = 'Novo Cadastro de Cliente'
+      subject = 'Novo Cadastro na Plataforma'
       htmlContent = baseTemplate(
         'Novo Cadastro Realizado',
-        `<p>Um novo cliente se cadastrou na plataforma e aguarda aprovação.</p>
+        `<p>Um novo usuário se cadastrou na plataforma Guia Low Carb.</p>
          <ul style="list-style-type: none; padding: 0;">
-           <li style="margin-bottom: 10px;"><strong>Nome:</strong> ${payload.name}</li>
+           <li style="margin-bottom: 10px;"><strong>Nome:</strong> ${payload.name || 'N/A'}</li>
            <li style="margin-bottom: 10px;"><strong>E-mail:</strong> ${payload.email}</li>
          </ul>
-         <p>Acesse o painel administrativo para revisar e aprovar o cadastro.</p>`,
+         <p>Acesse o painel administrativo para acompanhar.</p>`,
       )
+
+      await sendSlackNotification({
+        text: `👤 Novo Cadastro no Guia Low Carb:\n• *Nome:* ${payload.name || 'Não informado'}\n• *Email:* ${payload.email}`,
+      }).catch(() => {})
     } else if (event_type === 'reactivation_request') {
       subject = 'Nova Solicitação de Reativação'
       htmlContent = baseTemplate(
@@ -59,41 +56,48 @@ Deno.serve(async (req: Request) => {
          <ul style="list-style-type: none; padding: 0;">
            <li style="margin-bottom: 10px;"><strong>E-mail:</strong> ${payload.email}</li>
          </ul>
-         <p>Acesse o painel administrativo para revisar e aprovar a solicitação.</p>`,
+         <p>Acesse o painel administrativo para revisar a solicitação.</p>`,
       )
-    } else if (event_type === 'login_attempt_failed') {
-      subject = 'ALERTA DE SEGURANÇA: Múltiplas Falhas de Login'
+
+      await sendSlackNotification({
+        text: `🔄 Solicitação de Reativação de Conta:\n• *Email:* ${payload.email}`,
+      }).catch(() => {})
+    } else if (event_type === 'login_attempt_failed' || event_type === 'system_error') {
+      subject = 'ALERTA DE SEGURANÇA: Múltiplas Falhas de Login / Erro do Sistema'
       htmlContent = baseTemplate(
-        'Alerta de Segurança',
-        `<p style="color: #dc2626; font-weight: bold;">Foram detectadas múltiplas falhas de login recentes.</p>
+        'Alerta de Segurança & Monitoramento',
+        `<p style="color: #dc2626; font-weight: bold;">Foram detectadas múltiplas falhas de login ou alertas de monitoramento.</p>
          <ul style="list-style-type: none; padding: 0;">
-           <li style="margin-bottom: 10px;"><strong>E-mail Alvo:</strong> ${payload.email}</li>
-           <li style="margin-bottom: 10px;"><strong>Tentativas Falhas:</strong> ${payload.count} nos últimos 30 minutos</li>
+           <li style="margin-bottom: 10px;"><strong>Alvo/Componente:</strong> ${payload.email || payload.component || 'Sistema'}</li>
+           <li style="margin-bottom: 10px;"><strong>Detalhes:</strong> ${payload.count ? `${payload.count} tentativas recentes` : payload.details || 'Falha de login recorrente'}</li>
          </ul>
          <p>Recomendamos verificar os logs de acesso no painel administrativo.</p>`,
       )
+
+      await sendSystemErrorAlert({
+        system_component: 'Autenticação / Segurança',
+        error_message: `Múltiplas tentativas falhas de login para o usuário: ${payload.email || 'Desconhecido'} (${payload.count || 'recorrente'} tentativas)`,
+      }).catch(() => {})
     } else {
-      throw new Error(`Unknown event_type: ${event_type}`)
+      // Evento genérico ou desconhecido
+      console.log(`[SEND-ADMIN-NOTIFICATION] Generic event received: ${event_type}`)
     }
 
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'alerts@resend.dev',
-        to: adminEmail,
-        subject,
-        html: htmlContent,
-      }),
-    })
-
-    if (!res.ok) {
-      const errorText = await res.text()
-      console.error('Resend error:', errorText)
-      throw new Error(`Failed to send email: ${errorText}`)
+    // Se houver configuração de email Resend, envia email também
+    if (resendApiKey && adminEmail && subject && htmlContent) {
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'alerts@resend.dev',
+          to: adminEmail,
+          subject,
+          html: htmlContent,
+        }),
+      }).catch((err) => console.error('Resend error:', err))
     }
 
     return new Response(JSON.stringify({ success: true }), {
