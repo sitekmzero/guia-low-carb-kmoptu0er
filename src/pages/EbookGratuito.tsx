@@ -195,13 +195,12 @@ export default function EbookGratuito() {
 
         <div className="hidden md:block w-full md:w-1/2 animate-fade-in-up animation-delay-200">
           <img
-            src="https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Guia%20Low%20Carb/Imagens%20Adriana/AdrianaA.jpeg"
+            src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Fotos/Adriana%20consultorio.png"
             alt="Preview do E-book"
             className="rounded-2xl shadow-2xl object-cover w-full max-h-[600px]"
             loading="lazy"
             width="800"
             height="600"
-            srcSet="https://img.usecurling.com/p/480/600?q=diet 480w, https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Guia%20Low%20Carb/Imagens%20Adriana/AdrianaA.jpeg 800w"
           />
         </div>
       </div>

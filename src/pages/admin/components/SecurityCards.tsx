@@ -23,10 +23,21 @@ import {
 import { Database, Key, ShieldCheck, QrCode } from 'lucide-react'
 
 const MOCK_KEYS = [
-  { name: 'Stripe', status: 'Connected', lastUpdated: '2024-03-01', key: 'sk_live_...4829' },
-  { name: 'Mercado Pago', status: 'Connected', lastUpdated: '2024-02-15', key: 'APP_USR_...9182' },
-  { name: 'Brevo', status: 'Connected', lastUpdated: '2024-04-01', key: 'xkeysib-...8a2b' },
-  { name: 'Hotmart', status: 'Disconnected', lastUpdated: '2023-11-20', key: 'Not configured' },
+  { name: 'Stripe', status: 'Connected', lastUpdated: '2024-03-01', key: 'Configurado via Secret' },
+  {
+    name: 'Mercado Pago',
+    status: 'Connected',
+    lastUpdated: '2024-02-15',
+    key: 'Configurado via Secret',
+  },
+  { name: 'Brevo', status: 'Connected', lastUpdated: '2024-04-01', key: 'BREVO_API_KEY (Secret)' },
+  {
+    name: 'Resend',
+    status: 'Connected',
+    lastUpdated: '2024-04-01',
+    key: 'RESEND_API_KEY (Secret)',
+  },
+  { name: 'Hotmart', status: 'Connected', lastUpdated: '2024-04-01', key: 'Webhook Ativo' },
 ]
 
 export function SecurityApiKeys() {

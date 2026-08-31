@@ -58,8 +58,34 @@ export function SmtpBrevo() {
 
 export function SmtpConfig() {
   const { toast } = useToast()
-  const handleTest = () =>
-    toast({ title: 'Sucesso', description: 'Email de teste enviado com sucesso!' })
+  const [testingResend, setTestingResend] = useState(false)
+
+  const handleTestResend = async () => {
+    setTestingResend(true)
+    try {
+      const { supabase } = await import('@/lib/supabase/client')
+      const res = await supabase.functions.invoke('send-resend-email', {
+        body: {
+          from: 'onboarding@resend.dev',
+          to: 'guialowcarb@gmail.com',
+          subject: 'Teste SMTP / Resend - Guia Low Carb',
+          html: '<p>Congrats on sending your <strong>first email via Resend</strong>!</p>',
+        },
+      })
+      if (res.error) throw res.error
+      toast({ title: 'Sucesso', description: 'E-mail de teste Resend enviado com sucesso!' })
+    } catch (e) {
+      console.error(e)
+      toast({
+        title: 'Erro',
+        description: 'Falha ao enviar e-mail via Resend',
+        variant: 'destructive',
+      })
+    } finally {
+      setTestingResend(false)
+    }
+  }
+
   const handleSave = () =>
     toast({ title: 'Salvo', description: 'Configurações de e-mail atualizadas!' })
 
@@ -67,7 +93,7 @@ export function SmtpConfig() {
     <Card className="lg:col-span-2">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Settings2 className="w-5 h-5" /> Configuração SMTP
+          <Settings2 className="w-5 h-5" /> Configuração SMTP & Provedores
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -78,28 +104,37 @@ export function SmtpConfig() {
           </div>
           <div className="space-y-2">
             <Label>From Email</Label>
-            <Input defaultValue="admin@guialowcarb.com.br" />
+            <Input defaultValue="onboarding@resend.dev" />
           </div>
           <div className="space-y-2">
             <Label>Reply-To Email</Label>
-            <Input defaultValue="contato@guialowcarb.com.br" />
+            <Input defaultValue="guialowcarb@gmail.com" />
           </div>
           <div className="space-y-2">
-            <Label>Servidor SMTP</Label>
-            <Input defaultValue="smtp-relay.brevo.com" />
+            <Label>Provedor Principal</Label>
+            <Input defaultValue="Resend / Brevo (Edge Functions)" readOnly className="bg-muted" />
           </div>
           <div className="space-y-2">
-            <Label>Porta SMTP</Label>
-            <Input type="number" defaultValue={587} />
+            <Label>Status Brevo API Key</Label>
+            <Input
+              defaultValue="Configurado via Secret (BREVO_API_KEY)"
+              readOnly
+              className="bg-muted"
+            />
           </div>
           <div className="space-y-2">
-            <Label>Usuário SMTP</Label>
-            <Input type="password" defaultValue="admin@guialowcarb.com.br" />
+            <Label>Status Resend API Key</Label>
+            <Input
+              defaultValue="Configurado via Secret (RESEND_API_KEY)"
+              readOnly
+              className="bg-muted"
+            />
           </div>
         </div>
         <div className="flex gap-2 justify-end pt-4 border-t">
-          <Button variant="secondary" onClick={handleTest}>
-            <Send className="w-4 h-4 mr-2" /> Testar Envio
+          <Button variant="secondary" onClick={handleTestResend} disabled={testingResend}>
+            <Send className="w-4 h-4 mr-2" />{' '}
+            {testingResend ? 'Enviando...' : 'Testar Envio (Resend)'}
           </Button>
           <Button onClick={handleSave}>Salvar Configurações</Button>
         </div>

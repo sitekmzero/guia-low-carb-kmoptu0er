@@ -97,7 +97,7 @@ export default function Sobre() {
       <section className="relative min-h-[400px] md:min-h-[600px] flex items-center justify-center bg-gradient-to-b from-primary/90 to-background/5 dark:to-background px-6 pt-24 overflow-hidden">
         <div className="absolute inset-0 z-0 bg-black/40 dark:bg-black/60">
           <img
-            src="https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Guia%20Low%20Carb/Imagens%20Adriana/Adriana%20jaleco%20fundo%20branco.jpeg"
+            src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Fotos/Adriana%20consultorio.png"
             alt="Adriana de Freitas Oliveira Araújo"
             className="w-full h-full object-cover mix-blend-overlay"
           />

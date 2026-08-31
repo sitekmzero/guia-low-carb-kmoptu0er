@@ -217,7 +217,7 @@ export default function AdminDashboard() {
             <Button
               onClick={handleTestBrevo}
               variant="outline"
-              className="border-blue-600/30 hover:bg-blue-50 hover:text-blue-700 text-blue-600 bg-transparent flex-1"
+              className="border-blue-600/30 hover:bg-blue-50 hover:text-blue-700 text-blue-600 bg-transparent flex-1 min-w-[140px]"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -235,6 +235,48 @@ export default function AdminDashboard() {
                 <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
               </svg>
               Testar Brevo API
+            </Button>
+            <Button
+              onClick={async () => {
+                try {
+                  const res = await supabase.functions.invoke('send-resend-email', {
+                    body: {
+                      from: 'onboarding@resend.dev',
+                      to: 'guialowcarb@gmail.com',
+                      subject: 'Teste de Envio Resend - Guia Low Carb',
+                      html: '<p>Teste de envio com sucesso via <strong>Resend</strong>!</p>',
+                    },
+                  })
+                  if (res.error) throw res.error
+                  toast({ title: 'Sucesso', description: 'E-mail enviado com sucesso via Resend!' })
+                } catch (e) {
+                  console.error(e)
+                  toast({
+                    title: 'Erro',
+                    description: 'Erro ao enviar e-mail via Resend',
+                    variant: 'destructive',
+                  })
+                }
+              }}
+              variant="outline"
+              className="border-emerald-600/30 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 bg-transparent flex-1 min-w-[140px]"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="mr-2"
+              >
+                <path d="m22 2-7 20-4-9-9-4Z" />
+                <path d="M22 2 11 13" />
+              </svg>
+              Testar Resend API
             </Button>
             <Button
               onClick={handleSyncHotmart}
@@ -258,8 +300,8 @@ export default function AdminDashboard() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-4">
-            Teste o envio de e-mails via Brevo e a simulação de um webhook de compra da Hotmart para
-            liberar acesso premium.
+            Teste o envio de e-mails via Brevo e Resend, além da simulação de webhook de compra da
+            Hotmart.
           </p>
         </Card>
       </div>

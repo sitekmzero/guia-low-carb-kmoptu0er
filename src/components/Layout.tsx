@@ -10,7 +10,7 @@ export default function Layout() {
         <div className="container mx-auto px-4 flex h-20 items-center justify-between">
           <Link to="/" className="flex items-center space-x-3">
             <img
-              src="https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Guia%20Low%20Carb/Imagens%20Adriana/AdrianaA.jpeg"
+              src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Fotos/Adriana%20consultorio.png"
               alt="Guia Low Carb Logo"
               className="h-12 w-auto object-cover rounded-full shadow-md border-2 border-primary/20"
             />

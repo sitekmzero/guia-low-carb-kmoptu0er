@@ -26,7 +26,7 @@ export default function NutricaoLowCarb() {
     '@type': 'LocalBusiness',
     name: 'Adriana Araújo, Nutricionista',
     image:
-      'https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Guia%20Low%20Carb/Imagens%20Adriana/AdrianaA.jpeg',
+      'https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Fotos/Adriana%20consultorio.png',
     jobTitle: 'Nutricionista Clínica',
     url: 'https://www.guialowcarb.com.br',
   }
@@ -84,7 +84,7 @@ export default function NutricaoLowCarb() {
 
           <div className="w-full md:w-1/2 relative animate-fade-in-up animation-delay-200">
             <img
-              src="https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Guia%20Low%20Carb/Imagens%20Adriana/AdrianaA.jpeg"
+              src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Fotos/Adriana%20consultorio.png"
               alt="Adriana Araújo Nutricionista"
               className="rounded-2xl shadow-2xl object-cover aspect-[4/5] md:aspect-square w-full"
               loading="lazy"

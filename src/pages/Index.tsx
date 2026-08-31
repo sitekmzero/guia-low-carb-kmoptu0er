@@ -48,7 +48,7 @@ export default function Index() {
             <div className="w-full md:w-1/2 flex justify-center animate-fade-in-up animation-delay-200">
               <div className="relative w-full max-w-md aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-2xl border-[6px] border-white/50 backdrop-blur-sm">
                 <img
-                  src="https://idtvwxzbmnqjcyxquqdk.supabase.co/storage/v1/object/public/Guia%20Low%20Carb/Imagens%20Adriana/AdrianaA.jpeg"
+                  src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Fotos/Adriana%20consultorio.png"
                   alt="Adriana Araújo - Nutricionista Clínica"
                   loading="lazy"
                   className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-700"

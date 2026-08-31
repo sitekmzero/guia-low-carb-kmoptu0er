@@ -182,7 +182,7 @@ export default function Article() {
         <div className="mt-12 bg-secondary/5 rounded-xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-center sm:items-start border border-secondary/10">
           <div className="w-24 h-24 rounded-full overflow-hidden shrink-0 border-4 border-white shadow-md">
             <img
-              src="https://img.usecurling.com/p/200/200?q=nutritionist&seed=1"
+              src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Fotos/Adriana%20consultorio.png"
               alt="Adriana Araújo"
               className="w-full h-full object-cover"
             />
