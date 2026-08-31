@@ -1,15 +1,20 @@
 {
   "_versions": {
     "process-purchase": 1,
-    "hotmart-sync": 3,
-    "integrate-brevo": 3,
-    "notify-admin-reactivation": 3,
-    "notify-lead": 3,
-    "notify-new-candidate": 3,
-    "send-admin-notification": 3,
-    "send-brevo-email": 3,
-    "send-whatsapp-message": 3,
-    "validate-captcha": 3,
-    "validate-password": 3
+    "hotmart-sync": 4,
+    "integrate-brevo": 4,
+    "notify-admin-reactivation": 4,
+    "notify-lead": 4,
+    "notify-new-candidate": 4,
+    "send-admin-notification": 4,
+    "send-brevo-email": 4,
+    "send-whatsapp-message": 4,
+    "validate-captcha": 4,
+    "validate-password": 4,
+    "generate-report": 1,
+    "schedule-reports": 1,
+    "nurture-lead": 1,
+    "sync-lead-to-brevo": 1,
+    "update-lead-score": 1
   }
 }
