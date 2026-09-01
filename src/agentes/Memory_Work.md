@@ -21,5 +21,5 @@ O **Memory Work** é o agente guardião do contexto histórico, registros de apr
    - Registrar tudo que foi solicitado, todas as implantações e ajustes feitos no sistema, manter histórico e soluções de problemas encontrados (o que, onde e como foi solucionado) objetivo  
      de usar isso caso o mesmo erro aconteça novamente.
 5. **Registro dos Próximos Passos:**
-   - Registre o que ficou pendente e ainda não foi realizado e avisar a Adriana sempre que ela perguntar "onde paramos?". Pode atualizar sempre que a tarefa for totalmente implantada ou 
+   - Registre o que ficou pendente e ainda não foi realizado e avisar a Adriana sempre que ela perguntar "onde paramos?". Pode atualizar sempre que a tarefa for totalmente implantada ou
      ajustada com comprovação na tela que foi testada e concluída com sucesso.
