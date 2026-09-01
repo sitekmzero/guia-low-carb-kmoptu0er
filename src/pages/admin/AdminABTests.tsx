@@ -1,54 +1,9 @@
-import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Activity, Plus } from 'lucide-react'
+import { Activity, Plus, FlaskConical } from 'lucide-react'
 
 export default function AdminABTests() {
-  const tests = [
-    {
-      name: 'seo-hero-headline',
-      status: 'active',
-      varA: 'Transforme Sua Saúde',
-      varB: 'Emagrecimento Saudável',
-      impA: 1500,
-      impB: 1480,
-      convA: 45,
-      convB: 62,
-      duration: '14 dias',
-    },
-    {
-      name: 'ebook-form-fields',
-      status: 'active',
-      varA: '3 Campos',
-      varB: '2 Campos',
-      impA: 800,
-      impB: 820,
-      convA: 120,
-      convB: 165,
-      duration: '8 dias',
-    },
-    {
-      name: 'consulta-cta-color',
-      status: 'completed',
-      varA: 'Primary Green',
-      varB: 'Accent Orange',
-      impA: 3000,
-      impB: 3000,
-      convA: 210,
-      convB: 180,
-      duration: '30 dias',
-    },
-  ]
-
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -67,66 +22,35 @@ export default function AdminABTests() {
         <Card className="bg-primary/5 border-primary/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Activity className="w-5 h-5 text-primary" /> Insight Automático
+              <Activity className="w-5 h-5 text-primary" /> Motor de Testes A/B
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm font-medium">
-              A Variante B (2 Campos) do teste "ebook-form-fields" está vencendo com uma taxa de
-              conversão 34% maior (Confiança: 98%).
+              O componente{' '}
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">
+                ABTestVariant
+              </code>{' '}
+              está ativo no código. Crie novos experimentos ou vincule testes no Google Optimize /
+              PostHog.
             </p>
-            <Button variant="outline" size="sm" className="mt-4 w-full">
-              Aplicar Vencedor a 100%
-            </Button>
           </CardContent>
         </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Testes em Andamento e Concluídos</CardTitle>
+          <CardTitle>Experimentos Ativos</CardTitle>
           <CardDescription>Métricas de impressão e conversão por variante.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome do Teste</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Duração</TableHead>
-                  <TableHead className="text-right">Tx. Variante A</TableHead>
-                  <TableHead className="text-right">Tx. Variante B</TableHead>
-                  <TableHead className="text-center">Vencedor Parcial</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tests.map((t, i) => {
-                  const rateA = ((t.convA / t.impA) * 100).toFixed(1)
-                  const rateB = ((t.convB / t.impB) * 100).toFixed(1)
-                  const winner = parseFloat(rateB) > parseFloat(rateA) ? 'Variante B' : 'Variante A'
-
-                  return (
-                    <TableRow key={i}>
-                      <TableCell className="font-medium">{t.name}</TableCell>
-                      <TableCell>
-                        <Badge variant={t.status === 'active' ? 'default' : 'secondary'}>
-                          {t.status === 'active' ? 'Rodando' : 'Concluído'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{t.duration}</TableCell>
-                      <TableCell className="text-right">
-                        {rateA}% <span className="text-xs text-muted-foreground">({t.convA})</span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {rateB}% <span className="text-xs text-muted-foreground">({t.convB})</span>
-                      </TableCell>
-                      <TableCell className="text-center font-bold text-primary">{winner}</TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
+          <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground space-y-3">
+            <FlaskConical className="w-12 h-12 text-muted-foreground/40" />
+            <p className="text-base font-medium">Nenhum teste A/B em execução no momento.</p>
+            <p className="text-xs max-w-md">
+              Configure variantes utilizando o componente de teste A/B para comparar headlines e
+              formulários com dados reais de visualização e conversão.
+            </p>
           </div>
         </CardContent>
       </Card>

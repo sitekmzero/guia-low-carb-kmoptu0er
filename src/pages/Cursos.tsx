@@ -73,50 +73,62 @@ export default function Cursos() {
   const processPayment = async (method: string) => {
     setProcessing(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      if (method === 'stripe') {
+        const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
+          body: {
+            product_id: selectedCurso.id,
+            product_name: selectedCurso.name,
+            amount: selectedCurso.price,
+            user_email: session?.user.email,
+            user_id: session?.user.id,
+            success_url: `${window.location.origin}/dashboard?payment=success&product=${encodeURIComponent(selectedCurso.name)}`,
+            cancel_url: `${window.location.origin}/cursos?payment=cancelled`,
+            metadata: {
+              type: 'course',
+              ...getUTMParams(),
+            },
+          },
+        })
 
-      const { error: pError } = await supabase.from('purchases').insert({
-        user_id: session?.user.id,
-        product_id: selectedCurso.id,
-        amount_paid: selectedCurso.price,
-        payment_method: method,
-        transaction_id: `txn_${Math.random().toString(36).substr(2, 9)}`,
-        status: 'completed',
+        if (error || !data?.url) {
+          if (data?.requires_config || error?.message?.includes('STRIPE_SECRET_KEY')) {
+            toast({
+              title: 'Configuração do Stripe Pendente',
+              description:
+                'Aguardando configuração das chaves de API do Stripe (STRIPE_SECRET_KEY) no painel do Supabase.',
+              variant: 'destructive',
+            })
+          } else {
+            throw new Error(data?.error || error?.message || 'Falha ao iniciar checkout do Stripe')
+          }
+          return
+        }
+
+        trackEvent('course_enrolled', {
+          course_name: selectedCurso.name,
+          course_id: selectedCurso.id,
+          price: selectedCurso.price,
+          user_id: session?.user.id,
+          timestamp: Date.now(),
+          ...getUTMParams(),
+        })
+
+        trackingService.trackCourseEnrolled(selectedCurso.name, selectedCurso.price)
+
+        window.location.href = data.url
+        return
+      }
+
+      toast({
+        title: 'Método não disponível',
+        description: 'O método de pagamento padrão é Stripe. Conclua pelo Stripe.',
       })
-      if (pError) throw pError
-
-      const { error: cError } = await supabase.from('user_courses').insert({
-        user_id: session?.user.id,
-        course_id: selectedCurso.id,
-        access_until: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
+    } catch (err: any) {
+      toast({
+        title: 'Erro no Pagamento',
+        description: err?.message || 'Falha ao processar pagamento.',
+        variant: 'destructive',
       })
-      if (cError) throw cError
-
-      await supabase.functions.invoke('send-brevo-email', {
-        body: {
-          email: session?.user.email,
-          list_name: 'Clientes Pagos',
-          automation_name: 'Confirmação de Compra',
-          user_data: { course: selectedCurso.name },
-        },
-      })
-
-      trackEvent('course_enrolled', {
-        course_name: selectedCurso.name,
-        course_id: selectedCurso.id,
-        price: selectedCurso.price,
-        user_id: session?.user.id,
-        timestamp: Date.now(),
-        ...getUTMParams(),
-      })
-
-      trackingService.trackCourseEnrolled(selectedCurso.name, selectedCurso.price)
-
-      toast({ title: 'Sucesso!', description: 'Inscrição realizada com sucesso!' })
-      setShowPayment(false)
-      setSelectedCurso(null)
-    } catch (err) {
-      toast({ title: 'Erro', description: 'Falha no pagamento.', variant: 'destructive' })
     } finally {
       setProcessing(false)
     }
@@ -247,17 +259,10 @@ export default function Cursos() {
             <Button
               disabled={processing}
               onClick={() => processPayment('stripe')}
-              className="h-12 bg-[#635BFF] hover:bg-[#635BFF]/90"
+              className="h-12 bg-[#635BFF] hover:bg-[#635BFF]/90 text-white font-semibold"
             >
-              {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Pagar com Stripe
-            </Button>
-            <Button
-              disabled={processing}
-              onClick={() => processPayment('mercado_pago')}
-              className="h-12 bg-[#009EE3] hover:bg-[#009EE3]/90 text-white"
-            >
-              {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Pagar com Mercado
-              Pago
+              {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Ir para Checkout
+              Stripe
             </Button>
           </div>
         </DialogContent>

@@ -64,45 +64,60 @@ export default function EbooksPagos() {
   const processPayment = async (method: string) => {
     setProcessing(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      if (method === 'stripe') {
+        const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
+          body: {
+            product_id: selectedEbook.id,
+            product_name: selectedEbook.name,
+            amount: selectedEbook.price,
+            user_email: session?.user.email,
+            user_id: session?.user.id,
+            success_url: `${window.location.origin}/dashboard?payment=success&product=${encodeURIComponent(selectedEbook.name)}`,
+            cancel_url: `${window.location.origin}/ebooks-pagos?payment=cancelled`,
+            metadata: {
+              type: 'ebook',
+              ...getUTMParams(),
+            },
+          },
+        })
 
-      const { error } = await supabase.from('purchases').insert({
-        user_id: session?.user.id,
-        product_id: selectedEbook.id,
-        amount_paid: selectedEbook.price,
-        payment_method: method,
-        transaction_id: `txn_${Math.random().toString(36).substr(2, 9)}`,
-        status: 'completed',
+        if (error || !data?.url) {
+          if (data?.requires_config || error?.message?.includes('STRIPE_SECRET_KEY')) {
+            toast({
+              title: 'Configuração do Stripe Pendente',
+              description:
+                'Aguardando configuração das chaves de API do Stripe (STRIPE_SECRET_KEY) no Supabase.',
+              variant: 'destructive',
+            })
+          } else {
+            throw new Error(data?.error || error?.message || 'Falha ao iniciar checkout do Stripe')
+          }
+          return
+        }
+
+        trackEvent('purchase', {
+          product_name: selectedEbook.name,
+          product_id: selectedEbook.id,
+          price: selectedEbook.price,
+          currency: 'BRL',
+          payment_method: 'stripe',
+          user_id: session?.user.id,
+          timestamp: Date.now(),
+          product_type: 'ebook-paid',
+          ...getUTMParams(),
+        })
+
+        trackingService.trackPurchase(selectedEbook.price, 'BRL', selectedEbook.id)
+
+        window.location.href = data.url
+        return
+      }
+    } catch (err: any) {
+      toast({
+        title: 'Erro',
+        description: err?.message || 'Falha no pagamento.',
+        variant: 'destructive',
       })
-      if (error) throw error
-
-      await supabase.functions.invoke('send-brevo-email', {
-        body: {
-          email: session?.user.email,
-          list_name: 'Clientes Pagos',
-          automation_name: 'Confirmação de Compra',
-          user_data: { product: selectedEbook.name },
-        },
-      })
-
-      trackEvent('purchase', {
-        product_name: selectedEbook.name,
-        product_id: selectedEbook.id,
-        price: selectedEbook.price,
-        currency: 'BRL',
-        payment_method: method,
-        user_id: session?.user.id,
-        timestamp: Date.now(),
-        product_type: 'ebook-paid',
-        ...getUTMParams(),
-      })
-
-      trackingService.trackPurchase(selectedEbook.price, 'BRL', selectedEbook.id)
-
-      toast({ title: 'Sucesso!', description: 'Compra realizada. Verifique seu e-mail.' })
-      setSelectedEbook(null)
-    } catch (err) {
-      toast({ title: 'Erro', description: 'Falha no pagamento.', variant: 'destructive' })
     } finally {
       setProcessing(false)
     }
@@ -190,18 +205,10 @@ export default function EbooksPagos() {
             <Button
               disabled={processing}
               onClick={() => processPayment('stripe')}
-              className="h-12 bg-[#635BFF] hover:bg-[#635BFF]/90"
+              className="h-12 bg-[#635BFF] hover:bg-[#635BFF]/90 text-white font-semibold"
             >
               {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Pagar com Stripe
-            </Button>
-            <Button
-              disabled={processing}
-              onClick={() => processPayment('mercado_pago')}
-              className="h-12 bg-[#009EE3] hover:bg-[#009EE3]/90 text-white"
-            >
-              {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Pagar com Mercado Pago
+              Ir para Checkout Stripe
             </Button>
           </div>
         </DialogContent>

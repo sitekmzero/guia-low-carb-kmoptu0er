@@ -1,13 +1,24 @@
-// Mock Lead Enrichment Service
+// Lead Enrichment Service
 export const enrichLeadData = async (leadEmail: string) => {
-  // In a real scenario, you would call an external API (like Clearbit or Apollo) here
-  // simulating a delay
-  await new Promise((resolve) => setTimeout(resolve, 500))
+  if (!leadEmail) return null
+
+  // Extrai o domínio de e-mail corporativo se aplicável, sem inventar empresas fake
+  const parts = leadEmail.split('@')
+  const domain = parts[1] || ''
+  const isGeneric = [
+    'gmail.com',
+    'hotmail.com',
+    'yahoo.com',
+    'outlook.com',
+    'icloud.com',
+    'uol.com.br',
+    'bol.com.br',
+  ].includes(domain.toLowerCase())
 
   return {
-    company: 'Empresa Exemplo SA',
-    jobTitle: 'Gestor',
-    location: 'São Paulo, SP',
-    industry: 'Healthcare',
+    company: isGeneric ? '' : domain.split('.')[0].toUpperCase(),
+    jobTitle: '',
+    location: '',
+    industry: 'Nutrição & Saúde',
   }
 }

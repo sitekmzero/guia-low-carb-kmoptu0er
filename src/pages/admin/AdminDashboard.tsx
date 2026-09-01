@@ -15,17 +15,21 @@ import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
 
 export default function AdminDashboard() {
-  const [metrics, setMetrics] = useState({ leads: 0, vendas: 0 })
+  const [metrics, setMetrics] = useState({ leads: 0, vendas: 0, consultorias: 0, trackingViews: 0 })
   const [leads, setLeads] = useState<any[]>([])
+  const [chartData, setChartData] = useState<{ name: string; leads: number; vendas: number }[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     async function fetchData() {
-      const [lc, ld, crm, v] = await Promise.all([
+      const [lc, ld, crm, v, p, c, track] = await Promise.all([
         supabase.from('leads_cursos').select('id, name, email, whatsapp, created_at'),
         supabase.from('leads').select('id, name, email, phone, created_at, product_type'),
         supabase.from('crm_leads').select('id, name, email, phone, created_at, lead_source'),
-        supabase.from('vendas').select('*', { count: 'exact' }).eq('status', 'pago'),
+        supabase.from('vendas').select('id, amount, created_at').eq('status', 'pago'),
+        supabase.from('purchases').select('id, amount_paid, created_at').eq('status', 'completed'),
+        supabase.from('consultations').select('id, created_at'),
+        supabase.from('channel_tracking').select('id', { count: 'exact' }),
       ])
 
       const allLeads = [
@@ -35,8 +39,49 @@ export default function AdminDashboard() {
       ]
       allLeads.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
-      setMetrics({ leads: allLeads.length, vendas: v.count || 0 })
+      const totalVendas = (v.data || []).length + (p.data || []).length
+
+      setMetrics({
+        leads: allLeads.length,
+        vendas: totalVendas,
+        consultorias: (c.data || []).length,
+        trackingViews: track.count || 0,
+      })
       setLeads(allLeads.slice(0, 10))
+
+      // Gerar gráfico real agrupando os últimos 4 meses
+      const months = [
+        'Jan',
+        'Fev',
+        'Mar',
+        'Abr',
+        'Mai',
+        'Jun',
+        'Jul',
+        'Ago',
+        'Set',
+        'Out',
+        'Nov',
+        'Dez',
+      ]
+      const currentMonthIdx = new Date().getMonth()
+      const lastMonths = [
+        (currentMonthIdx - 3 + 12) % 12,
+        (currentMonthIdx - 2 + 12) % 12,
+        (currentMonthIdx - 1 + 12) % 12,
+        currentMonthIdx,
+      ]
+
+      const realChart = lastMonths.map((mIdx) => {
+        const mName = months[mIdx]
+        const mLeads = allLeads.filter((l) => new Date(l.created_at).getMonth() === mIdx).length
+        const mVendas =
+          (v.data || []).filter((item) => new Date(item.created_at).getMonth() === mIdx).length +
+          (p.data || []).filter((item) => new Date(item.created_at).getMonth() === mIdx).length
+        return { name: mName, leads: mLeads, vendas: mVendas }
+      })
+
+      setChartData(realChart)
     }
     fetchData()
   }, [])
@@ -103,14 +148,6 @@ export default function AdminDashboard() {
     }
   }
 
-  const chartData = [
-    { name: 'Jan', leads: 40, vendas: 24 },
-    { name: 'Fev', leads: 30, vendas: 13 },
-    { name: 'Mar', leads: 20, vendas: 38 },
-    { name: 'Abr', leads: 27, vendas: 39 },
-    { name: 'Mai', leads: 18, vendas: 48 },
-  ]
-
   return (
     <div className="space-y-8 animate-fade-in pb-10">
       <h1 className="text-3xl font-bold font-heading text-primary">CRM & Métricas</h1>
@@ -134,18 +171,18 @@ export default function AdminDashboard() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Page Views (MOCK)</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Teleconsultas Agendadas</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">12.5k</p>
+            <p className="text-3xl font-bold">{metrics.consultorias}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Usuários Únicos (MOCK)</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Eventos Rastreados</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">8.2k</p>
+            <p className="text-3xl font-bold">{metrics.trackingViews}</p>
           </CardContent>
         </Card>
       </div>

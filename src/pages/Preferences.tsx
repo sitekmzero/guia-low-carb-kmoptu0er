@@ -23,7 +23,7 @@ export default function Preferences() {
     whatsapp: false,
   })
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email) {
       toast({
@@ -35,14 +35,34 @@ export default function Preferences() {
     }
 
     setLoading(true)
-    // Mock save preferences to database
-    setTimeout(() => {
-      setLoading(false)
+    try {
+      const { supabase } = await import('@/lib/supabase/client')
+      const { error } = await supabase.from('user_preferences').upsert(
+        {
+          email: email.trim().toLowerCase(),
+          newsletter: prefs.newsletter,
+          marketing: prefs.marketing,
+          whatsapp: prefs.whatsapp,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'email' },
+      )
+
+      if (error) throw error
+
       toast({
         title: 'Preferências Atualizadas',
-        description: 'Suas opções de comunicação foram salvas.',
+        description: 'Suas opções de comunicação foram salvas com sucesso no banco.',
       })
-    }, 1000)
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao salvar',
+        description: err?.message || 'Falha ao gravar preferências.',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

@@ -76,50 +76,92 @@ export default function Teleconsulta() {
     setProcessing(true)
     try {
       const values = form.getValues()
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      const { error: consError } = await supabase.from('consultations').insert({
-        user_id: session?.user.id,
-        consultation_type: values.type,
-        scheduled_date: values.date.toISOString(),
-        scheduled_time: values.time,
-        status: 'confirmed',
-        notes: values.notes,
-        zoom_link: 'https://zoom.us/j/mock_link',
-      })
-      if (consError) throw consError
-
-      await supabase.functions.invoke('send-brevo-email', {
-        body: {
-          email: session?.user.email,
-          list_name: 'Clientes Pagos',
-          automation_name: 'Confirmação de Consulta',
-          user_data: { date: format(values.date, 'dd/MM/yyyy'), time: values.time },
-        },
-      })
-
       const priceMap: Record<string, number> = {
         nutrition: 150,
         metabolic: 180,
         program_60d: 290,
       }
+      const typeLabelMap: Record<string, string> = {
+        nutrition: 'Consulta Nutricional Individual',
+        metabolic: 'Acompanhamento Bariátrico / Metabólico',
+        program_60d: 'Programa Transformação 60 Dias',
+      }
       const price = priceMap[values.type] || 150
-      trackEvent('consultation_booked', {
-        consultation_type: values.type,
-        scheduled_date: values.date.toISOString(),
-        price,
-        user_id: session?.user.id,
-        timestamp: Date.now(),
-        ...getUTMParams(),
+      const title = typeLabelMap[values.type] || 'Teleconsulta Nutricional'
+
+      // Criação da consulta como 'pending' aguardando pagamento
+      const { data: consultationData, error: consError } = await supabase
+        .from('consultations')
+        .insert({
+          user_id: session?.user.id,
+          consultation_type: values.type,
+          scheduled_date: values.date.toISOString(),
+          scheduled_time: values.time,
+          status: 'pending_payment',
+          notes: values.notes || '',
+          zoom_link: null, // Link real gerado após confirmação / atendimento
+        })
+        .select()
+        .single()
+
+      if (consError) throw consError
+
+      if (method === 'stripe') {
+        const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
+          body: {
+            product_id: consultationData?.id || values.type,
+            product_name: title,
+            amount: price,
+            user_email: session?.user.email,
+            user_id: session?.user.id,
+            success_url: `${window.location.origin}/dashboard?payment=success&type=teleconsulta`,
+            cancel_url: `${window.location.origin}/teleconsulta?payment=cancelled`,
+            metadata: {
+              type: 'teleconsulta',
+              consultation_id: consultationData?.id,
+              date: format(values.date, 'dd/MM/yyyy'),
+              time: values.time,
+              ...getUTMParams(),
+            },
+          },
+        })
+
+        if (error || !data?.url) {
+          if (data?.requires_config || error?.message?.includes('STRIPE_SECRET_KEY')) {
+            toast({
+              title: 'Configuração do Stripe Pendente',
+              description:
+                'Agendamento registrado como pendente. Chaves de API do Stripe (STRIPE_SECRET_KEY) aguardando configuração no Supabase.',
+              variant: 'destructive',
+            })
+            setShowPayment(false)
+            form.reset()
+          } else {
+            throw new Error(data?.error || error?.message || 'Falha ao iniciar checkout do Stripe')
+          }
+          return
+        }
+
+        trackEvent('consultation_booked', {
+          consultation_type: values.type,
+          scheduled_date: values.date.toISOString(),
+          price,
+          user_id: session?.user.id,
+          timestamp: Date.now(),
+          ...getUTMParams(),
+        })
+
+        trackingService.trackConsultationBooked(values.type || 'nutrition', price)
+
+        window.location.href = data.url
+        return
+      }
+    } catch (err: any) {
+      toast({
+        title: 'Erro',
+        description: err?.message || 'Falha no agendamento.',
+        variant: 'destructive',
       })
-
-      trackingService.trackConsultationBooked(values.type || 'nutrition', price || 197)
-
-      toast({ title: 'Sucesso!', description: 'Consulta agendada com sucesso!' })
-      setShowPayment(false)
-      form.reset()
-    } catch (err) {
-      toast({ title: 'Erro', description: 'Falha no agendamento.', variant: 'destructive' })
     } finally {
       setProcessing(false)
     }
@@ -301,17 +343,10 @@ export default function Teleconsulta() {
             <Button
               disabled={processing}
               onClick={() => processPayment('stripe')}
-              className="h-12 bg-[#635BFF] hover:bg-[#635BFF]/90"
+              className="h-12 bg-[#635BFF] hover:bg-[#635BFF]/90 text-white font-semibold"
             >
-              {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Pagar com Stripe
-            </Button>
-            <Button
-              disabled={processing}
-              onClick={() => processPayment('mercado_pago')}
-              className="h-12 bg-[#009EE3] hover:bg-[#009EE3]/90 text-white"
-            >
-              {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Pagar com Mercado
-              Pago
+              {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Ir para Checkout
+              Stripe
             </Button>
           </div>
         </DialogContent>

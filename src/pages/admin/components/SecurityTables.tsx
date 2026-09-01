@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
@@ -8,185 +8,173 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { useToast } from '@/hooks/use-toast'
 import { Badge } from '@/components/ui/badge'
 import { Users, Activity } from 'lucide-react'
-
-const MOCK_USERS = [
-  {
-    email: 'admin@guialowcarb.com.br',
-    role: 'admin',
-    lastLogin: '2024-04-02 10:30',
-    status: 'Active',
-  },
-  {
-    email: 'suporte@guialowcarb.com.br',
-    role: 'user',
-    lastLogin: '2024-04-01 15:45',
-    status: 'Active',
-  },
-]
-
-const MOCK_LOGS = [
-  {
-    date: '2024-04-02 10:30:15',
-    action: 'Login',
-    user: 'admin@guialowcarb.com.br',
-    ip: '192.168.1.1',
-    status: 'Success',
-  },
-  {
-    date: '2024-04-01 18:20:00',
-    action: 'API Key Update',
-    user: 'admin@guialowcarb.com.br',
-    ip: '192.168.1.1',
-    status: 'Success',
-  },
-  {
-    date: '2024-04-01 15:45:10',
-    action: 'Login',
-    user: 'suporte@guialowcarb.com.br',
-    ip: '10.0.0.5',
-    status: 'Success',
-  },
-  {
-    date: '2024-03-30 09:15:00',
-    action: 'Database Backup',
-    user: 'System',
-    ip: 'localhost',
-    status: 'Success',
-  },
-]
+import { supabase } from '@/lib/supabase/client'
 
 export function SecurityUsers() {
-  const { toast } = useToast()
-  const [isOpen, setIsOpen] = useState(false)
+  const [users, setUsers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const handleAction = (action: string) => {
-    toast({ title: 'Sucesso', description: `Usuário ${action} com sucesso!` })
-    setIsOpen(false)
-  }
+  useEffect(() => {
+    async function fetchProfiles() {
+      try {
+        setLoading(true)
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('id, email, full_name, is_admin, role, created_at')
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+        setUsers(data || [])
+      } catch (err) {
+        console.error('Erro ao buscar perfis:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProfiles()
+  }, [])
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Users className="w-5 h-5" /> Controle de Acesso
+          <Users className="w-5 h-5" /> Perfis e Acesso Administrativo
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Usuário</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Último Login</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {MOCK_USERS.map((u) => (
-              <TableRow key={u.email}>
-                <TableCell className="font-medium">{u.email}</TableCell>
-                <TableCell>
-                  <Badge variant="outline">{u.role}</Badge>
-                </TableCell>
-                <TableCell className="text-muted-foreground">{u.lastLogin}</TableCell>
-                <TableCell>
-                  <Badge className="bg-green-500">{u.status}</Badge>
-                </TableCell>
-                <TableCell className="flex gap-2">
-                  <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        Editar
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Editar Acesso - {u.email}</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 py-4">
-                        <Select defaultValue={u.role}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione a role" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="admin">Administrador</SelectItem>
-                            <SelectItem value="user">Usuário Padrão</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Button onClick={() => handleAction('atualizado')} className="w-full">
-                          Salvar Alterações
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                  <Button variant="destructive" size="sm" onClick={() => handleAction('removido')}>
-                    Remover
-                  </Button>
-                </TableCell>
+        {loading ? (
+          <div className="py-6 text-center text-sm text-muted-foreground">
+            Carregando usuários...
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Usuário</TableHead>
+                <TableHead>Nome</TableHead>
+                <TableHead>Nível de Acesso</TableHead>
+                <TableHead>Criado Em</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {users.map((u) => (
+                <TableRow key={u.id}>
+                  <TableCell className="font-medium">{u.email || 'Sem e-mail'}</TableCell>
+                  <TableCell>{u.full_name || 'Usuário'}</TableCell>
+                  <TableCell>
+                    <Badge variant={u.is_admin ? 'default' : 'outline'}>
+                      {u.is_admin ? 'Admin' : u.role || 'Usuário'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : '-'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge className="bg-green-600">Ativo</Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {users.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                    Nenhum perfil de usuário retornado.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
   )
 }
 
 export function SecurityAuditLog() {
+  const [logs, setLogs] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchAuditLogs() {
+      try {
+        setLoading(true)
+        const { data, error } = await supabase
+          .from('audit_logs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(20)
+
+        if (error) {
+          setLogs([])
+        } else {
+          setLogs(data || [])
+        }
+      } catch (err) {
+        console.error('Erro ao buscar logs:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchAuditLogs()
+  }, [])
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <Activity className="w-5 h-5" /> Log de Auditoria
         </CardTitle>
-        <Button variant="outline" size="sm">
-          Exportar CSV
-        </Button>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Data/Hora</TableHead>
-              <TableHead>Ação</TableHead>
-              <TableHead>Usuário</TableHead>
-              <TableHead>IP</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {MOCK_LOGS.map((l, i) => (
-              <TableRow key={i}>
-                <TableCell className="whitespace-nowrap text-muted-foreground">{l.date}</TableCell>
-                <TableCell className="font-medium">{l.action}</TableCell>
-                <TableCell>{l.user}</TableCell>
-                <TableCell className="font-mono text-xs">{l.ip}</TableCell>
-                <TableCell>
-                  <Badge variant="secondary">{l.status}</Badge>
-                </TableCell>
+        {loading ? (
+          <div className="py-6 text-center text-sm text-muted-foreground">Carregando logs...</div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Data/Hora</TableHead>
+                <TableHead>Ação</TableHead>
+                <TableHead>Entidade</TableHead>
+                <TableHead>Usuário</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {logs.map((l) => (
+                <TableRow key={l.id}>
+                  <TableCell className="whitespace-nowrap text-muted-foreground text-xs">
+                    {new Date(l.created_at).toLocaleString('pt-BR')}
+                  </TableCell>
+                  <TableCell className="font-medium">{l.action}</TableCell>
+                  <TableCell className="text-xs font-mono text-muted-foreground">
+                    {l.entity_type}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {l.user_email || l.user_id || 'Sistema'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        l.status === 'Success' || l.status === 'completed' ? 'default' : 'secondary'
+                      }
+                    >
+                      {l.status}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {logs.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                    Nenhum registro de auditoria gravado ainda.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
   )

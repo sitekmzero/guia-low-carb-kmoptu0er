@@ -19,9 +19,16 @@ export default function Index() {
         <div className="container mx-auto px-4 max-w-[1200px]">
           <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-20">
             <div className="w-full md:w-1/2 space-y-8 animate-fade-in-up">
-              <span className="inline-block py-1.5 px-4 rounded-full bg-primary/10 text-primary text-sm font-bold tracking-wider uppercase border border-primary/20">
-                Nutrição Clínica baseada em Ciência
-              </span>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <img
+                  src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Logos/Logo%20guialowcarb2.png"
+                  alt="Logo Oficial Guia Low Carb"
+                  className="h-16 md:h-20 w-auto object-contain drop-shadow-md"
+                />
+                <span className="inline-block py-1.5 px-4 rounded-full bg-primary/10 text-primary text-sm font-bold tracking-wider uppercase border border-primary/20">
+                  Nutrição Clínica & Ciência
+                </span>
+              </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-extrabold text-foreground leading-tight tracking-tight">
                 Transforme seu <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">

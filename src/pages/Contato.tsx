@@ -7,6 +7,8 @@ import { toast } from '@/hooks/use-toast'
 
 import { useSEO } from '@/services/seo'
 
+import { supabase } from '@/lib/supabase/client'
+
 export default function Contato() {
   useSEO(
     'Contato | Guia Low Carb - Adriana Araújo',
@@ -17,15 +19,76 @@ export default function Contato() {
     'https://www.guialowcarb.com.br/contato',
   )
   const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    nome: '',
+    email: '',
+    whatsapp: '',
+    mensagem: '',
+  })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setTimeout(() => {
+    try {
+      // 1. Salvar na tabela leads
+      const { error: leadErr } = await supabase.from('leads').insert({
+        name: formData.nome,
+        email: formData.email,
+        phone: formData.whatsapp,
+        lead_source: 'formulario_contato',
+        product_type: 'contato_site',
+        notes: formData.mensagem,
+      })
+
+      if (leadErr) {
+        console.error('Erro ao salvar lead:', leadErr)
+      }
+
+      // 2. Salvar ou atualizar no crm_leads
+      await supabase.from('crm_leads').upsert(
+        {
+          name: formData.nome,
+          email: formData.email,
+          phone: formData.whatsapp,
+          lead_source: 'contato_site',
+          lead_status: 'new',
+          lead_score: 30,
+          notes: formData.mensagem,
+        },
+        { onConflict: 'email' },
+      )
+
+      // 3. Disparar notificação Brevo se configurada
+      await supabase.functions
+        .invoke('integrate-brevo', {
+          body: {
+            email: formData.email,
+            nome: formData.nome,
+            mensagem: formData.mensagem,
+          },
+        })
+        .catch(() => {})
+
+      toast({
+        title: 'Mensagem enviada com sucesso!',
+        description: 'Recebemos suas informações e entraremos em contato em breve.',
+      })
+
+      setFormData({
+        nome: '',
+        email: '',
+        whatsapp: '',
+        mensagem: '',
+      })
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao enviar mensagem',
+        description: err?.message || 'Tente novamente em instantes.',
+        variant: 'destructive',
+      })
+    } finally {
       setLoading(false)
-      toast({ title: 'Mensagem enviada', description: 'Entraremos em contato em breve.' })
-      ;(e.target as HTMLFormElement).reset()
-    }, 1000)
+    }
   }
 
   return (
@@ -44,7 +107,13 @@ export default function Contato() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-medium">Nome</label>
-              <Input required placeholder="Seu nome completo" className="bg-muted/50 border-none" />
+              <Input
+                required
+                placeholder="Seu nome completo"
+                value={formData.nome}
+                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                className="bg-muted/50 border-none"
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">E-mail</label>
@@ -52,6 +121,8 @@ export default function Contato() {
                 type="email"
                 required
                 placeholder="Seu melhor e-mail"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="bg-muted/50 border-none"
               />
             </div>
@@ -61,6 +132,8 @@ export default function Contato() {
                 type="tel"
                 required
                 placeholder="(00) 00000-0000"
+                value={formData.whatsapp}
+                onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
                 className="bg-muted/50 border-none"
               />
             </div>
@@ -70,6 +143,8 @@ export default function Contato() {
                 required
                 placeholder="Como posso te ajudar?"
                 rows={4}
+                value={formData.mensagem}
+                onChange={(e) => setFormData({ ...formData, mensagem: e.target.value })}
                 className="bg-muted/50 border-none"
               />
             </div>
@@ -79,7 +154,7 @@ export default function Contato() {
               className="w-full rounded-full h-12 text-lg"
               disabled={loading}
             >
-              {loading ? 'Enviando...' : 'Agendar Teleconsulta'}
+              {loading ? 'Enviando...' : 'Enviar Mensagem'}
             </Button>
           </form>
         </div>
