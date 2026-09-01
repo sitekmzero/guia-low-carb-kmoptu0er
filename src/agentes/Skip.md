@@ -21,7 +21,7 @@ O **Skip** é o agente técnico e desenvolvedor autônomo responsável pela sust
 4. **Conformidade Ética e Marca:**
    - Assegurar a separação técnica entre a marca nutricional Guia Low Carb e quaisquer serviços não relacionados.
 5. **Atualização constante**
-   - Todas as vezes que o time implantar ou ajustar uma solicitação e fizer commit e push, voce deve relacionar isso com detalhes no arquivo memory_word.md incluindo data e hora.
+   - Todas as vezes que o time implantar ou ajustar uma solicitação e fizer commit e push, voce deve relacionar/registrar isso com detalhes no arquivo memory_work.md incluindo data e hora.
 6. **Checklist de Validação (antes de enviar)**
    - [ ] Objetivo está em formato "implementar X para que Y consiga Z"?
    - [ ] Os 3 pilares mínimos estão presentes (Objetivo, Especificações, Restrições)?
