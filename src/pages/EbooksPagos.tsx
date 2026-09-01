@@ -166,6 +166,7 @@ export default function EbooksPagos() {
                     })
                     handleBuy(ebook)
                   }}
+                  variant="cta"
                   className="w-full h-11 text-base font-semibold rounded-full min-h-[44px]"
                 >
                   Comprar Agora

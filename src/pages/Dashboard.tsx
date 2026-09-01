@@ -158,7 +158,7 @@ export default function Dashboard() {
                 metabólica.
               </p>
               <Link to="/cursos" className="mt-4">
-                <Button className="bg-primary">Explorar Produtos</Button>
+                <Button variant="cta">Explorar Produtos</Button>
               </Link>
             </CardContent>
           </Card>

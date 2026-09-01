@@ -67,10 +67,7 @@ export default function VendasCursos() {
               <p className="text-2xl font-bold text-foreground">{p.price}</p>
             </CardContent>
             <CardFooter>
-              <Button
-                asChild
-                className="w-full rounded-full bg-secondary hover:bg-secondary/90 text-white font-bold h-12"
-              >
+              <Button asChild variant="cta" className="w-full rounded-full h-12">
                 <Link to="#">Adquira Agora</Link>
               </Button>
             </CardFooter>

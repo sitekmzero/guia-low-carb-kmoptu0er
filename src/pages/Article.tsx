@@ -210,7 +210,7 @@ export default function Article() {
               atendimento humanizado.
             </p>
             <Link to="/teleconsulta">
-              <Button className="bg-primary hover:bg-primary/90">Agendar Teleconsulta</Button>
+              <Button variant="cta">Agendar Teleconsulta</Button>
             </Link>
           </div>
         </div>

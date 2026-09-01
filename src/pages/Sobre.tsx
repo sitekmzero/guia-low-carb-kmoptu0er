@@ -124,12 +124,7 @@ export default function Sobre() {
               >
                 <a href="#historia">Conheça Minha História</a>
               </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="rounded-full px-8 py-6 text-lg border-white text-white hover:bg-white/10"
-                asChild
-              >
+              <Button size="lg" variant="cta" className="rounded-full px-8 py-6 text-lg" asChild>
                 <Link to="/teleconsulta">Agendar Consulta</Link>
               </Button>
             </div>
@@ -329,7 +324,7 @@ export default function Sobre() {
           duradoura e qualidade de vida.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <Button size="lg" className="rounded-full text-lg px-8 py-6" asChild>
+          <Button size="lg" variant="cta" className="rounded-full text-lg px-8 py-6" asChild>
             <Link to="/teleconsulta">Agendar Consulta</Link>
           </Button>
           <Button

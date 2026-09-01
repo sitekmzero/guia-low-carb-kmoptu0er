@@ -166,7 +166,8 @@ export default function EbookGratuito() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-12 mt-4 bg-primary hover:bg-[#158A68] text-white font-bold text-lg shadow-md transition-transform hover:-translate-y-0.5"
+                  variant="cta"
+                  className="w-full h-12 mt-4 font-bold text-lg shadow-md transition-transform hover:-translate-y-0.5"
                   onClick={() =>
                     trackEvent('cta_click', {
                       cta_text: 'Receber E-book Gratuito',

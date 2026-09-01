@@ -94,8 +94,8 @@ export default function AdminCROMetrics() {
                 <span className="font-medium">4. Pagamento Concluído</span>
                 <span>3.2% (80)</span>
               </div>
-              <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                <div className="h-full bg-[#158A68] w-[3.2%]"></div>
+              <div className="h-2 w-full bg-secondary/20 rounded-full overflow-hidden">
+                <div className="h-full bg-primary w-[3.2%]"></div>
               </div>
             </div>
           </CardContent>

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { toast } from '@/hooks/use-toast'
 
 export default function AdminSettings() {
-  const [colors, setColors] = useState({ primary: '#1CA67D', secondary: '#F7941D' })
+  const [colors, setColors] = useState({ primary: '#0F5132', secondary: '#3D6B4F' })
 
   useEffect(() => {
     supabase

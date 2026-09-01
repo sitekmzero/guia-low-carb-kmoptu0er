@@ -75,7 +75,8 @@ export default function Contato() {
             </div>
             <Button
               type="submit"
-              className="w-full bg-primary hover:bg-[#158A68] text-white rounded-full h-12 text-lg"
+              variant="cta"
+              className="w-full rounded-full h-12 text-lg"
               disabled={loading}
             >
               {loading ? 'Enviando...' : 'Agendar Teleconsulta'}

@@ -176,7 +176,7 @@ export function ProgressiveForm({ source = 'landing-page' }: { source?: string }
             </div>
           )}
 
-          <Button type="submit" className="w-full bg-primary mt-6" disabled={loading}>
+          <Button type="submit" variant="cta" className="w-full mt-6" disabled={loading}>
             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
             {stage === 3 ? 'Finalizar' : 'Continuar'}
             {!loading && stage < 3 && <ArrowRight className="w-4 h-4 ml-2" />}

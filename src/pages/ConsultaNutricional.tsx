@@ -49,7 +49,8 @@ export default function ConsultaNutricional() {
 
           <Button
             onClick={handleConsultationClick}
-            className="w-full sm:w-auto h-16 px-10 text-xl font-bold bg-primary hover:bg-[#158A68] text-white shadow-lg transition-transform hover:scale-105"
+            variant="cta"
+            className="w-full sm:w-auto h-16 px-10 text-xl font-bold shadow-lg transition-transform hover:scale-105"
           >
             Agendar Consulta Agora
           </Button>
@@ -177,7 +178,7 @@ export default function ConsultaNutricional() {
           <Button
             onClick={handleConsultationClick}
             size="lg"
-            variant="secondary"
+            variant="cta"
             className="w-full sm:w-auto h-16 px-12 text-xl font-bold rounded-full shadow-xl"
           >
             Agendar Agora com 30% OFF
@@ -193,6 +194,7 @@ export default function ConsultaNutricional() {
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-md border-t md:hidden z-50">
         <Button
           onClick={handleConsultationClick}
+          variant="cta"
           className="w-full h-14 text-lg font-bold shadow-lg"
         >
           Agendar Consulta Agora

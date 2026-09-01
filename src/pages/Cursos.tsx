@@ -175,6 +175,7 @@ export default function Cursos() {
                     })
                     handleEnroll(curso)
                   }}
+                  variant="cta"
                   className="w-full h-12 text-base font-bold rounded-full min-h-[44px]"
                 >
                   Ver Detalhes e Inscrever-se
@@ -219,6 +220,7 @@ export default function Cursos() {
               </div>
               <Button
                 onClick={proceedToPayment}
+                variant="cta"
                 className="w-full sm:w-auto h-12 px-8 text-base font-bold"
               >
                 Inscrever-se Agora

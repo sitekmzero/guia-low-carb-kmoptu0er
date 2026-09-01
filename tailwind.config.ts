@@ -27,8 +27,8 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
-        subheading: ['Montserrat', 'sans-serif'],
-        heading: ['Playfair Display', 'serif'],
+        subheading: ['Inter', 'sans-serif'],
+        heading: ['Lora', 'serif'],
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -36,6 +36,10 @@ export default {
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
+        cta: {
+          DEFAULT: 'hsl(var(--cta))',
+          foreground: 'hsl(var(--cta-foreground))',
+        },
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',

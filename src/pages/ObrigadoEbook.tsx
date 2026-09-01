@@ -32,7 +32,8 @@ export default function ObrigadoEbook() {
           <Button
             asChild
             size="lg"
-            className="rounded-full bg-secondary hover:bg-secondary/90 text-white w-full sm:w-auto h-14 px-8 text-lg font-bold"
+            variant="cta"
+            className="rounded-full w-full sm:w-auto h-14 px-8 text-lg font-bold"
           >
             <Link to="/vendas-cursos">Conheça o Curso Completo</Link>
           </Button>

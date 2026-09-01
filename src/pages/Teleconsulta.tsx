@@ -273,6 +273,7 @@ export default function Teleconsulta() {
               />
               <Button
                 type="submit"
+                variant="cta"
                 className="w-full h-12 text-base font-bold min-h-[48px]"
                 onClick={() =>
                   trackEvent('cta_click', {

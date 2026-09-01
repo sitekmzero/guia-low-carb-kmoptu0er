@@ -76,11 +76,7 @@ export default function Servicos() {
               <p>{s.desc}</p>
             </CardContent>
             <CardFooter className="pt-4 justify-center">
-              <Button
-                asChild
-                variant="outline"
-                className="w-full rounded-full border-primary text-primary hover:bg-primary hover:text-white transition-colors"
-              >
+              <Button asChild variant="cta" className="w-full rounded-full">
                 <Link to="/contato">Agendar Teleconsulta</Link>
               </Button>
             </CardFooter>

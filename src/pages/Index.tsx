@@ -24,7 +24,7 @@ export default function Index() {
               </span>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-extrabold text-foreground leading-tight tracking-tight">
                 Transforme seu <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-[#158A68]">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
                   Metabolismo
                 </span>{' '}
                 <br />
@@ -38,7 +38,8 @@ export default function Index() {
                 <Link to="/servicos">
                   <Button
                     size="lg"
-                    className="w-full sm:w-auto text-lg h-14 px-8 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all hover:-translate-y-1"
+                    variant="cta"
+                    className="w-full sm:w-auto text-lg h-14 px-8 rounded-full shadow-lg hover:shadow-xl transition-all hover:-translate-y-1"
                   >
                     Agendar Consulta
                   </Button>
@@ -46,8 +47,8 @@ export default function Index() {
                 <Link to="/ebook-gratuito">
                   <Button
                     size="lg"
-                    variant="outline"
-                    className="w-full sm:w-auto text-lg h-14 px-8 rounded-full border-2 border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all"
+                    variant="cta"
+                    className="w-full sm:w-auto text-lg h-14 px-8 rounded-full shadow-lg hover:shadow-xl transition-all hover:-translate-y-1"
                   >
                     Baixar E-book Grátis
                   </Button>
@@ -58,7 +59,7 @@ export default function Index() {
             <div className="w-full md:w-1/2 flex justify-center animate-fade-in-up animation-delay-200">
               <div className="relative w-full max-w-md aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-2xl border-[6px] border-white/50 backdrop-blur-sm">
                 <img
-                  src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Fotos/Adriana%20consultorio.png"
+                  src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Fotos/Adriana%20home%20site.png"
                   alt="Adriana Araújo - Nutricionista Clínica"
                   loading="lazy"
                   className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-700"

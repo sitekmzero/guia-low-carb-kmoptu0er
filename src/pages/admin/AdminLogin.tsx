@@ -52,7 +52,7 @@ export default function AdminLogin() {
           <Button
             type="submit"
             disabled={loadingLocal}
-            className="w-full bg-secondary hover:bg-[#158A68] text-white"
+            className="w-full bg-primary hover:bg-primary/90 text-white"
           >
             {loadingLocal ? 'Entrando...' : 'Entrar'}
           </Button>

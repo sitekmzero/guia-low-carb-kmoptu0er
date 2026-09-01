@@ -72,6 +72,7 @@ export default function NutricaoLowCarb() {
               <Button
                 asChild
                 size="lg"
+                variant="cta"
                 className="h-14 px-8 text-lg rounded-full w-full sm:w-auto"
                 onClick={() => handleCTAClick('hero')}
               >
@@ -245,7 +246,7 @@ export default function NutricaoLowCarb() {
           <Button
             asChild
             size="lg"
-            variant="secondary"
+            variant="cta"
             className="h-14 px-8 text-lg font-bold rounded-full w-full sm:w-auto"
             onClick={() =>
               trackEvent('cta_click', {
@@ -264,6 +265,7 @@ export default function NutricaoLowCarb() {
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-md border-t md:hidden z-50">
         <Button
           asChild
+          variant="cta"
           className="w-full h-12 text-lg font-bold"
           onClick={() => trackEvent('sticky_cta_click', { page_path: '/nutricao-low-carb' })}
         >

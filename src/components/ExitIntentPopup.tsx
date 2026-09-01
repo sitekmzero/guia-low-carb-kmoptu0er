@@ -55,7 +55,7 @@ export function ExitIntentPopup() {
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3 mt-4">
-          <Button onClick={handleAccept} className="h-12 text-lg font-bold">
+          <Button onClick={handleAccept} variant="cta" className="h-12 text-lg font-bold">
             Aproveitar Oferta
           </Button>
           <Button variant="ghost" onClick={handleClose}>

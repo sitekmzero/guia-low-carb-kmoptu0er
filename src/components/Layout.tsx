@@ -10,13 +10,10 @@ export default function Layout() {
         <div className="container mx-auto px-4 flex h-20 items-center justify-between">
           <Link to="/" className="flex items-center space-x-3">
             <img
-              src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Fotos/Adriana%20consultorio.png"
+              src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Logos/Logo%20guialowcarb2.png"
               alt="Guia Low Carb Logo"
-              className="h-12 w-auto object-cover rounded-full shadow-md border-2 border-primary/20"
+              className="h-12 w-auto object-contain"
             />
-            <span className="font-bold font-heading text-xl text-primary hidden md:inline-block">
-              Guia Low Carb
-            </span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
@@ -99,7 +96,14 @@ export default function Layout() {
       </main>
 
       <footer className="border-t bg-muted/30 py-10 mt-auto">
-        <div className="container mx-auto px-4 text-center">
+        <div className="container mx-auto px-4 text-center flex flex-col items-center">
+          <Link to="/" className="mb-4 inline-block">
+            <img
+              src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Logos/Logo%20guialowcarb2.png"
+              alt="Guia Low Carb Logo"
+              className="h-10 w-auto object-contain mx-auto"
+            />
+          </Link>
           <p className="text-sm text-muted-foreground">
             &copy; {new Date().getFullYear()} Guia Low Carb - Nutrição Clínica Avançada. Todos os
             direitos reservados.
