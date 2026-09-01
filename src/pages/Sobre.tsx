@@ -90,7 +90,17 @@ const pilares = [
   },
 ]
 
+import { useSEO } from '@/services/seo'
+
 export default function Sobre() {
+  useSEO(
+    'Sobre Adriana Araújo | Nutricionista Clínica Guia Low Carb',
+    'Conheça a história, formação e compromisso da nutricionista Adriana Araújo com a nutrição clínica baseada em evidências.',
+    'sobre nutricionista, adriana araujo, nutricao clinica, uftm',
+    '/og-image.png',
+    'https://www.guialowcarb.com.br/sobre',
+    'https://www.guialowcarb.com.br/sobre',
+  )
   return (
     <div className="flex flex-col w-full min-h-screen">
       {/* Hero Section */}

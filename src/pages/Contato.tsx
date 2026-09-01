@@ -5,7 +5,17 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/hooks/use-toast'
 
+import { useSEO } from '@/services/seo'
+
 export default function Contato() {
+  useSEO(
+    'Contato | Guia Low Carb - Adriana Araújo',
+    'Entre em contato para agendar sua consulta nutricional online ou presencial em Uberaba - MG.',
+    'contato nutricionista, agendamento teleconsulta, nutricao uberaba',
+    '/og-image.png',
+    'https://www.guialowcarb.com.br/contato',
+    'https://www.guialowcarb.com.br/contato',
+  )
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {

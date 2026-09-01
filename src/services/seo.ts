@@ -1,5 +1,20 @@
 import { useEffect } from 'react'
 
+export const updateCanonicalLink = (canonicalUrl?: string) => {
+  if (typeof window === 'undefined') return
+  const pathname = window.location.pathname || '/'
+  const normalizedPath = pathname === '/' ? '/' : pathname.replace(/\/+$/, '')
+  const resolvedCanonical = canonicalUrl || `https://www.guialowcarb.com.br${normalizedPath}`
+
+  let link = document.querySelector('link[rel="canonical"]')
+  if (!link) {
+    link = document.createElement('link')
+    link.setAttribute('rel', 'canonical')
+    document.head.appendChild(link)
+  }
+  link.setAttribute('href', resolvedCanonical)
+}
+
 export const setSEO = (
   title: string,
   description: string,
@@ -40,15 +55,7 @@ export const setSEO = (
   setMeta('twitter:description', description)
   setMeta('twitter:image', ogImage)
 
-  if (canonicalUrl) {
-    let link = document.querySelector('link[rel="canonical"]')
-    if (!link) {
-      link = document.createElement('link')
-      link.setAttribute('rel', 'canonical')
-      document.head.appendChild(link)
-    }
-    link.setAttribute('href', canonicalUrl)
-  }
+  updateCanonicalLink(canonicalUrl)
 }
 
 export const useSEO = (

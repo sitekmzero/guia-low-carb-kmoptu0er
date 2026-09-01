@@ -10,7 +10,17 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 
+import { useSEO } from '@/services/seo'
+
 export default function Servicos() {
+  useSEO(
+    'Serviços e Tratamentos | Guia Low Carb',
+    'Conheça nossos atendimentos e programas em nutrição clínica: emagrecimento metabólico, resistência insulínica e pós-bariátrica.',
+    'servicos nutricao, emagrecimento metabolico, resistencia insulinica, bariatrica',
+    '/og-image.png',
+    'https://www.guialowcarb.com.br/servicos',
+    'https://www.guialowcarb.com.br/servicos',
+  )
   const servicos = [
     {
       title: 'Emagrecimento Metabólico',

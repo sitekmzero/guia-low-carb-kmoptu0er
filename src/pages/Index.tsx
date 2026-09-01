@@ -1,7 +1,17 @@
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 
+import { useSEO } from '@/services/seo'
+
 export default function Index() {
+  useSEO(
+    'Guia Low Carb | Nutrição Clínica e Longevidade',
+    'Nutrição clínica e longevidade metabólica com embasamento científico. Transforme seu metabolismo sem fome nem culpa com o Guia Low Carb.',
+    'guialowcarb, low carb, nutricao clinica, saude metabolica, emagrecimento definitivo',
+    '/og-image.png',
+    'https://www.guialowcarb.com.br/',
+    'https://www.guialowcarb.com.br/',
+  )
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}

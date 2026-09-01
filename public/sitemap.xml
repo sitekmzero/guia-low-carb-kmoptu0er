@@ -25,12 +25,20 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://www.guialowcarb.com.br/obrigado-ebook</loc>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://www.guialowcarb.com.br/ebooks-pagos</loc>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.guialowcarb.com.br/cursos</loc>
     <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.guialowcarb.com.br/vendas-cursos</loc>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.guialowcarb.com.br/teleconsulta</loc>
@@ -43,5 +51,33 @@
   <url>
     <loc>https://www.guialowcarb.com.br/consulta-nutricional</loc>
     <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.guialowcarb.com.br/dashboard</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.guialowcarb.com.br/blog/cardapio-low-carb-7-dias</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.guialowcarb.com.br/blog/low-carb-diabetes-tipo-2-2026</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.guialowcarb.com.br/blog/resistencia-insulina-alimentacao</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.guialowcarb.com.br/blog/teleconsulta-nutricional-guia</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.guialowcarb.com.br/blog/low-carb-relacao-poder</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.guialowcarb.com.br/blog/inflamacao-cronica-alimentos</loc>
+    <priority>0.8</priority>
   </url>
 </urlset>

@@ -7,7 +7,17 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 
+import { useSEO } from '@/services/seo'
+
 export default function Blog() {
+  useSEO(
+    'Blog Guia Low Carb | Nutrição Clínica e Longevidade',
+    'Artigos sobre nutrição clínica, reversão de resistência insulínica, diabetes e longevidade metabólica.',
+    'blog low carb, artigos nutricao, saude metabolica, diabetes tipo 2',
+    '/og-image.png',
+    'https://www.guialowcarb.com.br/blog',
+    'https://www.guialowcarb.com.br/blog',
+  )
   const [posts, setPosts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')

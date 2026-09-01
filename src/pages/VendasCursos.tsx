@@ -3,7 +3,17 @@ import { BookOpen, MonitorPlay, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
 
+import { useSEO } from '@/services/seo'
+
 export default function VendasCursos() {
+  useSEO(
+    'Cursos Online de Nutrição Low Carb | Guia Low Carb',
+    'Aprenda com metodologia comprovada como aplicar a alimentação Low Carb no seu dia a dia.',
+    'cursos low carb, aulas nutricao, dieta cetogenica, emagrecimento',
+    '/og-image.png',
+    'https://www.guialowcarb.com.br/vendas-cursos',
+    'https://www.guialowcarb.com.br/vendas-cursos',
+  )
   const produtos = [
     {
       title: 'E-book Premium',

@@ -17,7 +17,17 @@ import { useAuth } from '@/hooks/use-auth'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent } from '@/components/ui/card'
 
+import { useSEO } from '@/services/seo'
+
 export default function Dashboard() {
+  useSEO(
+    'Área do Aluno | Guia Low Carb',
+    'Acesse seus cursos, materiais digitais e histórico de consultas.',
+    'area do aluno, painel do aluno, cursos guia low carb',
+    '/og-image.png',
+    'https://www.guialowcarb.com.br/dashboard',
+    'https://www.guialowcarb.com.br/dashboard',
+  )
   const [purchases, setPurchases] = useState<any[]>([])
   const [courses, setCourses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)

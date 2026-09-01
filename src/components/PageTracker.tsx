@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { trackEvent } from '@/services/analytics'
 import { storeUTMParams } from '@/services/utm'
 import { trackWebVitals } from '@/services/performance'
+import { updateCanonicalLink } from '@/services/seo'
 
 export function PageTracker() {
   const location = useLocation()
@@ -13,6 +14,9 @@ export function PageTracker() {
   }, [])
 
   useEffect(() => {
+    // Dynamic canonical link update on every route change
+    updateCanonicalLink()
+
     const handler = setTimeout(() => {
       trackEvent('page_view', {
         page_path: location.pathname + location.search,

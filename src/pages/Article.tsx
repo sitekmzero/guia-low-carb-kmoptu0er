@@ -16,6 +16,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
 
+import { setSEO } from '@/services/seo'
+
 export default function Article() {
   const { slug } = useParams()
   const [post, setPost] = useState<any>(null)
@@ -43,6 +45,14 @@ export default function Article() {
 
       if (data) {
         setPost(data)
+        setSEO(
+          `${data.title} | Guia Low Carb`,
+          data.excerpt || 'Artigo sobre nutrição clínica e metabolismo.',
+          data.tags ? data.tags.join(', ') : '',
+          data.featured_image_url || '/og-image.png',
+          `https://www.guialowcarb.com.br/blog/${data.slug}`,
+          `https://www.guialowcarb.com.br/blog/${data.slug}`,
+        )
         // Increment views safely using RPC or update
         supabase.rpc('increment_blog_view', { post_slug: slug }).then()
 
