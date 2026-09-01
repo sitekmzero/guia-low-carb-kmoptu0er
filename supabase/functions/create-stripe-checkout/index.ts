@@ -12,7 +12,7 @@ Deno.serve(async (req: Request) => {
     const stripeApiKey =
       Deno.env.get('STRIPE_SECRET_KEY') ||
       Deno.env.get('STRIPE_API_KEY') ||
-      Deno.env.get('STRIPE_PUBLIC_API_KEY')
+      Deno.env.get('STRIKE_API_KEY')
 
     const {
       product_id,
@@ -38,15 +38,15 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    // Se o segredo STRIPE_SECRET_KEY não existir no backend
-    if (!stripeApiKey || stripeApiKey.startsWith('pk_') || !stripeApiKey.startsWith('sk_')) {
+    // Se o segredo de chave secreta não existir no backend
+    if (!stripeApiKey || stripeApiKey.startsWith('pk_')) {
       console.warn(
-        '[CREATE-STRIPE-CHECKOUT] Chave secreta do Stripe (STRIPE_SECRET_KEY) não configurada nos secrets do Supabase.',
+        '[CREATE-STRIPE-CHECKOUT] Chave secreta do Stripe (STRIPE_SECRET_KEY / STRIPE_API_KEY / STRIKE_API_KEY) não configurada nos secrets do Supabase.',
       )
       return new Response(
         JSON.stringify({
           error:
-            'A integração com Stripe está pendente de configuração da chave secreta (STRIPE_SECRET_KEY) no Supabase.',
+            'A integração com Stripe está pendente de configuração da chave secreta (STRIPE_SECRET_KEY / STRIPE_API_KEY) no Supabase.',
           requires_config: true,
           configured: false,
         }),

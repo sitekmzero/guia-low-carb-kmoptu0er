@@ -9,8 +9,12 @@ Deno.serve(async (req: Request) => {
   }
 
   const signature = req.headers.get('stripe-signature')
-  const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')
-  const stripeApiKey = Deno.env.get('STRIPE_SECRET_KEY') || Deno.env.get('STRIPE_API_KEY')
+  const webhookSecret =
+    Deno.env.get('STRIPE_WEBHOOK_SECRET') || Deno.env.get('STRIKE_WEBHOOK_SECRET')
+  const stripeApiKey =
+    Deno.env.get('STRIPE_SECRET_KEY') ||
+    Deno.env.get('STRIPE_API_KEY') ||
+    Deno.env.get('STRIKE_API_KEY')
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
   const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
