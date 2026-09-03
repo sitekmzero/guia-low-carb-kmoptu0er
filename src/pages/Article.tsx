@@ -122,8 +122,20 @@ export default function Article() {
               {new Date(post.published_date).toLocaleDateString('pt-BR')}
             </span>
             <span className="flex items-center gap-1">
-              <Clock className="w-4 h-4" /> {post.reading_time_minutes} min de leitura
-            </span>
+              <Clock className="w-4 h-4" />{' '}
+              {post.reading_time_minutes ||
+                Math.max(
+                  1,
+                  Math.ceil(
+                    (post.content
+                      ?.replace(/<[^>]+>/g, ' ')
+                      .replace(/\s+/g, ' ')
+                      .trim()
+                      .split(/\s+/).length || 0) / 200,
+                  ),
+                )}{' '}
+              min de leitura
+            </span>{' '}
           </div>
         </div>
       </section>

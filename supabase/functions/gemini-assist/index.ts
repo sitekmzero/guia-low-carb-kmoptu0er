@@ -185,36 +185,40 @@ Contexto atual: ${content ? content.slice(0, 2000) : 'Em branco'}
       body: JSON.stringify(requestBody),
     })
 
-    // If gemini-3.7-flash is not available on this API key's tier, fallback to gemini-2.5-flash or gemini-1.5-flash
+    // If gemini-3.7-flash is not available on this API key's tier, fallback to gemini-2.5-flash, gemini-2.0-flash, or gemini-1.5-flash
+    let usedModelName = requestedModel
+    let finalErrorDetails = ''
+
     if (!geminiRes.ok) {
       const errText = await geminiRes.text()
       console.warn(
         `Tentativa com ${requestedModel} falhou (${geminiRes.status}): ${errText}. Tentando fallback...`,
       )
+      finalErrorDetails = errText
 
-      const fallbackModel = 'gemini-2.5-flash'
-      apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${fallbackModel}:generateContent?key=${apiKey}`
-      geminiRes = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-      })
-
-      if (!geminiRes.ok) {
-        // Last fallback: gemini-1.5-flash
-        apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
-        geminiRes = await fetch(apiUrl, {
+      const fallbacks = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
+      for (const fallbackModel of fallbacks) {
+        const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/${fallbackModel}:generateContent?key=${apiKey}`
+        const fbRes = await fetch(fallbackUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestBody),
         })
+        if (fbRes.ok) {
+          geminiRes = fbRes
+          usedModelName = fallbackModel
+          break
+        } else {
+          const fErr = await fbRes.text()
+          console.warn(`Fallback ${fallbackModel} falhou (${fbRes.status}): ${fErr}`)
+          finalErrorDetails = fErr
+        }
       }
     }
 
     if (!geminiRes.ok) {
-      const finalErr = await geminiRes.text()
       return new Response(
-        JSON.stringify({ error: `Erro na API do Gemini: ${geminiRes.status}`, details: finalErr }),
+        JSON.stringify({ error: `Erro na API do Gemini: ${geminiRes.status}`, details: finalErrorDetails }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }
@@ -246,7 +250,7 @@ Contexto atual: ${content ? content.slice(0, 2000) : 'Em branco'}
         success: true,
         text: cleanedText,
         json: parsedJson,
-        modelUsed: geminiData.modelVersion || requestedModel,
+        modelUsed: geminiData.modelVersion || usedModelName,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )

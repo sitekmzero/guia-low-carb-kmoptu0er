@@ -105,7 +105,8 @@ Deno.serve(async (req: Request) => {
     const finalPrompt = `${STYLE_PREFIX} Subject: ${userPrompt.trim()}`
 
     // 2. Call OpenAI Images API
-    // Attempt gpt-image-2 first (per task), with fallback to dall-e-3
+    // Attempt gpt-image-2 first (per task, standard landscape 1536x1024 or 1024x1024)
+    // Note: gpt-image-2 returns b64_json by default and rejects 'response_format' parameter!
     let imageModel = 'gpt-image-2'
     let imageRes = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
@@ -117,18 +118,17 @@ Deno.serve(async (req: Request) => {
         model: imageModel,
         prompt: finalPrompt,
         n: 1,
-        size: '1792x1024', // 16:9 standard for landscape covers
-        response_format: 'b64_json',
+        size: '1536x1024', // Standard landscape size for gpt-image-2
       }),
     })
 
     if (!imageRes.ok) {
       const errBody = await imageRes.text()
       console.warn(
-        `Tentativa com ${imageModel} falhou (${imageRes.status}): ${errBody}. Tentando dall-e-3...`,
+        `Tentativa com ${imageModel} (1536x1024) falhou (${imageRes.status}): ${errBody}. Tentando gpt-image-2 com 1024x1024...`,
       )
 
-      imageModel = 'dall-e-3'
+      // Try gpt-image-2 standard 1024x1024
       imageRes = await fetch('https://api.openai.com/v1/images/generations', {
         method: 'POST',
         headers: {
@@ -139,10 +139,32 @@ Deno.serve(async (req: Request) => {
           model: imageModel,
           prompt: finalPrompt,
           n: 1,
-          size: '1792x1024',
-          response_format: 'b64_json',
+          size: '1024x1024',
         }),
       })
+
+      if (!imageRes.ok) {
+        const errBody2 = await imageRes.text()
+        console.warn(
+          `Tentativa com ${imageModel} (1024x1024) falhou (${imageRes.status}): ${errBody2}. Tentando fallback dall-e-3...`,
+        )
+
+        imageModel = 'dall-e-3'
+        imageRes = await fetch('https://api.openai.com/v1/images/generations', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${openaiApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: imageModel,
+            prompt: finalPrompt,
+            n: 1,
+            size: '1792x1024',
+            response_format: 'b64_json',
+          }),
+        })
+      }
     }
 
     if (!imageRes.ok) {
@@ -157,33 +179,56 @@ Deno.serve(async (req: Request) => {
     }
 
     const imageData = await imageRes.json()
-    const b64Data = imageData.data?.[0]?.b64_json
-    const revisedPrompt = imageData.data?.[0]?.revised_prompt || finalPrompt
+    const itemData = imageData.data?.[0]
+    const b64Data = itemData?.b64_json
+    const revisedPrompt = itemData?.revised_prompt || finalPrompt
 
-    if (!b64Data) {
-      return new Response(JSON.stringify({ error: 'Nenhuma imagem retornada pela OpenAI.' }), {
-        status: 502,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    // 3. Decode base64 to binary buffer and upload directly to Supabase Storage
-    const binaryStr = atob(b64Data)
-    const bytes = new Uint8Array(binaryStr.length)
-    for (let i = 0; i < binaryStr.length; i++) {
-      bytes[i] = binaryStr.charCodeAt(i)
+    let bytes: Uint8Array
+    if (b64Data) {
+      const binaryStr = atob(b64Data)
+      bytes = new Uint8Array(binaryStr.length)
+      for (let i = 0; i < binaryStr.length; i++) {
+        bytes[i] = binaryStr.charCodeAt(i)
+      }
+    } else if (itemData?.url) {
+      // If OpenAI returned a hosted URL (e.g. dall-e-3 without response_format)
+      const downloadRes = await fetch(itemData.url)
+      const buffer = await downloadRes.arrayBuffer()
+      bytes = new Uint8Array(buffer)
+    } else {
+      return new Response(
+        JSON.stringify({ error: 'Nenhuma imagem retornada pela OpenAI.', details: imageData }),
+        {
+          status: 502,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
     }
 
     const fileName = `ia_${Date.now()}_${Math.random().toString(36).substring(2, 9)}.webp`
     const filePath = `blog-ia/${fileName}`
 
-    // Upload to 'Imagens' bucket
-    const { data: uploadData, error: uploadErr } = await supabase.storage
-      .from('Imagens')
+    // Upload to 'Imagens' bucket (or fallback to 'blog')
+    let bucketName = 'Imagens'
+    let { data: uploadData, error: uploadErr } = await supabase.storage
+      .from(bucketName)
       .upload(filePath, bytes, {
         contentType: 'image/webp',
         upsert: true,
       })
+
+    if (uploadErr) {
+      console.warn(`Erro no upload para bucket '${bucketName}': ${uploadErr.message}. Tentando bucket 'blog'...`)
+      bucketName = 'blog'
+      const retryRes = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, bytes, {
+          contentType: 'image/webp',
+          upsert: true,
+        })
+      uploadData = retryRes.data
+      uploadErr = retryRes.error
+    }
 
     if (uploadErr) {
       console.error('Erro no upload para Supabase Storage:', uploadErr)
@@ -196,7 +241,7 @@ Deno.serve(async (req: Request) => {
     // Get public URL
     const {
       data: { publicUrl },
-    } = supabase.storage.from('Imagens').getPublicUrl(filePath)
+    } = supabase.storage.from(bucketName).getPublicUrl(filePath)
 
     // Suggest ALT text (max 125 chars)
     let altText = `Fotografia culinária de ${userPrompt.trim().replace(/[".]/g, '')}`
