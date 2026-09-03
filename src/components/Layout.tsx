@@ -2,6 +2,7 @@ import { Link, Outlet } from 'react-router-dom'
 import { Menu } from 'lucide-react'
 import { Button } from './ui/button'
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet'
+import { openConsentPreferences } from '@/services/consentService'
 
 export default function Layout() {
   return (
@@ -108,13 +109,22 @@ export default function Layout() {
             &copy; {new Date().getFullYear()} Guia Low Carb - Nutrição Clínica Avançada. Todos os
             direitos reservados.
           </p>
-          <div className="mt-4 flex justify-center gap-4 text-xs text-muted-foreground">
-            <Link to="#" className="hover:text-primary transition-colors">
+          <div className="mt-4 flex flex-wrap justify-center items-center gap-4 text-xs text-muted-foreground">
+            <Link to="/termos-de-uso" className="hover:text-primary transition-colors">
               Termos de Uso
             </Link>
-            <Link to="#" className="hover:text-primary transition-colors">
+            <span className="text-muted-foreground/40">•</span>
+            <Link to="/politica-de-privacidade" className="hover:text-primary transition-colors">
               Política de Privacidade
             </Link>
+            <span className="text-muted-foreground/40">•</span>
+            <button
+              type="button"
+              onClick={openConsentPreferences}
+              className="hover:text-primary transition-colors underline cursor-pointer"
+            >
+              Preferências de cookies
+            </button>
           </div>
         </div>
       </footer>

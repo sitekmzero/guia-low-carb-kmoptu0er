@@ -6,13 +6,15 @@ declare global {
   }
 }
 
+import { hasAnalyticsConsent, hasMarketingConsent } from './consentService'
+
 export const trackingService = {
   trackEvent: (eventName: string, eventData?: any): boolean => {
     try {
-      if (typeof window.fbq === 'function') {
+      if (hasMarketingConsent() && typeof window.fbq === 'function') {
         window.fbq('track', eventName, eventData)
       }
-      if (typeof window.gtag === 'function') {
+      if ((hasAnalyticsConsent() || hasMarketingConsent()) && typeof window.gtag === 'function') {
         window.gtag('event', eventName, eventData)
       }
       return true
@@ -28,11 +30,11 @@ export const trackingService = {
     try {
       trackingService.trackEvent('Purchase')
 
-      if (typeof window.fbq === 'function') {
+      if (hasMarketingConsent() && typeof window.fbq === 'function') {
         window.fbq('track', 'Purchase', { value, currency })
       }
 
-      if (typeof window.gtag === 'function') {
+      if (hasMarketingConsent() && typeof window.gtag === 'function') {
         window.gtag('event', 'purchase', { value, currency, transaction_id: product_id })
       }
 
@@ -49,14 +51,14 @@ export const trackingService = {
     try {
       trackingService.trackEvent('Lead')
 
-      if (typeof window.fbq === 'function') {
+      if (hasMarketingConsent() && typeof window.fbq === 'function') {
         window.fbq('track', 'Lead', {
           content_name: product_interest,
           content_category: lead_source,
         })
       }
 
-      if (typeof window.gtag === 'function') {
+      if ((hasAnalyticsConsent() || hasMarketingConsent()) && typeof window.gtag === 'function') {
         window.gtag('event', 'generate_lead', {
           value: 0,
           currency: 'BRL',
@@ -77,11 +79,11 @@ export const trackingService = {
     try {
       trackingService.trackEvent('ConsultationBooked')
 
-      if (typeof window.fbq === 'function') {
+      if (hasMarketingConsent() && typeof window.fbq === 'function') {
         window.fbq('track', 'Lead', { content_name: consultation_type })
       }
 
-      if (typeof window.gtag === 'function') {
+      if ((hasAnalyticsConsent() || hasMarketingConsent()) && typeof window.gtag === 'function') {
         window.gtag('event', 'generate_lead', { value, currency: 'BRL' })
         window.gtag('event', 'consultation_booked', { value, consultation_type })
       }
@@ -99,7 +101,7 @@ export const trackingService = {
     try {
       trackingService.trackEvent('CourseEnrolled')
 
-      if (typeof window.fbq === 'function') {
+      if (hasMarketingConsent() && typeof window.fbq === 'function') {
         window.fbq('track', 'Purchase', {
           content_name: course_name,
           value: course_price,
@@ -107,7 +109,7 @@ export const trackingService = {
         })
       }
 
-      if (typeof window.gtag === 'function') {
+      if (hasMarketingConsent() && typeof window.gtag === 'function') {
         window.gtag('event', 'purchase', { value: course_price, currency: 'BRL' })
         window.gtag('event', 'course_enrolled', { value: course_price, course_name })
       }

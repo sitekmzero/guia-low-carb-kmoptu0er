@@ -134,9 +134,26 @@ export default function Article() {
           {/* Article Body */}
           <article className="flex-1 prose prose-lg md:prose-xl max-w-none prose-headings:font-heading prose-headings:text-primary prose-a:text-primary prose-a:no-underline hover:prose-a:underline animate-fade-in-up">
             <div dangerouslySetInnerHTML={{ __html: post.content || '' }} />
+
+            {/* Rodapé Obrigatório de Artigo (Art. 55 do Código de Ética do Nutricionista - Parágrafo Único) */}
+            <div className="not-prose mt-12 p-6 rounded-2xl bg-muted/40 border border-primary/20 shadow-sm text-sm space-y-2 text-foreground/80">
+              <p className="font-semibold text-primary flex items-center gap-2">
+                <span>ℹ️</span> Nota de Esclarecimento e Responsabilidade Técnica
+              </p>
+              <p className="leading-relaxed">
+                Este conteúdo tem caráter estritamente educativo e informativo, não configurando
+                diagnóstico, prescrição dietética individualizada ou recomendação terapêutica
+                específica. Cada organismo possui particularidades clínicas e metabólicas únicas.
+                Para adequação de conduta ou intervenção nutricional, consulte sempre um
+                nutricionista habilitado para atendimento clínico individualizado.
+              </p>
+              <p className="text-xs text-muted-foreground pt-1 border-t border-border/50">
+                Responsável Técnica: <strong>Adriana de Freitas Oliveira Araújo</strong> •
+                Nutricionista Clínica • <strong>CRN-9 28762</strong>.
+              </p>
+            </div>
           </article>
         </div>
-
         {/* Share Actions */}
         <div className="mt-12 py-6 border-y flex flex-col sm:flex-row items-center justify-between gap-4">
           <span className="font-semibold text-lg flex items-center gap-2">
@@ -202,11 +219,11 @@ export default function Article() {
               {post.author || 'Adriana Araújo'}
             </h3>
             <p className="text-sm font-medium text-secondary mb-3">
-              Nutricionista Clínica Especialista em Low Carb & Metabolismo
+              Nutricionista Clínica com formação complementar em Low Carb & Metabolismo
             </p>
             <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
-              Nutricionista com foco em saúde metabólica, reversão de resistência insulínica e
-              emagrecimento definitivo. Meu trabalho é fundamentado em evidências científicas e
+              Nutricionista com foco em saúde metabólica, manejo da resistência insulínica e
+              emagrecimento sustentável. Meu trabalho é fundamentado em evidências científicas e
               atendimento humanizado.
             </p>
             <Link to="/teleconsulta">

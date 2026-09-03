@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { MapPin, MessageCircle } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { MapPin, MessageCircle, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -147,6 +148,22 @@ export default function Contato() {
                 onChange={(e) => setFormData({ ...formData, mensagem: e.target.value })}
                 className="bg-muted/50 border-none"
               />
+              <div className="p-3 rounded-lg bg-muted/70 border border-border/60 text-xs text-muted-foreground flex items-start gap-2 leading-relaxed mt-2">
+                <AlertCircle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                <span>
+                  <strong>Aviso de Privacidade (LGPD):</strong> Este campo destina-se a dúvidas e
+                  agendamentos gerais e não deve conter dados sensíveis de saúde (como resultados de
+                  exames ou diagnósticos clínicos). Caso opte por enviar dados de saúde
+                  espontaneamente, isso configura consentimento expresso nos termos da nossa{' '}
+                  <Link
+                    to="/politica-de-privacidade"
+                    className="text-primary underline font-medium hover:text-primary/80"
+                  >
+                    Política de Privacidade
+                  </Link>
+                  .
+                </span>
+              </div>
             </div>
             <Button
               type="submit"

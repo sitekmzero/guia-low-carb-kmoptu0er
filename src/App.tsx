@@ -24,6 +24,7 @@ import AdminAgendamentos from './pages/admin/AdminAgendamentos'
 import { AuthProvider } from './hooks/use-auth'
 import { PageTracker } from './components/PageTracker'
 import { TrackingInitializer } from './components/TrackingInitializer'
+import { CookieBanner } from './components/CookieBanner'
 import { Loader2 } from 'lucide-react'
 
 const Cursos = lazy(() => import('./pages/Cursos'))
@@ -31,6 +32,8 @@ const Teleconsulta = lazy(() => import('./pages/Teleconsulta'))
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'))
 const NutricaoLowCarb = lazy(() => import('./pages/NutricaoLowCarb'))
 const ConsultaNutricional = lazy(() => import('./pages/ConsultaNutricional'))
+const PoliticaPrivacidade = lazy(() => import('./pages/PoliticaPrivacidade'))
+const TermosDeUso = lazy(() => import('./pages/TermosDeUso'))
 const AdminCampaigns = lazy(() => import('./pages/admin/AdminCampaigns'))
 const AdminABTests = lazy(() => import('./pages/admin/AdminABTests'))
 const AdminCROMetrics = lazy(() => import('./pages/admin/AdminCROMetrics'))
@@ -69,6 +72,7 @@ const App = () => (
       <TrackingInitializer />
       <PageTracker />
       <TooltipProvider>
+        <CookieBanner />
         <Toaster />
         <Sonner />
         <Routes>
@@ -85,6 +89,22 @@ const App = () => (
             <Route path="/ebook-gratuito" element={<EbookGratuito />} />
             <Route path="/obrigado-ebook" element={<ObrigadoEbook />} />
             <Route path="/ebooks-pagos" element={<EbooksPagos />} />
+            <Route
+              path="/politica-de-privacidade"
+              element={
+                <SuspenseWrapper>
+                  <PoliticaPrivacidade />
+                </SuspenseWrapper>
+              }
+            />
+            <Route
+              path="/termos-de-uso"
+              element={
+                <SuspenseWrapper>
+                  <TermosDeUso />
+                </SuspenseWrapper>
+              }
+            />
             <Route
               path="/login"
               element={

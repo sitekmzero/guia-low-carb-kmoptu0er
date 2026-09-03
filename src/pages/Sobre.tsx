@@ -230,10 +230,10 @@ export default function Sobre() {
             </p>
             <ul className="space-y-4 pt-2">
               {[
-                'Nutricionista Clínica (CRN 28762)',
+                'Nutricionista Clínica (CRN-9 28762)',
                 'Bacharel em Nutrição Clínica (UFTM)',
-                'Especialista em Diabetes, Resistência Insulínica e Metabolismo',
-                'Especialista em Nutrição Esportiva e Acompanhamento Bariátrico',
+                'Formação complementar em Diabetes, Resistência Insulínica e Metabolismo',
+                'Formação complementar em Nutrição Esportiva e Acompanhamento Bariátrico',
                 'Pesquisadora contínua em estratégias Low Carb e Cetogênicas',
               ].map((item, j) => (
                 <li key={j} className="flex items-start gap-3 text-foreground/90">

@@ -1,6 +1,12 @@
+import { hasAnalyticsConsent, hasMarketingConsent } from './consentService'
+
 export const trackEvent = (eventName: string, eventData: any = {}) => {
   try {
-    if (typeof window !== 'undefined' && (window as any).dataLayer) {
+    if (
+      typeof window !== 'undefined' &&
+      (window as any).dataLayer &&
+      (hasAnalyticsConsent() || hasMarketingConsent())
+    ) {
       ;(window as any).dataLayer.push({
         event: eventName,
         ...eventData,
@@ -19,6 +25,7 @@ export const trackGoogleAdsConversion = (
   conversionId: string = 'AW-XXXXXXXXXX',
   label: string = 'YYYYYYYYYYYYYY',
 ) => {
+  if (!hasMarketingConsent()) return
   if (typeof window !== 'undefined' && (window as any).gtag) {
     ;(window as any).gtag('event', 'conversion', {
       send_to: `${conversionId}/${label}`,
@@ -33,6 +40,7 @@ export const trackMetaPixelConversion = (
   value: number,
   contentName: string = '',
 ) => {
+  if (!hasMarketingConsent()) return
   try {
     if (typeof window !== 'undefined' && (window as any).fbq) {
       ;(window as any).fbq('track', eventName, {

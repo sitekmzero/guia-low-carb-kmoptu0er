@@ -7,7 +7,7 @@ export default function Index() {
   useSEO(
     'Guia Low Carb | Nutrição Clínica e Longevidade',
     'Nutrição clínica e longevidade metabólica com embasamento científico. Transforme seu metabolismo sem fome nem culpa com o Guia Low Carb.',
-    'guialowcarb, low carb, nutricao clinica, saude metabolica, emagrecimento definitivo',
+    'guialowcarb, low carb, nutricao clinica, saude metabolica, emagrecimento sustentavel',
     '/og-image.png',
     'https://www.guialowcarb.com.br/',
     'https://www.guialowcarb.com.br/',
@@ -38,8 +38,8 @@ export default function Index() {
                 sem fome nem culpa.
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground font-subheading leading-relaxed max-w-lg">
-                Descubra por que 95% das dietas convencionais falham e como a estratégia Low Carb
-                correta pode restaurar sua saúde, energia e composição corporal de forma definitiva.
+                Descubra por que a maioria das dietas convencionais falha e como a estratégia Low
+                Carb correta pode restaurar sua saúde, disposição e sustentabilidade alimentar.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <Link to="/servicos">

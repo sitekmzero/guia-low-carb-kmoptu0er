@@ -29,7 +29,7 @@ export default function ConsultaNutricional() {
       <header className="py-6 border-b">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-2xl font-heading font-bold text-primary">Adriana Araújo</h1>
-          <p className="text-sm text-muted-foreground">Nutricionista Clínica Especializada</p>
+          <p className="text-sm text-muted-foreground">Nutricionista Clínica (CRN-9 28762)</p>
         </div>
       </header>
 
@@ -37,14 +37,14 @@ export default function ConsultaNutricional() {
       <section className="py-12 md:py-20 relative">
         <div className="container mx-auto px-4 max-w-4xl text-center">
           <span className="inline-block px-4 py-1.5 bg-red-100 text-red-700 rounded-full text-sm font-bold mb-6">
-            ⏳ Primeira Consulta com 30% de Desconto
+            ⏳ Primeira Consulta com Condição Especial
           </span>
           <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 text-foreground leading-tight">
             Consulta Nutricional <span className="text-primary">Personalizada</span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-            Descubra o plano nutricional ideal para você. Emagrecimento, energia e controle de
-            diabetes sem passar fome.
+            Descubra o plano nutricional ideal para você. Emagrecimento saudável, disposição e
+            manejo metabólico sem dietas punitivas.
           </p>
 
           <Button
@@ -57,10 +57,10 @@ export default function ConsultaNutricional() {
 
           <div className="flex flex-wrap justify-center items-center gap-6 mt-8 text-sm text-muted-foreground font-medium">
             <div className="flex items-center gap-2">
-              <Award className="w-5 h-5 text-primary" /> Nutricionista Certificada
+              <Award className="w-5 h-5 text-primary" /> Nutricionista Clínica (CRN-9 28762)
             </div>
             <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-primary" /> 20+ Anos de Experiência
+              <Clock className="w-5 h-5 text-primary" /> Experiência Clínica
             </div>
           </div>
         </div>
@@ -77,15 +77,15 @@ export default function ConsultaNutricional() {
               },
               {
                 title: 'Acompanhamento Contínuo',
-                desc: 'Suporte humanizado para garantir que você atinja suas metas.',
+                desc: 'Suporte humanizado para orientar você em cada etapa do processo.',
               },
               {
-                title: 'Resultados Comprovados',
-                desc: 'Metodologia baseada em ciência e aplicada em centenas de pacientes.',
+                title: 'Fundamentação Científica',
+                desc: 'Metodologia baseada nas melhores evidências clínicas contemporâneas.',
               },
               {
-                title: 'Suporte Especializado',
-                desc: 'Orientação precisa para reversão de resistência à insulina e inflamação.',
+                title: 'Foco Metabólico',
+                desc: 'Orientação precisa para manejo da sensibilidade à insulina e modulação inflamatória.',
               },
             ].map((prop, i) => (
               <div key={i} className="flex gap-4 items-start bg-card p-6 rounded-xl border">
@@ -94,42 +94,6 @@ export default function ConsultaNutricional() {
                   <h3 className="text-xl font-bold mb-2">{prop.title}</h3>
                   <p className="text-muted-foreground">{prop.desc}</p>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Social Proof */}
-      <section className="py-16">
-        <div className="container mx-auto px-4 max-w-4xl text-center">
-          <h2 className="text-3xl font-heading font-bold mb-10">O que nossos pacientes dizem</h2>
-          <div className="grid sm:grid-cols-3 gap-6">
-            {[
-              {
-                name: 'Ricardo Oliveira',
-                text: 'Perdi 12kg sem passar fome. A Adriana mudou minha relação com a comida.',
-              },
-              {
-                name: 'Fernanda Lima',
-                text: 'Minha glicemia normalizou no segundo mês de acompanhamento. Excelente!',
-              },
-              {
-                name: 'Camila Silva',
-                text: 'Finalmente encontrei uma nutri que entende minha rotina corrida.',
-              },
-            ].map((t, i) => (
-              <div
-                key={i}
-                className="bg-card p-6 rounded-xl border shadow-sm flex flex-col items-center text-center"
-              >
-                <div className="flex gap-1 text-yellow-500 mb-3">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star key={star} className="w-4 h-4 fill-current" />
-                  ))}
-                </div>
-                <p className="text-sm italic mb-4 flex-grow">"{t.text}"</p>
-                <p className="font-bold text-primary">{t.name}</p>
               </div>
             ))}
           </div>

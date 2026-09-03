@@ -31,7 +31,7 @@ export default function Cursos() {
 
   useSEO(
     'Cursos Online: Nutrição Low-Carb Completo',
-    'Aprenda nutrição low-carb com especialista. Cursos online com certificado.',
+    'Aprenda nutrição low-carb com embasamento científico. Cursos online com certificado.',
   )
   const [loading, setLoading] = useState(true)
   const [selectedCurso, setSelectedCurso] = useState<any>(null)
@@ -150,7 +150,7 @@ export default function Cursos() {
           Cursos Online
         </h1>
         <p className="text-xl text-muted-foreground font-subheading">
-          Aprenda nutrição low-carb com especialista
+          Aprenda nutrição low-carb com fundamentação científica
         </p>
       </div>
 

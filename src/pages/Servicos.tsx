@@ -29,12 +29,12 @@ export default function Servicos() {
     },
     {
       title: 'Resistência Insulínica e Pré-Diabetes',
-      desc: 'Tratamento nutricional específico para reverter a resistência à insulina, controlar glicemia e recuperar a sensibilidade metabólica.',
+      desc: 'Tratamento nutricional específico para acompanhar a resistência à insulina, apoiar o controle da glicemia e a saúde metabólica.',
       icon: Activity,
     },
     {
       title: 'Nutrição Bariátrica / Pós-Bariátrica',
-      desc: 'Acompanhamento especializado para pacientes bariátricos, garantindo absorção de nutrientes, manutenção de massa magra e prevenção de reganho de peso.',
+      desc: 'Acompanhamento focado para pacientes bariátricos, com foco em absorção de nutrientes, manutenção de massa magra e prevenção de reganho de peso.',
       icon: Stethoscope,
     },
     {
@@ -82,6 +82,23 @@ export default function Servicos() {
             </CardFooter>
           </Card>
         ))}
+      </div>
+
+      {/* Rodapé de Serviços (Aviso Obrigatório CFN) */}
+      <div className="mt-16 p-6 rounded-2xl bg-muted/40 border border-border text-center max-w-3xl mx-auto space-y-2">
+        <p className="font-semibold text-primary text-sm flex items-center justify-center gap-2">
+          <span>ℹ️</span> Informação Institucional e Responsabilidade Profissional
+        </p>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          As informações apresentadas nesta página têm caráter meramente informativo e orientativo
+          sobre as áreas de atuação clínica, não substituindo a consulta e o diagnóstico nutricional
+          individualizado. Todo atendimento clínico é realizado de acordo com as normas éticas do
+          Conselho Federal de Nutricionistas (CFN).
+        </p>
+        <p className="text-xs font-medium text-foreground pt-1">
+          Nutricionista Responsável: <strong>Adriana de Freitas Oliveira Araújo</strong> •{' '}
+          <strong>CRN-9 28762</strong>
+        </p>
       </div>
     </div>
   )

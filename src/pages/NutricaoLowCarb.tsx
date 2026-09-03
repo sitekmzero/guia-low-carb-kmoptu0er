@@ -98,7 +98,7 @@ export default function NutricaoLowCarb() {
               </div>
               <div>
                 <p className="font-bold text-foreground">Nutricionista Clínica</p>
-                <p className="text-sm text-muted-foreground">Especialista Certificada</p>
+                <p className="text-sm text-muted-foreground">CRN-9 28762</p>
               </div>
             </div>
           </div>
@@ -110,16 +110,22 @@ export default function NutricaoLowCarb() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-border">
             <div className="p-4">
-              <h3 className="text-xl font-bold mb-2">20+ Anos de Experiência</h3>
-              <p className="text-muted-foreground">Atendimento focado em resultados reais</p>
+              <h3 className="text-xl font-bold mb-2">Experiência Clínica</h3>
+              <p className="text-muted-foreground">
+                Atendimento focado em saúde e bem-estar sustentável
+              </p>
             </div>
             <div className="p-4">
               <h3 className="text-xl font-bold mb-2">Nutricionista Clínica</h3>
-              <p className="text-muted-foreground">Abordagem científica e personalizada</p>
+              <p className="text-muted-foreground">
+                Abordagem científica e personalizada (CRN-9 28762)
+              </p>
             </div>
             <div className="p-4">
-              <h3 className="text-xl font-bold mb-2">Especialista em Diabetes</h3>
-              <p className="text-muted-foreground">Reversão e controle da resistência à insulina</p>
+              <h3 className="text-xl font-bold mb-2">Formação complementar em Diabetes</h3>
+              <p className="text-muted-foreground">
+                Acompanhamento e manejo da resistência à insulina
+              </p>
             </div>
           </div>
         </div>

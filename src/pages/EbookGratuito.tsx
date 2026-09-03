@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Form,
   FormControl,
@@ -26,6 +27,9 @@ const formSchema = z.object({
   name: z.string().min(3, 'O nome deve ter no mínimo 3 caracteres'),
   email: z.string().email('E-mail inválido'),
   phone: z.string().optional(),
+  consent: z.boolean().refine((val) => val === true, {
+    message: 'É necessário concordar com os termos de privacidade para receber o material.',
+  }),
 })
 
 export default function EbookGratuito() {
@@ -39,7 +43,7 @@ export default function EbookGratuito() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: '', email: '', phone: '' },
+    defaultValues: { name: '', email: '', phone: '', consent: false },
   })
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -163,6 +167,37 @@ export default function EbookGratuito() {
                     B: <div className="hidden" />,
                   }}
                 />
+                <FormField
+                  control={form.control}
+                  name="consent"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg p-3 bg-muted/40 border text-left">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          aria-label="Consentimento de tratamento de dados LGPD"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="text-xs font-normal text-muted-foreground leading-relaxed cursor-pointer">
+                          Concordo em fornecer meus dados para o envio do e-book gratuito e
+                          comunicações educativas sobre saúde e nutrição pelo Guia Low Carb, em
+                          conformidade com a{' '}
+                          <Link
+                            to="/politica-de-privacidade"
+                            target="_blank"
+                            className="text-primary underline font-medium hover:text-primary/80"
+                          >
+                            Política de Privacidade
+                          </Link>
+                          .
+                        </FormLabel>
+                        <FormMessage />
+                      </div>
+                    </FormItem>
+                  )}
+                />
                 <Button
                   type="submit"
                   disabled={loading}
@@ -183,12 +218,12 @@ export default function EbookGratuito() {
             </Form>
 
             <div className="mt-6 pt-4 border-t flex flex-col items-center justify-center gap-2 text-muted-foreground text-sm">
-              <div className="flex items-center gap-1">
-                <ShieldCheck className="w-4 h-4 text-green-500" />
-                <span>Seus dados estão 100% seguros.</span>
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-primary" />
+                <span>Tratamento ético e protegido nos termos da LGPD.</span>
               </div>
               <p className="font-medium text-foreground">
-                Mais de 5.000 pessoas já baixaram este e-book
+                Material educativo com embasamento científico e acesso imediato
               </p>
             </div>
           </div>
