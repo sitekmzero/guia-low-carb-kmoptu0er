@@ -8,7 +8,10 @@ function base64UrlEncode(bytes: Uint8Array): string {
   for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCharCode(bytes[i])
   }
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+  return btoa(binary)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '')
 }
 
 function stringToBase64Url(str: string): string {
@@ -39,7 +42,7 @@ async function importPrivateKey(pem: string): Promise<CryptoKey> {
       hash: 'SHA-256',
     },
     false,
-    ['sign'],
+    ['sign']
   )
 }
 
@@ -47,7 +50,7 @@ async function importPrivateKey(pem: string): Promise<CryptoKey> {
 async function getGoogleAccessToken(
   clientEmail: string,
   privateKeyPem: string,
-  scopes: string[],
+  scopes: string[]
 ): Promise<string> {
   const now = Math.floor(Date.now() / 1000)
   const header = {
@@ -70,7 +73,7 @@ async function getGoogleAccessToken(
   const signature = await crypto.subtle.sign(
     'RSASSA-PKCS1-v1_5',
     privateKey,
-    new TextEncoder().encode(unsignedToken),
+    new TextEncoder().encode(unsignedToken)
   )
 
   const encodedSignature = base64UrlEncode(new Uint8Array(signature))
@@ -123,7 +126,7 @@ Deno.serve(async (req: Request) => {
         JSON.stringify({
           error: 'Segredo GOOGLE_SERVICE_ACCOUNT_KEY não configurado no backend.',
         }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -154,8 +157,7 @@ Deno.serve(async (req: Request) => {
           } catch {
             if (parsedKey.includes('-----BEGIN PRIVATE KEY-----')) {
               privateKey = parsedKey.replace(/\\n/g, '\n')
-              clientEmail =
-                'sync-drive-supabase@project-be50844e-44c0-46da-a5e.iam.gserviceaccount.com'
+              clientEmail = 'sync-drive-supabase@project-be50844e-44c0-46da-a5e.iam.gserviceaccount.com'
             }
           }
         }
@@ -172,7 +174,7 @@ Deno.serve(async (req: Request) => {
               receivedType: typeof rawKey,
               sample: rawKey.slice(0, 50),
             }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           )
         }
       }
@@ -184,19 +186,21 @@ Deno.serve(async (req: Request) => {
           parsedKey.email ||
           'sync-drive-supabase@project-be50844e-44c0-46da-a5e.iam.gserviceaccount.com'
 
-        privateKey = parsedKey.private_key || parsedKey.privateKey || null
+        privateKey =
+          parsedKey.private_key ||
+          parsedKey.privateKey ||
+          null
       }
     }
 
     if (!clientEmail || !privateKey) {
-      const keysFound =
-        typeof parsedKey === 'object' && parsedKey !== null ? Object.keys(parsedKey) : []
+      const keysFound = typeof parsedKey === 'object' && parsedKey !== null ? Object.keys(parsedKey) : []
       return new Response(
         JSON.stringify({
           error: 'GOOGLE_SERVICE_ACCOUNT_KEY inválido: falta client_email ou private_key.',
           keysFound,
         }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -215,9 +219,11 @@ Deno.serve(async (req: Request) => {
     }
 
     // 1. Get access token
-    const accessToken = await getGoogleAccessToken(clientEmail, privateKey, [
-      'https://www.googleapis.com/auth/drive.readonly',
-    ])
+    const accessToken = await getGoogleAccessToken(
+      clientEmail,
+      privateKey,
+      ['https://www.googleapis.com/auth/drive.readonly']
+    )
 
     // Helper to call Google Drive API
     const driveHeaders: Record<string, string> = {
@@ -268,7 +274,7 @@ Deno.serve(async (req: Request) => {
               ? `O Google Drive retornou 404 (Pasta não encontrada). Como a pasta usa formato legado (${folderId}), verifique se ela foi compartilhada explicitamente com o e-mail da conta de serviço (${clientEmail}) como Leitor, ou tente abrir a pasta no Google Drive logado, copiar o ID novo da barra de endereços e compartilhar novamente.`
               : `Erro ao acessar pasta: ${folderErr}. Verifique permissões da conta de serviço ${clientEmail}.`,
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -296,7 +302,7 @@ Deno.serve(async (req: Request) => {
         listUrl.searchParams.set('q', `'${currentFolder}' in parents and trashed = false`)
         listUrl.searchParams.set(
           'fields',
-          'nextPageToken,files(id,name,mimeType,size,modifiedTime,webViewLink,webContentLink,parents,resourceKey)',
+          'nextPageToken,files(id,name,mimeType,size,modifiedTime,webViewLink,webContentLink,parents,resourceKey)'
         )
         listUrl.searchParams.set('supportsAllDrives', 'true')
         listUrl.searchParams.set('includeItemsFromAllDrives', 'true')
@@ -337,7 +343,9 @@ Deno.serve(async (req: Request) => {
     const errors: Array<{ fileId: string; name: string; error: string }> = []
 
     // Fetch existing files from drive_arquivos to detect created vs updated
-    const { data: existingRows } = await supabase.from('drive_arquivos').select('file_id')
+    const { data: existingRows } = await supabase
+      .from('drive_arquivos')
+      .select('file_id')
 
     const existingFileIds = new Set((existingRows || []).map((r) => r.file_id))
 
@@ -392,7 +400,9 @@ Deno.serve(async (req: Request) => {
       }
 
       const driveLink =
-        file.webViewLink || file.webContentLink || `https://drive.google.com/file/d/${file.id}/view`
+        file.webViewLink ||
+        file.webContentLink ||
+        `https://drive.google.com/file/d/${file.id}/view`
 
       upsertRows.push({
         file_id: file.id,
@@ -447,7 +457,7 @@ Deno.serve(async (req: Request) => {
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
+      }
     )
   } catch (err) {
     console.error('Erro na sincronização do Google Drive:', err)
@@ -458,7 +468,7 @@ Deno.serve(async (req: Request) => {
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
+      }
     )
   }
 })
