@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 const NAV = [
   { name: 'CRM', path: '/admin', icon: LayoutDashboard },
   { name: 'Agendamentos', path: '/admin/agendamentos', icon: CalendarDays },
+  { name: 'Estúdio IA', path: '/admin/estudio', icon: FileText },
   { name: 'Blog/Posts', path: '/admin/posts', icon: FileText },
   { name: 'Conteúdo Drive', path: '/admin/drive', icon: FolderSync },
   { name: 'Tema/Aparência', path: '/admin/settings', icon: Settings },

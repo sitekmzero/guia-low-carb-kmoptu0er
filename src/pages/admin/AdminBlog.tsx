@@ -20,7 +20,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { FileText, Plus, Trash2, Edit, Download, Eye } from 'lucide-react'
+import { FileText, Plus, Trash2, Edit, Download, Eye, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export default function AdminBlog() {
@@ -177,9 +177,16 @@ export default function AdminBlog() {
             Gerencie artigos, categorias e métricas de leitura
           </p>
         </div>
-        <Button variant="outline" onClick={exportToCSV}>
-          <Download className="w-4 h-4 mr-2" /> Exportar CSV
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button asChild className="bg-terracotta hover:bg-terracotta/90 text-white shadow-sm">
+            <Link to="/admin/estudio">
+              <Sparkles className="w-4 h-4 mr-2" /> Estúdio IA
+            </Link>
+          </Button>
+          <Button variant="outline" onClick={exportToCSV}>
+            <Download className="w-4 h-4 mr-2" /> Exportar CSV
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="posts" className="w-full">
@@ -190,7 +197,13 @@ export default function AdminBlog() {
 
         {/* POSTS TAB */}
         <TabsContent value="posts" className="space-y-4">
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-between items-center mb-4">
+            <Button asChild variant="outline" className="text-primary border-primary/30">
+              <Link to="/admin/estudio">
+                <Sparkles className="w-4 h-4 mr-2 text-terracotta" /> Criar no Estúdio IA (com Drive
+                & SEO)
+              </Link>
+            </Button>
             <Dialog
               open={isPostModalOpen}
               onOpenChange={(v) => {
@@ -200,7 +213,7 @@ export default function AdminBlog() {
             >
               <DialogTrigger asChild>
                 <Button className="bg-primary text-white">
-                  <Plus className="w-4 h-4 mr-2" /> Novo Artigo
+                  <Plus className="w-4 h-4 mr-2" /> Novo Artigo Rápido
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -319,6 +332,11 @@ export default function AdminBlog() {
                       <Button variant="ghost" size="sm" asChild>
                         <Link to={`/blog/${p.slug}`} target="_blank">
                           <Eye className="w-4 h-4 text-blue-500" />
+                        </Link>
+                      </Button>
+                      <Button variant="ghost" size="sm" asChild title="Abrir no Estúdio IA">
+                        <Link to={`/admin/estudio?id=${p.id}`}>
+                          <Sparkles className="w-4 h-4 text-terracotta" />
                         </Link>
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => openEditPost(p)}>

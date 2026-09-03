@@ -42,7 +42,9 @@ import {
   Archive,
   Info,
   FolderOpen,
+  Sparkles,
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export interface DriveArquivo {
   id: string
@@ -488,17 +490,29 @@ export default function AdminDrive() {
 
                     <TableCell className="text-right whitespace-nowrap space-x-1 pr-4">
                       {arq.texto_extraido && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedArquivo(arq)
-                            setIsPreviewOpen(true)
-                          }}
-                          title="Ver texto extraído"
-                        >
-                          <Eye className="w-4 h-4 text-primary" />
-                        </Button>
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            asChild
+                            title="Criar artigo no Estúdio IA"
+                          >
+                            <Link to="/admin/estudio">
+                              <Sparkles className="w-4 h-4 text-terracotta" />
+                            </Link>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedArquivo(arq)
+                              setIsPreviewOpen(true)
+                            }}
+                            title="Ver texto extraído"
+                          >
+                            <Eye className="w-4 h-4 text-primary" />
+                          </Button>
+                        </>
                       )}
 
                       {arq.link_drive && (

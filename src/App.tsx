@@ -48,6 +48,7 @@ const AdminForms = lazy(() => import('./pages/admin/AdminForms'))
 const AdminLeadAnalytics = lazy(() => import('./pages/admin/AdminLeadAnalytics'))
 const AdminTracking = lazy(() => import('./pages/admin/AdminTracking'))
 const AdminDrive = lazy(() => import('./pages/admin/AdminDrive'))
+const AdminEstudio = lazy(() => import('./pages/admin/AdminEstudio'))
 
 const StudentLogin = lazy(() => import('./pages/auth/StudentLogin'))
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'))
@@ -198,6 +199,14 @@ const App = () => (
               }
             />
             <Route path="posts" element={<Navigate replace to="/admin/blog" />} />
+            <Route
+              path="estudio"
+              element={
+                <SuspenseWrapper>
+                  <AdminEstudio />
+                </SuspenseWrapper>
+              }
+            />
             <Route
               path="drive"
               element={
