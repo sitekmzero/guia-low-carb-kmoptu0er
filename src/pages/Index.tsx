@@ -19,13 +19,13 @@ export default function Index() {
         <div className="container mx-auto px-4 max-w-[1200px]">
           <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-20">
             <div className="w-full md:w-1/2 space-y-8 animate-fade-in-up">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
                 <img
                   src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Logos/Logo%20guialowcarb2.png"
                   alt="Logo Oficial Guia Low Carb"
-                  className="h-16 md:h-20 w-auto object-contain drop-shadow-md"
+                  className="h-24 sm:h-28 md:h-32 lg:h-36 max-w-[280px] sm:max-w-[340px] w-auto object-contain drop-shadow-md -ml-1"
                 />
-                <span className="inline-block py-1.5 px-4 rounded-full bg-primary/10 text-primary text-sm font-bold tracking-wider uppercase border border-primary/20">
+                <span className="inline-block py-2 px-4 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-bold tracking-wider uppercase border border-primary/20 shrink-0">
                   Nutrição Clínica & Ciência
                 </span>
               </div>
@@ -64,12 +64,12 @@ export default function Index() {
             </div>
 
             <div className="w-full md:w-1/2 flex justify-center animate-fade-in-up animation-delay-200">
-              <div className="relative w-full max-w-md aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-2xl border-[6px] border-white/50 backdrop-blur-sm">
+              <div className="relative w-full max-w-lg lg:max-w-xl aspect-[16/9] rounded-3xl lg:rounded-[2.5rem] overflow-hidden shadow-2xl border-[6px] border-white/70 dark:border-white/20 backdrop-blur-sm bg-muted/20">
                 <img
                   src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Fotos/Adriana%20home%20site.png"
                   alt="Adriana Araújo - Nutricionista Clínica"
                   loading="lazy"
-                  className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-700"
+                  className="w-full h-full object-contain md:object-cover object-center hover:scale-105 transition-transform duration-700"
                 />
               </div>
             </div>
