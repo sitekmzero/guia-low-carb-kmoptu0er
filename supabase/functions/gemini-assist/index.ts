@@ -152,12 +152,13 @@ Contexto atual: ${content ? content.slice(0, 2000) : 'Em branco'}
 `
     }
 
-    // Call Gemini 3.7 Flash API (or 2.5/flash fallback if 3.7 alias needs specific version)
-    // The task specifically calls for: "gemini-3.7-flash"
-    const model = 'gemini-2.5-flash' // Note: fallback or 3.7-flash
-    const requestedModel = 'gemini-3.7-flash'
-
-    let apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${requestedModel}:generateContent?key=${apiKey}`
+    // Sequence of models confirmed available on the API: gemini-2.5-flash, gemini-flash-latest, gemini-3.7-flash
+    const candidateModels = [
+      'gemini-2.5-flash',
+      'gemini-flash-latest',
+      'gemini-3.7-flash',
+      'gemini-2.5-flash-lite',
+    ]
 
     const requestBody: any = {
       system_instruction: {
@@ -179,46 +180,37 @@ Contexto atual: ${content ? content.slice(0, 2000) : 'Em branco'}
       requestBody.generationConfig.responseMimeType = 'application/json'
     }
 
-    let geminiRes = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody),
-    })
-
-    // If gemini-3.7-flash is not available on this API key's tier, fallback to gemini-2.5-flash, gemini-2.0-flash, or gemini-1.5-flash
-    let usedModelName = requestedModel
+    let geminiRes: Response | null = null
+    let usedModelName = ''
     let finalErrorDetails = ''
 
-    if (!geminiRes.ok) {
-      const errText = await geminiRes.text()
-      console.warn(
-        `Tentativa com ${requestedModel} falhou (${geminiRes.status}): ${errText}. Tentando fallback...`,
-      )
-      finalErrorDetails = errText
-
-      const fallbacks = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
-      for (const fallbackModel of fallbacks) {
-        const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/${fallbackModel}:generateContent?key=${apiKey}`
-        const fbRes = await fetch(fallbackUrl, {
+    for (const modelCandidate of candidateModels) {
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelCandidate}:generateContent?key=${apiKey}`
+      try {
+        const res = await fetch(apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestBody),
         })
-        if (fbRes.ok) {
-          geminiRes = fbRes
-          usedModelName = fallbackModel
+
+        if (res.ok) {
+          geminiRes = res
+          usedModelName = modelCandidate
           break
         } else {
-          const fErr = await fbRes.text()
-          console.warn(`Fallback ${fallbackModel} falhou (${fbRes.status}): ${fErr}`)
-          finalErrorDetails = fErr
+          const errText = await res.text()
+          console.warn(`Modelo ${modelCandidate} retornou status ${res.status}: ${errText}`)
+          finalErrorDetails = `${modelCandidate} (${res.status}): ${errText}`
         }
+      } catch (fetchErr: any) {
+        console.warn(`Erro de rede ao chamar modelo ${modelCandidate}:`, fetchErr)
+        finalErrorDetails = `${modelCandidate} network err: ${fetchErr.message}`
       }
     }
 
-    if (!geminiRes.ok) {
+    if (!geminiRes || !geminiRes.ok) {
       return new Response(
-        JSON.stringify({ error: `Erro na API do Gemini: ${geminiRes.status}`, details: finalErrorDetails }),
+        JSON.stringify({ error: `Erro na API do Gemini`, details: finalErrorDetails }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }

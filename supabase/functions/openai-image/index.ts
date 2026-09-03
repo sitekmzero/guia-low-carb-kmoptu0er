@@ -105,74 +105,51 @@ Deno.serve(async (req: Request) => {
     const finalPrompt = `${STYLE_PREFIX} Subject: ${userPrompt.trim()}`
 
     // 2. Call OpenAI Images API
-    // Attempt gpt-image-2 first (per task, standard landscape 1536x1024 or 1024x1024)
-    // Note: gpt-image-2 returns b64_json by default and rejects 'response_format' parameter!
-    let imageModel = 'gpt-image-2'
-    let imageRes = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
+    // Call OpenAI Images API with confirmed available models: gpt-image-2, chatgpt-image-latest, gpt-image-1.5, gpt-image-1
+    // CRITICAL: None of these accept 'response_format'! Only model, prompt, n, and optionally size.
+    const candidateConfigs = [
+      { model: 'gpt-image-2', body: { model: 'gpt-image-2', prompt: finalPrompt, n: 1 } },
+      {
+        model: 'chatgpt-image-latest',
+        body: { model: 'chatgpt-image-latest', prompt: finalPrompt, n: 1 },
       },
-      body: JSON.stringify({
-        model: imageModel,
-        prompt: finalPrompt,
-        n: 1,
-        size: '1536x1024', // Standard landscape size for gpt-image-2
-      }),
-    })
+      { model: 'gpt-image-1.5', body: { model: 'gpt-image-1.5', prompt: finalPrompt, n: 1 } },
+      { model: 'gpt-image-1', body: { model: 'gpt-image-1', prompt: finalPrompt, n: 1 } },
+    ]
 
-    if (!imageRes.ok) {
-      const errBody = await imageRes.text()
-      console.warn(
-        `Tentativa com ${imageModel} (1536x1024) falhou (${imageRes.status}): ${errBody}. Tentando gpt-image-2 com 1024x1024...`,
-      )
+    let imageRes: Response | null = null
+    let imageModel = 'gpt-image-2'
+    let lastErrorText = ''
 
-      // Try gpt-image-2 standard 1024x1024
-      imageRes = await fetch('https://api.openai.com/v1/images/generations', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${openaiApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: imageModel,
-          prompt: finalPrompt,
-          n: 1,
-          size: '1024x1024',
-        }),
-      })
-
-      if (!imageRes.ok) {
-        const errBody2 = await imageRes.text()
-        console.warn(
-          `Tentativa com ${imageModel} (1024x1024) falhou (${imageRes.status}): ${errBody2}. Tentando fallback dall-e-3...`,
-        )
-
-        imageModel = 'dall-e-3'
-        imageRes = await fetch('https://api.openai.com/v1/images/generations', {
+    for (const config of candidateConfigs) {
+      imageModel = config.model
+      try {
+        const res = await fetch('https://api.openai.com/v1/images/generations', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${openaiApiKey}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            model: imageModel,
-            prompt: finalPrompt,
-            n: 1,
-            size: '1792x1024',
-            response_format: 'b64_json',
-          }),
+          body: JSON.stringify(config.body),
         })
+
+        if (res.ok) {
+          imageRes = res
+          break
+        } else {
+          lastErrorText = await res.text()
+          console.warn(`Tentativa com ${config.model} falhou (${res.status}): ${lastErrorText}`)
+        }
+      } catch (err: any) {
+        lastErrorText = err.message
       }
     }
 
-    if (!imageRes.ok) {
-      const errorText = await imageRes.text()
+    if (!imageRes || !imageRes.ok) {
       return new Response(
         JSON.stringify({
-          error: `Erro ao gerar imagem na OpenAI (${imageRes.status})`,
-          details: errorText,
+          error: `Erro ao gerar imagem na OpenAI`,
+          details: lastErrorText,
         }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
@@ -218,14 +195,14 @@ Deno.serve(async (req: Request) => {
       })
 
     if (uploadErr) {
-      console.warn(`Erro no upload para bucket '${bucketName}': ${uploadErr.message}. Tentando bucket 'blog'...`)
+      console.warn(
+        `Erro no upload para bucket '${bucketName}': ${uploadErr.message}. Tentando bucket 'blog'...`,
+      )
       bucketName = 'blog'
-      const retryRes = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, bytes, {
-          contentType: 'image/webp',
-          upsert: true,
-        })
+      const retryRes = await supabase.storage.from(bucketName).upload(filePath, bytes, {
+        contentType: 'image/webp',
+        upsert: true,
+      })
       uploadData = retryRes.data
       uploadErr = retryRes.error
     }
