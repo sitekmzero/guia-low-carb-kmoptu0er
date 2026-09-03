@@ -64,12 +64,12 @@ export default function Index() {
             </div>
 
             <div className="w-full md:w-1/2 flex justify-center animate-fade-in-up animation-delay-200">
-              <div className="relative w-full max-w-lg lg:max-w-xl aspect-[16/9] rounded-3xl lg:rounded-[2.5rem] overflow-hidden shadow-2xl border-[6px] border-white/70 dark:border-white/20 backdrop-blur-sm bg-muted/20">
+              <div className="relative w-full max-w-md lg:max-w-lg aspect-[4/5] sm:aspect-[3/4] md:aspect-[4/5] rounded-3xl lg:rounded-[2.5rem] overflow-hidden shadow-2xl border-[6px] border-white/70 dark:border-white/20 backdrop-blur-sm bg-muted/20">
                 <img
-                  src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Fotos/Adriana%20home%20site.png"
+                  src="https://wfuwhozrwyqkqdovzers.supabase.co/storage/v1/object/public/Imagens/Fotos/Adriana%20foto%20profissional.jpeg"
                   alt="Adriana Araújo - Nutricionista Clínica"
                   loading="lazy"
-                  className="w-full h-full object-contain md:object-cover object-center hover:scale-105 transition-transform duration-700"
+                  className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-700"
                 />
               </div>
             </div>
