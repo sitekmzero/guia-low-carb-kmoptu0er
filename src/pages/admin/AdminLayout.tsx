@@ -8,6 +8,7 @@ import {
   LogOut,
   Users,
   CalendarDays,
+  FolderSync,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
@@ -18,6 +19,7 @@ const NAV = [
   { name: 'CRM', path: '/admin', icon: LayoutDashboard },
   { name: 'Agendamentos', path: '/admin/agendamentos', icon: CalendarDays },
   { name: 'Blog/Posts', path: '/admin/posts', icon: FileText },
+  { name: 'Conteúdo Drive', path: '/admin/drive', icon: FolderSync },
   { name: 'Tema/Aparência', path: '/admin/settings', icon: Settings },
   { name: 'Segurança', path: '/admin/security', icon: Shield },
   { name: 'SMTP/CDN', path: '/admin/smtp', icon: Mail },
