@@ -334,12 +334,22 @@ export default function AdminBlog() {
                           <Eye className="w-4 h-4 text-blue-500" />
                         </Link>
                       </Button>
-                      <Button variant="ghost" size="sm" asChild title="Abrir no Estúdio IA">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                        title="Editar no Estúdio IA (com atalho anti-fricção)"
+                      >
                         <Link to={`/admin/estudio?id=${p.id}`}>
                           <Sparkles className="w-4 h-4 text-terracotta" />
                         </Link>
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => openEditPost(p)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEditPost(p)}
+                        title="Editar rápido"
+                      >
                         <Edit className="w-4 h-4 text-primary" />
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => handleDeletePost(p.id)}>
