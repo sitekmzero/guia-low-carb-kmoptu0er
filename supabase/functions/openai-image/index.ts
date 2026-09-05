@@ -35,7 +35,6 @@ Deno.serve(async (req: Request) => {
 
     const payload = await req.json().catch(() => ({}))
     const { prompt: userPrompt, userEmail, checkOnly } = payload
-
     // 1. Check daily generation count
     const todayStart = new Date()
     todayStart.setUTCHours(0, 0, 0, 0)

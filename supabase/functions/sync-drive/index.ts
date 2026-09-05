@@ -2,240 +2,347 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 
+/**
+ * Edge function sync-drive v2
+ * Scans Google Drive shared folder recursively using GOOGLE_SERVICE_ACCOUNT_KEY
+ * Upserts all files into drive_arquivos with folder path (caminho_pasta, e.g. "Blog LowCArb/Textos/").
+ * Idempotent upsert matching on file_id, preserving extracted text.
+ */
+
+// Helper: base64url encode
+function base64UrlEncode(str: string): string {
+  const bytes = new TextEncoder().encode(str)
+  let binary = ''
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+function base64UrlEncodeBytes(bytes: Uint8Array): string {
+  let binary = ''
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+// Helper: import PEM RSA private key for RS256 Web Crypto
+async function getGoogleAuthToken(serviceAccountJson: any): Promise<string> {
+  const now = Math.floor(Date.now() / 1000)
+  const header = { alg: 'RS256', typ: 'JWT' }
+  const claimSet = {
+    iss: serviceAccountJson.client_email,
+    scope: 'https://www.googleapis.com/auth/drive.readonly',
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: now + 3600,
+    iat: now,
+  }
+
+  const encodedHeader = base64UrlEncode(JSON.stringify(header))
+  const encodedClaim = base64UrlEncode(JSON.stringify(claimSet))
+  const unsignedToken = `${encodedHeader}.${encodedClaim}`
+
+  // Inspect possible keys for private_key (snake_case, camelCase or direct string)
+  const pem =
+    serviceAccountJson.private_key || serviceAccountJson.privateKey || serviceAccountJson.key
+  if (!pem) {
+    throw new Error(
+      `Chave privada não encontrada no objeto serviceAccount. Chaves disponíveis: ${Object.keys(serviceAccountJson).join(', ')}`,
+    )
+  }
+  const normalizedPem = pem.replace(/\\n/g, '\n')
+  // Strip headers and all non-base64 characters
+  const pemContents = normalizedPem
+    .replace(/-----BEGIN[ A-Z0-9_-]+-----/gi, '')
+    .replace(/-----END[ A-Z0-9_-]+-----/gi, '')
+    .replace(/[^A-Za-z0-9+/=]/g, '')
+
+  // Pad base64 if needed
+  let padded = pemContents
+  while (padded.length % 4 !== 0) {
+    padded += '='
+  }
+
+  let binaryKey: string
+  try {
+    binaryKey = atob(padded)
+  } catch (b64Err: any) {
+    throw new Error(
+      `Erro ao decodificar base64 do PEM (len: ${pemContents.length}, sample: ${pemContents.slice(0, 30)}...): ${b64Err.message}`,
+    )
+  }
+  const keyBytes = new Uint8Array(binaryKey.length)
+  for (let i = 0; i < binaryKey.length; i++) {
+    keyBytes[i] = binaryKey.charCodeAt(i)
+  }
+
+  const cryptoKey = await crypto.subtle.importKey(
+    'pkcs8',
+    keyBytes.buffer,
+    {
+      name: 'RSASSA-PKCS1-v1_5',
+      hash: { name: 'SHA-256' },
+    },
+    false,
+    ['sign'],
+  )
+
+  const signature = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    cryptoKey,
+    new TextEncoder().encode(unsignedToken),
+  )
+
+  const signedJwt = `${unsignedToken}.${base64UrlEncodeBytes(new Uint8Array(signature))}`
+
+  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: signedJwt,
+    }),
+  })
+
+  if (!tokenRes.ok) {
+    const errText = await tokenRes.text()
+    throw new Error(`Falha ao obter token OAuth do Google: ${tokenRes.status} ${errText}`)
+  }
+
+  const tokenData = await tokenRes.json()
+  return tokenData.access_token
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  // Support GET for testing
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+  const googleKeyRaw = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_KEY') || ''
+
+  if (!googleKeyRaw) {
+    return new Response(
+      JSON.stringify({ error: 'Secret GOOGLE_SERVICE_ACCOUNT_KEY não configurado no backend.' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
+  }
+
+  let serviceAccount: any
+  // Let's inspect googleKeyRaw structure safely
+  let emailDetected = ''
+  const emailMatch = googleKeyRaw.match(
+    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.iam\.gserviceaccount\.com/,
+  )
+  if (emailMatch) {
+    emailDetected = emailMatch[0]
+  }
+
+  // Find private key within googleKeyRaw
+  let privKeyDetected = ''
+  const pemMatch = googleKeyRaw.match(
+    /-----BEGIN (?:RSA )?PRIVATE KEY-----[\s\S]+?-----END (?:RSA )?PRIVATE KEY-----/,
+  )
+  if (pemMatch) {
+    privKeyDetected = pemMatch[0]
+  } else {
+    privKeyDetected = googleKeyRaw
+  }
+
+  // Return diagnostics about the secret structure to see why account not found
+  if (req.headers.get('x-debug') === 'true') {
+    return new Response(
+      JSON.stringify({
+        emailDetected,
+        hasPem: !!pemMatch,
+        rawLen: googleKeyRaw.length,
+        sampleRaw: googleKeyRaw.slice(0, 30) + '...' + googleKeyRaw.slice(-30),
+        startsWith: googleKeyRaw.slice(0, 50),
+      }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
+  }
+
+  serviceAccount = {
+    client_email: emailDetected || 'adriana.araujo@kmzero.com.br',
+    private_key: privKeyDetected,
+    rawPreview: googleKeyRaw.slice(0, 100),
+    hasEmail: !!emailDetected,
+  }
+
   const supabase = createClient(supabaseUrl, serviceKey)
 
-  const urlObj = new URL(req.url)
-  const part = urlObj.searchParams.get('part') || 'draft'
-
   try {
-    if (part === 'draft') {
-      const { data: driveDoc, error: driveErr } = await supabase
-        .from('drive_arquivos')
-        .select('id, nome, texto_extraido')
-        .eq('id', 'd3153fa9-59c6-4968-a533-1256f24af70f')
-        .single()
+    const payload = await req.json().catch(() => ({}))
+    const rootFolderId = payload.folderId || '0B_Wkefn8LCZxUzdna1BjX0xoeU0'
+    const resourceKey = payload.resourceKey || '0-liYQFyvNcEqpmKVrUq6cAw'
 
-      if (driveErr || !driveDoc) {
-        return new Response(
-          JSON.stringify({ error: 'Erro ao carregar driveDoc', details: driveErr }),
-          {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          },
-        )
-      }
+    const accessToken = await getGoogleAuthToken(serviceAccount)
 
-      const driveSnippet = driveDoc.texto_extraido || ''
-
-      // 1a. Call gemini-assist for draft
-      const geminiDraftStart = Date.now()
-      const geminiDraftRes = await fetch(`${supabaseUrl}/functions/v1/gemini-assist`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${serviceKey}`,
-        },
-        body: JSON.stringify({
-          action: 'draft',
-          title: '[TESTE] Alimentação Intuitiva e Low Carb: Da Teoria à Prática Clínica',
-          briefing:
-            'Artigo educativo demonstrando a integração da escuta corporal (fome e saciedade) com a estratégia low carb sem imposição de restrições arbitrárias.',
-          driveFileName: driveDoc.nome,
-          driveContent: driveSnippet.slice(0, 8000),
-          userInstruction:
-            'Incluir advertência de segurança obrigatória para diabéticos e respeitar a titulação oficial de Adriana Araújo (CRN-9 28762).',
-        }),
-      })
-
-      const draftStatus = geminiDraftRes.status
-      const draftData = await geminiDraftRes
-        .json()
-        .catch(async () => ({ raw: await geminiDraftRes.text() }))
-      const draftDurationMs = Date.now() - geminiDraftStart
-
-      if (!draftData.text) {
-        return new Response(
-          JSON.stringify({
-            error: 'Falha na geração do rascunho com Gemini',
-            draftStatus,
-            draftDurationMs,
-            draftData,
-          }),
-          { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-        )
-      }
-
-      // 1b. Call gemini-assist for SEO
-      const geminiSeoStart = Date.now()
-      const geminiSeoRes = await fetch(`${supabaseUrl}/functions/v1/gemini-assist`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${serviceKey}`,
-        },
-        body: JSON.stringify({
-          action: 'seo',
-          title: '[TESTE] Alimentação Intuitiva e Low Carb: Da Teoria à Prática Clínica',
-          content: draftData.text.slice(0, 1500),
-        }),
-      })
-
-      const seoStatus = geminiSeoRes.status
-      const seoData = await geminiSeoRes
-        .json()
-        .catch(async () => ({ raw: await geminiSeoRes.text() }))
-      const seoDurationMs = Date.now() - geminiSeoStart
-
-      const seoJson = seoData.json || {}
-      const metaTitle = seoJson.meta_title || 'Alimentação Intuitiva e Low Carb: Saúde Sem Culpa'
-      const metaDesc =
-        seoJson.meta_description ||
-        'Descubra como conciliar alimentação intuitiva e low carb para maior saciedade e bem-estar metabólico.'
-      const focusKeyword = seoJson.focus_keyword || 'alimentação intuitiva low carb'
-      const generatedSlug =
-        'teste-' +
-        (seoJson.slug ? seoJson.slug.replace(/^teste-/, '') : 'alimentacao-intuitiva-low-carb')
-      const tags =
-        Array.isArray(seoJson.tags) && seoJson.tags.length > 0
-          ? seoJson.tags
-          : ['alimentação intuitiva', 'low carb', 'saciedade', 'metabolismo']
-
-      // Calculate reading time: words / 200
-      const plainText = draftData.text
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-      const wordCount = plainText ? plainText.split(/\s+/).length : 0
-      const readingTimeMinutes = Math.max(1, Math.ceil(wordCount / 200))
-
-      // Clean up previous test post with this slug if any
-      await supabase.from('blog_posts').delete().eq('slug', generatedSlug)
-
-      // Insert into public.blog_posts with EXACT schema column names
-      const { data: savedPost, error: postErr } = await supabase
-        .from('blog_posts')
-        .insert({
-          title: '[TESTE] Alimentação Intuitiva e Low Carb: Da Teoria à Prática Clínica',
-          slug: generatedSlug,
-          excerpt: metaDesc,
-          content: draftData.text,
-          category: 'Nutrição Clínica',
-          tags,
-          author: 'Adriana Araújo',
-          published: true,
-          published_date: new Date().toISOString(),
-          reading_time_minutes: readingTimeMinutes,
-          meta_title: metaTitle,
-          meta_description: metaDesc,
-          focus_keyword: focusKeyword,
-          image_alt:
-            seoJson.image_alt_suggestion || 'Prato saudável low carb com ingredientes frescos',
-          image_is_ai: true,
-          compliance_passed: true,
-        })
-        .select(
-          'id, title, slug, published, reading_time_minutes, meta_title, meta_description, focus_keyword, tags',
-        )
-        .single()
-
-      return new Response(
-        JSON.stringify(
-          {
-            part: 'draft',
-            geminiDraft: {
-              status: draftStatus,
-              durationMs: draftDurationMs,
-              modelUsed: draftData.modelUsed,
-            },
-            geminiSeo: {
-              status: seoStatus,
-              durationMs: seoDurationMs,
-              modelUsed: seoData.modelUsed,
-              seoJson,
-            },
-            wordCount,
-            readingTimeMinutes,
-            savedPost,
-            postErr,
-          },
-          null,
-          2,
-        ),
-        {
-          status: postErr ? 500 : 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        },
-      )
+    // Headers with ResourceKey for Google Drive older shared links
+    const driveHeaders: Record<string, string> = {
+      Authorization: `Bearer ${accessToken}`,
+      'X-Goog-Drive-Resource-Keys': `${rootFolderId}/${resourceKey}`,
     }
 
-    if (part === 'image') {
-      const slugTarget = urlObj.searchParams.get('slug') || 'teste-alimentacao-intuitiva-low-carb'
-      const imageStart = Date.now()
-      const imageRes = await fetch(`${supabaseUrl}/functions/v1/openai-image`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${serviceKey}`,
-        },
-        body: JSON.stringify({
-          prompt:
-            'Prato low carb com salmão grelhado, aspargos frescos salteados no azeite de oliva e fatias de abacate sobre mesa rústica de madeira em luz natural suave',
-          userEmail: 'adriana.araujo@kmzero.com.br',
-        }),
+    // First fetch root folder metadata to get root name
+    let rootFolderName = 'Blog LowCArb'
+    try {
+      const rootMetaRes = await fetch(
+        `https://www.googleapis.com/drive/v3/files/${rootFolderId}?fields=id,name&supportsAllDrives=true`,
+        { headers: driveHeaders },
+      )
+      if (rootMetaRes.ok) {
+        const rootMeta = await rootMetaRes.json()
+        if (rootMeta.name) rootFolderName = rootMeta.name
+      }
+    } catch {
+      // fallback to 'Blog LowCArb'
+    }
+
+    // Traverse recursively
+    interface FolderQueueItem {
+      id: string
+      path: string // e.g. "Blog LowCArb/"
+    }
+
+    const queue: FolderQueueItem[] = [{ id: rootFolderId, path: `${rootFolderName}/` }]
+    const scannedFolders: string[] = []
+    const allFilesFound: Array<{
+      file_id: string
+      nome: string
+      mime_type: string
+      tamanho_bytes: number
+      modified_time: string | null
+      link_drive: string
+      caminho_pasta: string
+    }> = []
+
+    while (queue.length > 0) {
+      const current = queue.shift()!
+      scannedFolders.push(current.path)
+
+      let pageToken: string | null = null
+      do {
+        const query = encodeURIComponent(`'${current.id}' in parents and trashed = false`)
+        const fields = encodeURIComponent(
+          'nextPageToken, files(id, name, mimeType, size, modifiedTime, webViewLink, parents)',
+        )
+        let listUrl = `https://www.googleapis.com/drive/v3/files?q=${query}&fields=${fields}&pageSize=100&supportsAllDrives=true&includeItemsFromAllDrives=true`
+        if (pageToken) {
+          listUrl += `&pageToken=${pageToken}`
+        }
+
+        const res = await fetch(listUrl, { headers: driveHeaders })
+        if (!res.ok) {
+          const errText = await res.text()
+          console.warn(
+            `Erro ao listar pasta ${current.path} (${current.id}): ${res.status} ${errText}`,
+          )
+          break
+        }
+
+        const data = await res.json()
+        const items = data.files || []
+
+        for (const item of items) {
+          if (item.mimeType === 'application/vnd.google-apps.folder') {
+            queue.push({
+              id: item.id,
+              path: `${current.path}${item.name}/`,
+            })
+          } else {
+            allFilesFound.push({
+              file_id: item.id,
+              nome: item.name,
+              mime_type: item.mimeType || 'application/octet-stream',
+              tamanho_bytes: item.size ? parseInt(item.size, 10) : 0,
+              modified_time: item.modifiedTime || null,
+              link_drive: item.webViewLink || `https://drive.google.com/file/d/${item.id}/view`,
+              caminho_pasta: current.path,
+            })
+          }
+        }
+
+        pageToken = data.nextPageToken || null
+      } while (pageToken)
+    }
+
+    // Now upsert allFilesFound in batches of 100 into public.drive_arquivos
+    // IMPORTANT: Do NOT overwrite texto_extraido if it already exists in the database!
+    // Supabase upsert: onConflict: 'file_id'
+    // To preserve texto_extraido, we only update caminho_pasta, nome, mime_type, tamanho_bytes, modified_time, link_drive, updated_at
+    // Let's do batch updates
+    let updatedCount = 0
+    let createdCount = 0
+
+    // Fetch existing file_ids to see which ones are updates vs inserts
+    const { data: existingRecords, error: fetchErr } = await supabase
+      .from('drive_arquivos')
+      .select('file_id, texto_extraido')
+
+    if (fetchErr) {
+      throw new Error(`Erro ao consultar drive_arquivos existentes: ${fetchErr.message}`)
+    }
+
+    const existingMap = new Map<string, string | null>()
+    for (const rec of existingRecords || []) {
+      existingMap.set(rec.file_id, rec.texto_extraido)
+    }
+
+    const batchSize = 100
+    for (let i = 0; i < allFilesFound.length; i += batchSize) {
+      const batch = allFilesFound.slice(i, i + batchSize)
+      const rowsToUpsert = batch.map((f) => {
+        const isExisting = existingMap.has(f.file_id)
+        if (isExisting) updatedCount++
+        else createdCount++
+
+        return {
+          file_id: f.file_id,
+          nome: f.nome,
+          mime_type: f.mime_type,
+          tamanho_bytes: f.tamanho_bytes,
+          modified_time: f.modified_time,
+          link_drive: f.link_drive,
+          caminho_pasta: f.caminho_pasta,
+          // If already existing, retain existing text if any; if not present, null
+          texto_extraido: existingMap.get(f.file_id) ?? null,
+          updated_at: new Date().toISOString(),
+        }
       })
 
-      const status = imageRes.status
-      const data = await imageRes.json().catch(async () => ({ raw: await imageRes.text() }))
-      const durationMs = Date.now() - imageStart
+      const { error: upsertErr } = await supabase
+        .from('drive_arquivos')
+        .upsert(rowsToUpsert, { onConflict: 'file_id' })
 
-      // If image succeeded, attach it to featured_image_url
-      let updatedPost = null
-      let updateErr = null
-      if (data.imageUrl) {
-        const updateResult = await supabase
-          .from('blog_posts')
-          .update({
-            featured_image_url: data.imageUrl,
-            image_alt: data.altText || 'Prato low carb com salmão, aspargos e abacate',
-            image_is_ai: true,
-          })
-          .ilike('slug', 'teste-%')
-          .select('id, title, slug, featured_image_url, image_alt, image_is_ai')
-
-        updatedPost = updateResult.data
-        updateErr = updateResult.error
+      if (upsertErr) {
+        throw new Error(`Erro no upsert do batch ${i}: ${upsertErr.message}`)
       }
-
-      return new Response(
-        JSON.stringify(
-          { part: 'image', status, durationMs, data, updatedPost, updateErr },
-          null,
-          2,
-        ),
-        {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        },
-      )
     }
 
     return new Response(
-      JSON.stringify({ error: 'Unknown part parameter. Use part=draft or part=image' }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
+      JSON.stringify({
+        success: true,
+        summary: {
+          totalFilesFound: allFilesFound.length,
+          foldersScanned: scannedFolders.length,
+          created: createdCount,
+          updated: updatedCount,
+          folderPathsSample: scannedFolders.slice(0, 10),
+        },
+        folder: {
+          name: rootFolderName,
+          id: rootFolderId,
+        },
+      }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message || String(err) }), {
+    console.error('Erro em sync-drive:', err)
+    return new Response(JSON.stringify({ error: err.message || String(err), stack: err.stack }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
