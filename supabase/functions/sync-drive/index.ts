@@ -562,10 +562,7 @@ Deno.serve(async (req: Request) => {
                 folder_id: rootFolderId,
                 status_code: errStatus,
               }),
-              {
-                status: errStatus,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              },
+              { status: errStatus, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
             )
           }
           break
