@@ -218,9 +218,33 @@ export default function AdminDrive() {
       await fetchArquivos()
     } catch (err: any) {
       console.error('Erro ao sincronizar com Google Drive:', err)
-      const errorMsg =
+
+      let errorMsg =
         err.message ||
         'Falha ao conectar com o Google Drive. Verifique as credenciais da conta de serviço.'
+
+      // Extrair mensagem do corpo HTTP caso venha envelopado em FunctionsHttpError
+      if (err.context && typeof err.context.json === 'function') {
+        try {
+          const body = await err.context.json()
+          if (body?.error) {
+            errorMsg = body.error + (body.details ? ` (${body.details})` : '')
+          } else if (typeof body === 'string') {
+            errorMsg = body
+          }
+        } catch {
+          // Fallback se não for JSON válido
+          try {
+            if (typeof err.context.text === 'function') {
+              const text = await err.context.text()
+              if (text) errorMsg = text
+            }
+          } catch {
+            /* intentionally ignored */
+          }
+        }
+      }
+
       setSyncStatusBanner({
         type: 'error',
         message: `Falha na sincronização: ${errorMsg}`,

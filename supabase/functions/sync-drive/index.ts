@@ -397,9 +397,9 @@ Deno.serve(async (req: Request) => {
       return new Response(
         JSON.stringify({
           error:
-            'Secret GOOGLE_SERVICE_ACCOUNT_KEY não configurado no backend. A usuária precisa colar o JSON completo no secret.',
+            'Secret GOOGLE_SERVICE_ACCOUNT_KEY não configurado no backend. Configure o JSON completo da Service Account nas variáveis de ambiente.',
         }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -432,15 +432,22 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    if (!emailDetected || !privKeyDetected) {
+      return new Response(
+        JSON.stringify({
+          error: `O secret GOOGLE_SERVICE_ACCOUNT_KEY está incompleto. ${
+            !emailDetected ? 'Campo client_email ausente. ' : ''
+          }${!privKeyDetected ? 'Campo private_key ausente.' : ''}`,
+          hasEmail: !!emailDetected,
+          hasKey: !!privKeyDetected,
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
     const serviceAccount = {
       client_email: emailDetected,
       private_key: privKeyDetected,
-    }
-
-    if (!emailDetected) {
-      console.warn(
-        'Atenção: GOOGLE_SERVICE_ACCOUNT_KEY não contém um client_email @*.iam.gserviceaccount.com válido.',
-      )
     }
 
     const rootFolderId = payload.folderId || '0B_Wkefn8LCZxUzdna1BjX0xoeU0'
@@ -450,12 +457,16 @@ Deno.serve(async (req: Request) => {
     try {
       accessToken = await getGoogleAuthToken(serviceAccount)
     } catch (authErr: any) {
+      const rawErrMsg = authErr.message || String(authErr)
+      const isInvalidGrant = rawErrMsg.includes('invalid_grant')
       return new Response(
         JSON.stringify({
-          error: 'invalid_grant: O secret GOOGLE_SERVICE_ACCOUNT_KEY está incompleto ou inválido.',
-          details: authErr.message,
+          error: isInvalidGrant
+            ? 'Falha de autenticação com o Google (invalid_grant): A chave privada ou o client_email no GOOGLE_SERVICE_ACCOUNT_KEY são inválidos ou expiraram.'
+            : `Falha na autenticação OAuth com o Google: ${rawErrMsg}`,
+          details: rawErrMsg,
           hasEmail: !!emailDetected,
-          emailDomain: emailDetected ? emailDetected.split('@')[1] : null,
+          email: emailDetected,
           hasKey: !!privKeyDetected,
         }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
@@ -476,9 +487,26 @@ Deno.serve(async (req: Request) => {
       if (rootMetaRes.ok) {
         const rootMeta = await rootMetaRes.json()
         if (rootMeta.name) rootFolderName = rootMeta.name
+      } else {
+        const errStatus = rootMetaRes.status
+        const errText = await rootMetaRes.text()
+        console.warn(`Aviso ao acessar pasta raiz (${rootFolderId}): ${errStatus} ${errText}`)
+
+        if (errStatus === 404 || errStatus === 403) {
+          return new Response(
+            JSON.stringify({
+              error: `Compartilhe a pasta 'Blog LowCArb' com o e-mail ${emailDetected} como Visualizador no Google Drive. O Google retornou erro ${errStatus} ao tentar acessar a pasta raiz.`,
+              details: errText,
+              client_email: emailDetected,
+              folder_id: rootFolderId,
+              status_code: errStatus,
+            }),
+            { status: errStatus, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          )
+        }
       }
-    } catch {
-      // fallback
+    } catch (rootErr: any) {
+      console.warn('Falha de rede ao consultar pasta raiz:', rootErr)
     }
 
     interface FolderQueueItem {
@@ -518,10 +546,28 @@ Deno.serve(async (req: Request) => {
 
         const res = await fetch(listUrl, { headers: driveHeaders })
         if (!res.ok) {
+          const errStatus = res.status
           const errText = await res.text()
           console.warn(
-            `Erro ao listar pasta ${current.path} (${current.id}): ${res.status} ${errText}`,
+            `Erro ao listar pasta ${current.path} (${current.id}): ${errStatus} ${errText}`,
           )
+
+          // Se falhou logo na pasta raiz, retornar erro explícito e acionável
+          if (current.id === rootFolderId && (errStatus === 404 || errStatus === 403)) {
+            return new Response(
+              JSON.stringify({
+                error: `Compartilhe a pasta 'Blog LowCArb' com o e-mail ${emailDetected} como Visualizador no Google Drive. O Google retornou erro ${errStatus} ao tentar listar o conteúdo da pasta raiz.`,
+                details: errText,
+                client_email: emailDetected,
+                folder_id: rootFolderId,
+                status_code: errStatus,
+              }),
+              {
+                status: errStatus,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
+            )
+          }
           break
         }
 
