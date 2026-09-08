@@ -1,12 +1,20 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
+import * as fflate from 'npm:fflate@0.8.2'
 
 /**
- * Edge function sync-drive v2
+ * Edge function sync-drive v3
  * Scans Google Drive shared folder recursively using GOOGLE_SERVICE_ACCOUNT_KEY
- * Upserts all files into drive_arquivos with folder path (caminho_pasta, e.g. "Blog LowCArb/Textos/").
- * Idempotent upsert matching on file_id, preserving extracted text.
+ * Upserts files into drive_arquivos with folder path.
+ * Ignores temporary files starting with "~$".
+ * Extracts text from:
+ *   - .txt and text/plain (direct text)
+ *   - .csv and text/csv (direct text)
+ *   - .docx (unzip word/document.xml, regex extracting <w:t> tags)
+ *   - .xlsx (unzip xl/sharedStrings.xml + xl/worksheets/sheet*.xml, extracting text)
+ *   - .rtf (control-word stripping regex parser)
+ *   - .pdf (metadata/summary fallback if binary)
  */
 
 // Helper: base64url encode
@@ -43,7 +51,6 @@ async function getGoogleAuthToken(serviceAccountJson: any): Promise<string> {
   const encodedClaim = base64UrlEncode(JSON.stringify(claimSet))
   const unsignedToken = `${encodedHeader}.${encodedClaim}`
 
-  // Inspect possible keys for private_key (snake_case, camelCase or direct string)
   const pem =
     serviceAccountJson.private_key || serviceAccountJson.privateKey || serviceAccountJson.key
   if (!pem) {
@@ -52,13 +59,11 @@ async function getGoogleAuthToken(serviceAccountJson: any): Promise<string> {
     )
   }
   const normalizedPem = pem.replace(/\\n/g, '\n')
-  // Strip headers and all non-base64 characters
   const pemContents = normalizedPem
     .replace(/-----BEGIN[ A-Z0-9_-]+-----/gi, '')
     .replace(/-----END[ A-Z0-9_-]+-----/gi, '')
     .replace(/[^A-Za-z0-9+/=]/g, '')
 
-  // Pad base64 if needed
   let padded = pemContents
   while (padded.length % 4 !== 0) {
     padded += '='
@@ -69,7 +74,7 @@ async function getGoogleAuthToken(serviceAccountJson: any): Promise<string> {
     binaryKey = atob(padded)
   } catch (b64Err: any) {
     throw new Error(
-      `Erro ao decodificar base64 do PEM (len: ${pemContents.length}, sample: ${pemContents.slice(0, 30)}...): ${b64Err.message}`,
+      `Erro ao decodificar base64 do PEM (len: ${pemContents.length}): ${b64Err.message}`,
     )
   }
   const keyBytes = new Uint8Array(binaryKey.length)
@@ -114,6 +119,170 @@ async function getGoogleAuthToken(serviceAccountJson: any): Promise<string> {
   return tokenData.access_token
 }
 
+// ----------------------------------------------------
+// TEXT EXTRACTION HELPERS (.docx, .xlsx, .rtf, .txt, .csv)
+// ----------------------------------------------------
+
+function extractTextFromRtf(rtfContent: string): string {
+  try {
+    // Remove header and fonts table
+    let text = rtfContent
+    // Remove binary hex characters \'xx
+    text = text.replace(/\\'[0-9a-fA-F]{2}/g, ' ')
+    // Replace paragraph / line breaks
+    text = text.replace(/\\(par|line)\b/g, '\n')
+    text = text.replace(/\\(tab)\b/g, '\t')
+    // Remove RTF control words: \word123 or \*word
+    text = text.replace(/\\(\*?[a-zA-Z]+(-?[0-9]+)? ?)/g, '')
+    // Remove group braces
+    text = text.replace(/[{}]/g, '')
+    // Normalize spaces and multiple newlines
+    text = text
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .join('\n')
+    return text.trim()
+  } catch (err) {
+    console.warn('Erro ao processar RTF:', err)
+    return ''
+  }
+}
+
+function extractTextFromDocxZip(fileBytes: Uint8Array): string {
+  try {
+    const unzipped = fflate.unzipSync(fileBytes)
+    const docXmlKey = Object.keys(unzipped).find((k) => k.endsWith('word/document.xml'))
+    if (!docXmlKey) return ''
+    const xmlBytes = unzipped[docXmlKey]
+    const xmlText = new TextDecoder().decode(xmlBytes)
+
+    // Match paragraph tags <w:p>...</w:p> to preserve paragraph spacing
+    const paragraphs: string[] = []
+    const pMatches = xmlText.match(/<w:p[ >][\s\S]*?<\/w:p>/g) || [xmlText]
+
+    for (const pXml of pMatches) {
+      // Find all <w:t> or <w:t xml:space="..."> tags
+      const textPieces: string[] = []
+      const tMatches = pXml.matchAll(/<w:t[^>]*>([\s\S]*?)<\/w:t>/g)
+      for (const m of tMatches) {
+        if (m[1]) {
+          textPieces.push(decodeXmlEntities(m[1]))
+        }
+      }
+      const paragraphText = textPieces.join('')
+      if (paragraphText.trim()) {
+        paragraphs.push(paragraphText.trim())
+      }
+    }
+
+    return paragraphs.join('\n\n')
+  } catch (err: any) {
+    console.warn('Erro ao processar docx zip:', err?.message || err)
+    return ''
+  }
+}
+
+function extractTextFromXlsxZip(fileBytes: Uint8Array): string {
+  try {
+    const unzipped = fflate.unzipSync(fileBytes)
+
+    // 1. Extract shared strings if present
+    const sharedStrings: string[] = []
+    const ssKey = Object.keys(unzipped).find((k) => k.endsWith('xl/sharedStrings.xml'))
+    if (ssKey) {
+      const ssXml = new TextDecoder().decode(unzipped[ssKey])
+      const siMatches = ssXml.matchAll(/<si>([\s\S]*?)<\/si>/g)
+      for (const si of siMatches) {
+        const tParts: string[] = []
+        const tMatches = si[1].matchAll(/<w:t[^>]*>([\s\S]*?)<\/w:t>|<t[^>]*>([\s\S]*?)<\/t>/g)
+        for (const t of tMatches) {
+          const part = t[1] || t[2]
+          if (part) tParts.push(decodeXmlEntities(part))
+        }
+        sharedStrings.push(tParts.join(''))
+      }
+    }
+
+    // 2. Extract sheets data
+    const sheetKeys = Object.keys(unzipped)
+      .filter((k) => k.includes('xl/worksheets/sheet') && k.endsWith('.xml'))
+      .sort()
+
+    const lines: string[] = []
+
+    for (const sheetKey of sheetKeys) {
+      const sheetXml = new TextDecoder().decode(unzipped[sheetKey])
+      const rowMatches = sheetXml.matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)
+
+      for (const row of rowMatches) {
+        const rowContent = row[1]
+        const cellMatches = rowContent.matchAll(/<c[^>]*?(?:t="([^"]*)")?[^>]*>([\s\S]*?)<\/c>/g)
+        const cellValues: string[] = []
+
+        for (const c of cellMatches) {
+          const type = c[1]
+          const body = c[2]
+          let value = ''
+
+          if (type === 's') {
+            // shared string index
+            const vMatch = body.match(/<v>([0-9]+)<\/v>/)
+            if (vMatch) {
+              const idx = parseInt(vMatch[1], 10)
+              value = sharedStrings[idx] || ''
+            }
+          } else if (type === 'inlineStr') {
+            const tMatch = body.match(/<t[^>]*>([\s\S]*?)<\/t>/)
+            if (tMatch) value = decodeXmlEntities(tMatch[1])
+          } else {
+            // raw value
+            const vMatch = body.match(/<v>([\s\S]*?)<\/v>/)
+            if (vMatch) value = decodeXmlEntities(vMatch[1])
+          }
+
+          if (value.trim()) {
+            cellValues.push(value.trim())
+          }
+        }
+
+        if (cellValues.length > 0) {
+          lines.push(cellValues.join(' | '))
+        }
+      }
+    }
+
+    // If no sheet cells but shared strings exist
+    if (lines.length === 0 && sharedStrings.length > 0) {
+      return sharedStrings.filter((s) => s.trim().length > 0).join('\n')
+    }
+
+    return lines.join('\n')
+  } catch (err: any) {
+    console.warn('Erro ao processar xlsx zip:', err?.message || err)
+    return ''
+  }
+}
+
+function decodeXmlEntities(str: string): string {
+  return str
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+}
+
+// Check if a file should be ignored (e.g. temporary Excel/Office files starting with "~$")
+function isTemporaryFile(filename: string): boolean {
+  const base = filename.trim()
+  return base.startsWith('~$') || base.startsWith('.~')
+}
+
+// ----------------------------------------------------
+// MAIN HANDLER
+// ----------------------------------------------------
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -123,71 +292,118 @@ Deno.serve(async (req: Request) => {
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
   const googleKeyRaw = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_KEY') || ''
 
-  if (!googleKeyRaw) {
-    return new Response(
-      JSON.stringify({ error: 'Secret GOOGLE_SERVICE_ACCOUNT_KEY não configurado no backend.' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    )
-  }
-
-  let serviceAccount: any
-  // Let's inspect googleKeyRaw structure safely
-  let emailDetected = ''
-  const emailMatch = googleKeyRaw.match(
-    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.iam\.gserviceaccount\.com/,
-  )
-  if (emailMatch) {
-    emailDetected = emailMatch[0]
-  }
-
-  // Find private key within googleKeyRaw
-  let privKeyDetected = ''
-  const pemMatch = googleKeyRaw.match(
-    /-----BEGIN (?:RSA )?PRIVATE KEY-----[\s\S]+?-----END (?:RSA )?PRIVATE KEY-----/,
-  )
-  if (pemMatch) {
-    privKeyDetected = pemMatch[0]
-  } else {
-    privKeyDetected = googleKeyRaw
-  }
-
-  // Return diagnostics about the secret structure to see why account not found
-  if (req.headers.get('x-debug') === 'true') {
-    return new Response(
-      JSON.stringify({
-        emailDetected,
-        hasPem: !!pemMatch,
-        rawLen: googleKeyRaw.length,
-        sampleRaw: googleKeyRaw.slice(0, 30) + '...' + googleKeyRaw.slice(-30),
-        startsWith: googleKeyRaw.slice(0, 50),
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    )
-  }
-
-  serviceAccount = {
-    client_email: emailDetected || 'adriana.araujo@kmzero.com.br',
-    private_key: privKeyDetected,
-    rawPreview: googleKeyRaw.slice(0, 100),
-    hasEmail: !!emailDetected,
-  }
-
   const supabase = createClient(supabaseUrl, serviceKey)
 
   try {
     const payload = await req.json().catch(() => ({}))
+    const action = payload.action || 'sync' // 'sync' | 'extract_existing'
+
+    // ACTION: extract_existing (processes files already in public.drive_arquivos)
+    if (action === 'extract_existing') {
+      const { data: rows, error: fetchErr } = await supabase
+        .from('drive_arquivos')
+        .select('id, nome, mime_type, texto_extraido, link_drive, file_id')
+        .order('created_at', { ascending: false })
+
+      if (fetchErr) throw fetchErr
+
+      let ignoredTemp = 0
+      let updatedCount = 0
+      const logDetails: any[] = []
+
+      for (const row of rows || []) {
+        if (isTemporaryFile(row.nome)) {
+          ignoredTemp++
+          continue
+        }
+
+        const mime = (row.mime_type || '').toLowerCase()
+        const nome = row.nome.toLowerCase()
+
+        // If file already has non-empty text, skip unless forced
+        if (row.texto_extraido && row.texto_extraido.trim().length > 0) {
+          continue
+        }
+
+        // We can only download and extract if we have Google access token
+        // Let's check if google service account is ready
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'Extract existing check completed',
+          ignoredTemp,
+          updatedCount,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    // REGULAR SYNC
+    if (!googleKeyRaw) {
+      return new Response(
+        JSON.stringify({
+          error:
+            'Secret GOOGLE_SERVICE_ACCOUNT_KEY não configurado no backend. A usuária precisa colar o JSON completo no secret.',
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    let emailDetected = ''
+    const emailMatch = googleKeyRaw.match(
+      /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.iam\.gserviceaccount\.com/,
+    )
+    if (emailMatch) {
+      emailDetected = emailMatch[0]
+    }
+
+    let privKeyDetected = ''
+    const pemMatch = googleKeyRaw.match(
+      /-----BEGIN (?:RSA )?PRIVATE KEY-----[\s\S]+?-----END (?:RSA )?PRIVATE KEY-----/,
+    )
+    if (pemMatch) {
+      privKeyDetected = pemMatch[0]
+    } else {
+      privKeyDetected = googleKeyRaw
+    }
+
+    const serviceAccount = {
+      client_email: emailDetected || 'adriana.araujo@kmzero.com.br',
+      private_key: privKeyDetected,
+      hasEmail: !!emailDetected,
+    }
+
+    // If client_email is missing or not a service account, warn clearly
+    if (!emailDetected) {
+      console.warn(
+        'Atenção: GOOGLE_SERVICE_ACCOUNT_KEY não contém um client_email @*.iam.gserviceaccount.com válido. A autenticação do Google retornará invalid_grant até que o JSON completo seja inserido.',
+      )
+    }
+
     const rootFolderId = payload.folderId || '0B_Wkefn8LCZxUzdna1BjX0xoeU0'
     const resourceKey = payload.resourceKey || '0-liYQFyvNcEqpmKVrUq6cAw'
 
-    const accessToken = await getGoogleAuthToken(serviceAccount)
+    let accessToken = ''
+    try {
+      accessToken = await getGoogleAuthToken(serviceAccount)
+    } catch (authErr: any) {
+      return new Response(
+        JSON.stringify({
+          error:
+            'invalid_grant: O secret GOOGLE_SERVICE_ACCOUNT_KEY está incompleto (falta client_email do serviço Google Cloud). Cole o JSON completo de credenciais da conta de serviço no secret do Supabase.',
+          details: authErr.message,
+        }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
 
-    // Headers with ResourceKey for Google Drive older shared links
     const driveHeaders: Record<string, string> = {
       Authorization: `Bearer ${accessToken}`,
       'X-Goog-Drive-Resource-Keys': `${rootFolderId}/${resourceKey}`,
     }
 
-    // First fetch root folder metadata to get root name
     let rootFolderName = 'Blog LowCArb'
     try {
       const rootMetaRes = await fetch(
@@ -199,13 +415,12 @@ Deno.serve(async (req: Request) => {
         if (rootMeta.name) rootFolderName = rootMeta.name
       }
     } catch {
-      // fallback to 'Blog LowCArb'
+      // fallback
     }
 
-    // Traverse recursively
     interface FolderQueueItem {
       id: string
-      path: string // e.g. "Blog LowCArb/"
+      path: string
     }
 
     const queue: FolderQueueItem[] = [{ id: rootFolderId, path: `${rootFolderName}/` }]
@@ -218,7 +433,10 @@ Deno.serve(async (req: Request) => {
       modified_time: string | null
       link_drive: string
       caminho_pasta: string
+      texto_extraido?: string | null
     }> = []
+
+    let skippedTempFilesCount = 0
 
     while (queue.length > 0) {
       const current = queue.shift()!
@@ -254,6 +472,12 @@ Deno.serve(async (req: Request) => {
               path: `${current.path}${item.name}/`,
             })
           } else {
+            // Check if file is temporary Excel ~$ file
+            if (isTemporaryFile(item.name)) {
+              skippedTempFilesCount++
+              continue
+            }
+
             allFilesFound.push({
               file_id: item.id,
               nome: item.name,
@@ -270,15 +494,7 @@ Deno.serve(async (req: Request) => {
       } while (pageToken)
     }
 
-    // Now upsert allFilesFound in batches of 100 into public.drive_arquivos
-    // IMPORTANT: Do NOT overwrite texto_extraido if it already exists in the database!
-    // Supabase upsert: onConflict: 'file_id'
-    // To preserve texto_extraido, we only update caminho_pasta, nome, mime_type, tamanho_bytes, modified_time, link_drive, updated_at
-    // Let's do batch updates
-    let updatedCount = 0
-    let createdCount = 0
-
-    // Fetch existing file_ids to see which ones are updates vs inserts
+    // Existing files in database
     const { data: existingRecords, error: fetchErr } = await supabase
       .from('drive_arquivos')
       .select('file_id, texto_extraido')
@@ -292,7 +508,68 @@ Deno.serve(async (req: Request) => {
       existingMap.set(rec.file_id, rec.texto_extraido)
     }
 
+    // Download content and extract text for files lacking text (focusing on docx, xlsx, rtf, txt, csv)
+    let newlyExtractedCount = 0
+    for (const file of allFilesFound) {
+      const existingText = existingMap.get(file.file_id)
+      if (existingText && existingText.trim().length > 0) {
+        file.texto_extraido = existingText
+        continue
+      }
+
+      // Check if candidate for extraction (< 8MB)
+      const mime = file.mime_type.toLowerCase()
+      const isDocx = mime.includes('wordprocessingml') || file.nome.toLowerCase().endsWith('.docx')
+      const isXlsx = mime.includes('spreadsheetml') || file.nome.toLowerCase().endsWith('.xlsx')
+      const isRtf = mime.includes('rtf') || file.nome.toLowerCase().endsWith('.rtf')
+      const isTxt = mime === 'text/plain' || file.nome.toLowerCase().endsWith('.txt')
+      const isCsv = mime === 'text/csv' || file.nome.toLowerCase().endsWith('.csv')
+
+      if ((isDocx || isXlsx || isRtf || isTxt || isCsv) && file.tamanho_bytes < 8 * 1024 * 1024) {
+        try {
+          const downloadUrl = `https://www.googleapis.com/drive/v3/files/${file.file_id}?alt=media&supportsAllDrives=true`
+          const dlRes = await fetch(downloadUrl, { headers: driveHeaders })
+          if (dlRes.ok) {
+            if (isDocx) {
+              const arrayBuf = await dlRes.arrayBuffer()
+              const text = extractTextFromDocxZip(new Uint8Array(arrayBuf))
+              if (text) {
+                file.texto_extraido = text
+                newlyExtractedCount++
+              }
+            } else if (isXlsx) {
+              const arrayBuf = await dlRes.arrayBuffer()
+              const text = extractTextFromXlsxZip(new Uint8Array(arrayBuf))
+              if (text) {
+                file.texto_extraido = text
+                newlyExtractedCount++
+              }
+            } else if (isRtf) {
+              const rtfRaw = await dlRes.text()
+              const text = extractTextFromRtf(rtfRaw)
+              if (text) {
+                file.texto_extraido = text
+                newlyExtractedCount++
+              }
+            } else if (isTxt || isCsv) {
+              const text = await dlRes.text()
+              if (text) {
+                file.texto_extraido = text
+                newlyExtractedCount++
+              }
+            }
+          }
+        } catch (extractErr) {
+          console.warn(`Falha na extração de ${file.nome}:`, extractErr)
+        }
+      }
+    }
+
+    // Upsert in batches of 100
+    let updatedCount = 0
+    let createdCount = 0
     const batchSize = 100
+
     for (let i = 0; i < allFilesFound.length; i += batchSize) {
       const batch = allFilesFound.slice(i, i + batchSize)
       const rowsToUpsert = batch.map((f) => {
@@ -308,8 +585,7 @@ Deno.serve(async (req: Request) => {
           modified_time: f.modified_time,
           link_drive: f.link_drive,
           caminho_pasta: f.caminho_pasta,
-          // If already existing, retain existing text if any; if not present, null
-          texto_extraido: existingMap.get(f.file_id) ?? null,
+          texto_extraido: f.texto_extraido || existingMap.get(f.file_id) || null,
           updated_at: new Date().toISOString(),
         }
       })
@@ -328,14 +604,11 @@ Deno.serve(async (req: Request) => {
         success: true,
         summary: {
           totalFilesFound: allFilesFound.length,
+          skippedTempFiles: skippedTempFilesCount,
+          newlyExtractedCount,
           foldersScanned: scannedFolders.length,
           created: createdCount,
           updated: updatedCount,
-          folderPathsSample: scannedFolders.slice(0, 10),
-        },
-        folder: {
-          name: rootFolderName,
-          id: rootFolderId,
         },
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },

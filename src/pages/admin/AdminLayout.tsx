@@ -9,6 +9,7 @@ import {
   Users,
   CalendarDays,
   FolderSync,
+  Sparkles,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
@@ -18,6 +19,7 @@ import { Button } from '@/components/ui/button'
 const NAV = [
   { name: 'CRM', path: '/admin', icon: LayoutDashboard },
   { name: 'Agendamentos', path: '/admin/agendamentos', icon: CalendarDays },
+  { name: 'Copywriter IA', path: '/admin/copywriter', icon: Sparkles },
   { name: 'Estúdio IA', path: '/admin/estudio', icon: FileText },
   { name: 'Blog/Posts', path: '/admin/posts', icon: FileText },
   { name: 'Conteúdo Drive', path: '/admin/drive', icon: FolderSync },
