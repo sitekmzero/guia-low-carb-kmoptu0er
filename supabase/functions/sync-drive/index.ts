@@ -340,6 +340,58 @@ Deno.serve(async (req: Request) => {
       )
     }
 
+    // ACTION: test_auth (Quick check of google credentials without running full sync)
+    if (action === 'test_auth') {
+      let parsedKey: any = null
+      try {
+        parsedKey = JSON.parse(googleKeyRaw)
+      } catch {}
+
+      let emailDetected = parsedKey?.client_email || ''
+      if (!emailDetected) {
+        const emailMatch = googleKeyRaw.match(
+          /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.iam\.gserviceaccount\.com/,
+        )
+        if (emailMatch) emailDetected = emailMatch[0]
+      }
+
+      let privKeyDetected = parsedKey?.private_key || ''
+      if (!privKeyDetected) {
+        const pemMatch = googleKeyRaw.match(
+          /-----BEGIN (?:RSA )?PRIVATE KEY-----[\s\S]+?-----END (?:RSA )?PRIVATE KEY-----/,
+        )
+        if (pemMatch) privKeyDetected = pemMatch[0]
+        else privKeyDetected = googleKeyRaw
+      }
+
+      const serviceAccount = {
+        client_email: emailDetected,
+        private_key: privKeyDetected,
+      }
+
+      try {
+        const token = await getGoogleAuthToken(serviceAccount)
+        return new Response(
+          JSON.stringify({
+            success: true,
+            email: emailDetected,
+            tokenObtained: !!token,
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        )
+      } catch (err: any) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: err.message,
+            emailDetected,
+            hasKey: !!privKeyDetected,
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        )
+      }
+    }
+
     // REGULAR SYNC
     if (!googleKeyRaw) {
       return new Response(
@@ -351,34 +403,43 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    let emailDetected = ''
-    const emailMatch = googleKeyRaw.match(
-      /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.iam\.gserviceaccount\.com/,
-    )
-    if (emailMatch) {
-      emailDetected = emailMatch[0]
+    let parsedKey: any = null
+    try {
+      parsedKey = JSON.parse(googleKeyRaw)
+    } catch {
+      // not direct JSON or has escaped characters
     }
 
-    let privKeyDetected = ''
-    const pemMatch = googleKeyRaw.match(
-      /-----BEGIN (?:RSA )?PRIVATE KEY-----[\s\S]+?-----END (?:RSA )?PRIVATE KEY-----/,
-    )
-    if (pemMatch) {
-      privKeyDetected = pemMatch[0]
-    } else {
-      privKeyDetected = googleKeyRaw
+    let emailDetected = parsedKey?.client_email || ''
+    if (!emailDetected) {
+      const emailMatch = googleKeyRaw.match(
+        /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.iam\.gserviceaccount\.com/,
+      )
+      if (emailMatch) {
+        emailDetected = emailMatch[0]
+      }
+    }
+
+    let privKeyDetected = parsedKey?.private_key || ''
+    if (!privKeyDetected) {
+      const pemMatch = googleKeyRaw.match(
+        /-----BEGIN (?:RSA )?PRIVATE KEY-----[\s\S]+?-----END (?:RSA )?PRIVATE KEY-----/,
+      )
+      if (pemMatch) {
+        privKeyDetected = pemMatch[0]
+      } else {
+        privKeyDetected = googleKeyRaw
+      }
     }
 
     const serviceAccount = {
-      client_email: emailDetected || 'adriana.araujo@kmzero.com.br',
+      client_email: emailDetected,
       private_key: privKeyDetected,
-      hasEmail: !!emailDetected,
     }
 
-    // If client_email is missing or not a service account, warn clearly
     if (!emailDetected) {
       console.warn(
-        'Atenção: GOOGLE_SERVICE_ACCOUNT_KEY não contém um client_email @*.iam.gserviceaccount.com válido. A autenticação do Google retornará invalid_grant até que o JSON completo seja inserido.',
+        'Atenção: GOOGLE_SERVICE_ACCOUNT_KEY não contém um client_email @*.iam.gserviceaccount.com válido.',
       )
     }
 
@@ -391,9 +452,11 @@ Deno.serve(async (req: Request) => {
     } catch (authErr: any) {
       return new Response(
         JSON.stringify({
-          error:
-            'invalid_grant: O secret GOOGLE_SERVICE_ACCOUNT_KEY está incompleto (falta client_email do serviço Google Cloud). Cole o JSON completo de credenciais da conta de serviço no secret do Supabase.',
+          error: 'invalid_grant: O secret GOOGLE_SERVICE_ACCOUNT_KEY está incompleto ou inválido.',
           details: authErr.message,
+          hasEmail: !!emailDetected,
+          emailDomain: emailDetected ? emailDetected.split('@')[1] : null,
+          hasKey: !!privKeyDetected,
         }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )

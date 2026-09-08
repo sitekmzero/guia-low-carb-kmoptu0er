@@ -168,6 +168,73 @@ export default function AdminDrive() {
     }))
   }
 
+  const [syncStatusBanner, setSyncStatusBanner] = useState<{
+    type: 'success' | 'error' | 'info'
+    message: string
+  } | null>(null)
+
+  const handleSyncDrive = async () => {
+    try {
+      setSyncing(true)
+      setSyncStatusBanner({
+        type: 'info',
+        message:
+          'Sincronizando com o Google Drive e extraindo textos de arquivos (.docx, .xlsx, .rtf, .txt)... Isso pode levar de 1 a 3 minutos.',
+      })
+      toast({
+        title: 'Sincronização iniciada',
+        description: 'Buscando arquivos e extraindo textos no Google Drive...',
+      })
+
+      const { data, error } = await supabase.functions.invoke('sync-drive', {
+        body: { action: 'sync' },
+      })
+
+      if (error) {
+        throw error
+      }
+
+      if (data?.error) {
+        throw new Error(data.error + (data.details ? ` (${data.details})` : ''))
+      }
+
+      const summary = data?.summary || {}
+      const totalFound = summary.totalFilesFound ?? 0
+      const newlyExtracted = summary.newlyExtractedCount ?? 0
+      const skippedTemp = summary.skippedTempFiles ?? 0
+
+      const successMsg = `${totalFound} arquivos processados com sucesso (${newlyExtracted} novos com texto extraído${skippedTemp > 0 ? `, ${skippedTemp} temporários ignorados` : ''}).`
+
+      setSyncStatusBanner({
+        type: 'success',
+        message: successMsg,
+      })
+
+      toast({
+        title: 'Sincronização concluída!',
+        description: successMsg,
+      })
+
+      await fetchArquivos()
+    } catch (err: any) {
+      console.error('Erro ao sincronizar com Google Drive:', err)
+      const errorMsg =
+        err.message ||
+        'Falha ao conectar com o Google Drive. Verifique as credenciais da conta de serviço.'
+      setSyncStatusBanner({
+        type: 'error',
+        message: `Falha na sincronização: ${errorMsg}`,
+      })
+      toast({
+        title: 'Erro na sincronização',
+        description: errorMsg,
+        variant: 'destructive',
+      })
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   const handleUpdateStatus = async (id: string, newStatus: 'novo' | 'em_producao' | 'usado') => {
     try {
       const { error } = await (supabase as any)
@@ -346,7 +413,7 @@ export default function AdminDrive() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             asChild
             className="bg-terracotta hover:bg-terracotta/90 text-white shadow-sm text-xs h-9"
@@ -356,17 +423,63 @@ export default function AdminDrive() {
             </Link>
           </Button>
           <Button
+            variant="default"
+            size="sm"
+            onClick={handleSyncDrive}
+            disabled={syncing || loading}
+            className="bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm text-xs h-9 font-medium"
+          >
+            <FolderSync className={`w-3.5 h-3.5 mr-1.5 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? 'Sincronizando com o Drive…' : 'Sincronizar com o Drive'}
+          </Button>
+          <Button
             variant="outline"
             size="sm"
             onClick={fetchArquivos}
-            disabled={loading}
+            disabled={loading || syncing}
             className="text-xs h-9"
           >
-            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`w-3.5 h-3.5 mr-1.5 ${loading && !syncing ? 'animate-spin' : ''}`}
+            />
             Atualizar
           </Button>
         </div>
       </div>
+
+      {/* Banner de Status da Sincronização */}
+      {syncStatusBanner && (
+        <div
+          className={`p-4 rounded-xl border text-xs flex items-center justify-between gap-3 animate-fade-in ${
+            syncStatusBanner.type === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-200'
+              : syncStatusBanner.type === 'error'
+                ? 'bg-rose-50 border-rose-200 text-rose-900 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-200'
+                : 'bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-200'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {syncStatusBanner.type === 'info' && (
+              <RefreshCw className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400 shrink-0" />
+            )}
+            {syncStatusBanner.type === 'success' && (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            )}
+            {syncStatusBanner.type === 'error' && (
+              <Archive className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+            )}
+            <span className="font-medium">{syncStatusBanner.message}</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSyncStatusBanner(null)}
+            className="h-6 px-2 text-[11px] opacity-70 hover:opacity-100"
+          >
+            Fechar
+          </Button>
+        </div>
+      )}
 
       {/* KPI Cards Rápidos */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
