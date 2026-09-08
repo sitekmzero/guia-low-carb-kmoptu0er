@@ -291,6 +291,8 @@ Deno.serve(async (req: Request) => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
   const googleKeyRaw = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_KEY') || ''
+  const dedicatedClientEmail =
+    Deno.env.get('GOOGLE_CLIENTE_EMAIL') || Deno.env.get('GOOGLE_CLIENT_EMAIL') || ''
 
   const supabase = createClient(supabaseUrl, serviceKey)
 
@@ -353,6 +355,9 @@ Deno.serve(async (req: Request) => {
           /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.iam\.gserviceaccount\.com/,
         )
         if (emailMatch) emailDetected = emailMatch[0]
+      }
+      if (!emailDetected && dedicatedClientEmail) {
+        emailDetected = dedicatedClientEmail.trim()
       }
 
       let privKeyDetected = parsedKey?.private_key || ''
@@ -418,6 +423,9 @@ Deno.serve(async (req: Request) => {
       if (emailMatch) {
         emailDetected = emailMatch[0]
       }
+    }
+    if (!emailDetected && dedicatedClientEmail) {
+      emailDetected = dedicatedClientEmail.trim()
     }
 
     let privKeyDetected = parsedKey?.private_key || ''
@@ -562,7 +570,10 @@ Deno.serve(async (req: Request) => {
                 folder_id: rootFolderId,
                 status_code: errStatus,
               }),
-              { status: errStatus, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+              {
+                status: errStatus,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
             )
           }
           break
