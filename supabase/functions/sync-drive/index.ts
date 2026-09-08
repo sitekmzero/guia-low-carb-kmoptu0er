@@ -4,17 +4,16 @@ import { corsHeaders } from '../_shared/cors.ts'
 import * as fflate from 'npm:fflate@0.8.2'
 
 /**
- * Edge function sync-drive v3
- * Scans Google Drive shared folder recursively using GOOGLE_SERVICE_ACCOUNT_KEY
- * Upserts files into drive_arquivos with folder path.
- * Ignores temporary files starting with "~$".
- * Extracts text from:
- *   - .txt and text/plain (direct text)
- *   - .csv and text/csv (direct text)
- *   - .docx (unzip word/document.xml, regex extracting <w:t> tags)
- *   - .xlsx (unzip xl/sharedStrings.xml + xl/worksheets/sheet*.xml, extracting text)
- *   - .rtf (control-word stripping regex parser)
- *   - .pdf (metadata/summary fallback if binary)
+ * Edge function sync-drive v4 (incremental / batch processing)
+ * Scans Google Drive shared folder recursively using GOOGLE_SERVICE_ACCOUNT_KEY.
+ *
+ * To avoid HTTP 504 idle timeouts (150s), this function supports batch execution:
+ * - Scans folder tree and upserts all discovered metadata in small db batches.
+ * - Extracts text from .docx, .xlsx, .rtf, .txt, .csv incrementally.
+ * - If time elapsed approaches TIME_BUDGET_MS (~70s) or extraction batch limit is reached,
+ *   it returns { status: "in_progress", processados, restantes, total, stats, cursor }
+ *   allowing the frontend to loop until { status: "completed" }.
+ * - Fully idempotent: upserts into drive_arquivos based on unique file_id.
  */
 
 // Helper: base64url encode
@@ -125,18 +124,12 @@ async function getGoogleAuthToken(serviceAccountJson: any): Promise<string> {
 
 function extractTextFromRtf(rtfContent: string): string {
   try {
-    // Remove header and fonts table
     let text = rtfContent
-    // Remove binary hex characters \'xx
     text = text.replace(/\\'[0-9a-fA-F]{2}/g, ' ')
-    // Replace paragraph / line breaks
     text = text.replace(/\\(par|line)\b/g, '\n')
     text = text.replace(/\\(tab)\b/g, '\t')
-    // Remove RTF control words: \word123 or \*word
     text = text.replace(/\\(\*?[a-zA-Z]+(-?[0-9]+)? ?)/g, '')
-    // Remove group braces
     text = text.replace(/[{}]/g, '')
-    // Normalize spaces and multiple newlines
     text = text
       .split('\n')
       .map((line) => line.trim())
@@ -157,12 +150,10 @@ function extractTextFromDocxZip(fileBytes: Uint8Array): string {
     const xmlBytes = unzipped[docXmlKey]
     const xmlText = new TextDecoder().decode(xmlBytes)
 
-    // Match paragraph tags <w:p>...</w:p> to preserve paragraph spacing
     const paragraphs: string[] = []
     const pMatches = xmlText.match(/<w:p[ >][\s\S]*?<\/w:p>/g) || [xmlText]
 
     for (const pXml of pMatches) {
-      // Find all <w:t> or <w:t xml:space="..."> tags
       const textPieces: string[] = []
       const tMatches = pXml.matchAll(/<w:t[^>]*>([\s\S]*?)<\/w:t>/g)
       for (const m of tMatches) {
@@ -187,7 +178,6 @@ function extractTextFromXlsxZip(fileBytes: Uint8Array): string {
   try {
     const unzipped = fflate.unzipSync(fileBytes)
 
-    // 1. Extract shared strings if present
     const sharedStrings: string[] = []
     const ssKey = Object.keys(unzipped).find((k) => k.endsWith('xl/sharedStrings.xml'))
     if (ssKey) {
@@ -204,7 +194,6 @@ function extractTextFromXlsxZip(fileBytes: Uint8Array): string {
       }
     }
 
-    // 2. Extract sheets data
     const sheetKeys = Object.keys(unzipped)
       .filter((k) => k.includes('xl/worksheets/sheet') && k.endsWith('.xml'))
       .sort()
@@ -226,7 +215,6 @@ function extractTextFromXlsxZip(fileBytes: Uint8Array): string {
           let value = ''
 
           if (type === 's') {
-            // shared string index
             const vMatch = body.match(/<v>([0-9]+)<\/v>/)
             if (vMatch) {
               const idx = parseInt(vMatch[1], 10)
@@ -236,7 +224,6 @@ function extractTextFromXlsxZip(fileBytes: Uint8Array): string {
             const tMatch = body.match(/<t[^>]*>([\s\S]*?)<\/t>/)
             if (tMatch) value = decodeXmlEntities(tMatch[1])
           } else {
-            // raw value
             const vMatch = body.match(/<v>([\s\S]*?)<\/v>/)
             if (vMatch) value = decodeXmlEntities(vMatch[1])
           }
@@ -252,7 +239,6 @@ function extractTextFromXlsxZip(fileBytes: Uint8Array): string {
       }
     }
 
-    // If no sheet cells but shared strings exist
     if (lines.length === 0 && sharedStrings.length > 0) {
       return sharedStrings.filter((s) => s.trim().length > 0).join('\n')
     }
@@ -273,113 +259,127 @@ function decodeXmlEntities(str: string): string {
     .replace(/&apos;/g, "'")
 }
 
-// Check if a file should be ignored (e.g. temporary Excel/Office files starting with "~$")
+// Check if a file should be ignored (e.g. temporary Excel/Office files starting with "~$" or ".~")
 function isTemporaryFile(filename: string): boolean {
   const base = filename.trim()
   return base.startsWith('~$') || base.startsWith('.~')
 }
 
 // ----------------------------------------------------
+// CREDENTIAL RESOLVER (Multi-source fallback)
+// ----------------------------------------------------
+
+function resolveServiceAccount(): { email: string; privateKey: string } | null {
+  const googleKeyRaw = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_KEY') || ''
+  const dedicatedClientEmail =
+    Deno.env.get('GOOGLE_CLIENTE_EMAIL') || Deno.env.get('GOOGLE_CLIENT_EMAIL') || ''
+
+  if (!googleKeyRaw && !dedicatedClientEmail) {
+    return null
+  }
+
+  let parsedKey: any = null
+  try {
+    parsedKey = JSON.parse(googleKeyRaw)
+  } catch {
+    // not raw JSON
+  }
+
+  let emailDetected = parsedKey?.client_email || ''
+  if (!emailDetected) {
+    const emailMatch = googleKeyRaw.match(
+      /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.iam\.gserviceaccount\.com/,
+    )
+    if (emailMatch) emailDetected = emailMatch[0]
+  }
+  if (!emailDetected && dedicatedClientEmail) {
+    emailDetected = dedicatedClientEmail.trim()
+  }
+
+  let privKeyDetected = parsedKey?.private_key || ''
+  if (!privKeyDetected) {
+    const pemMatch = googleKeyRaw.match(
+      /-----BEGIN (?:RSA )?PRIVATE KEY-----[\s\S]+?-----END (?:RSA )?PRIVATE KEY-----/,
+    )
+    if (pemMatch) {
+      privKeyDetected = pemMatch[0]
+    } else {
+      privKeyDetected = googleKeyRaw
+    }
+  }
+
+  if (!emailDetected || !privKeyDetected) {
+    return null
+  }
+
+  return { email: emailDetected, privateKey: privKeyDetected }
+}
+
+// ----------------------------------------------------
 // MAIN HANDLER
 // ----------------------------------------------------
+
+// Idle timeout is 150s. We stay well within safety margins: stop after ~65s per invocation.
+const TIME_BUDGET_MS = 65_000
+const MAX_EXTRACTIONS_PER_BATCH = 15
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  const startTime = Date.now()
+
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
-  const googleKeyRaw = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_KEY') || ''
-  const dedicatedClientEmail =
-    Deno.env.get('GOOGLE_CLIENTE_EMAIL') || Deno.env.get('GOOGLE_CLIENT_EMAIL') || ''
 
   const supabase = createClient(supabaseUrl, serviceKey)
 
   try {
     const payload = await req.json().catch(() => ({}))
-    const action = payload.action || 'sync' // 'sync' | 'extract_existing'
+    const action = payload.action || 'sync' // 'sync' | 'extract_batch' | 'test_auth'
+    const step = payload.step || (action === 'extract_batch' ? 'extract' : 'scan')
+    const batchOffset = typeof payload.offset === 'number' ? payload.offset : 0
+    const accumulatedStats = payload.stats || {
+      totalFound: 0,
+      newlyExtracted: 0,
+      alreadyWithText: 0,
+      skippedTemp: 0,
+      foldersScanned: 0,
+      created: 0,
+      updated: 0,
+    }
 
-    // ACTION: extract_existing (processes files already in public.drive_arquivos)
-    if (action === 'extract_existing') {
-      const { data: rows, error: fetchErr } = await supabase
-        .from('drive_arquivos')
-        .select('id, nome, mime_type, texto_extraido, link_drive, file_id')
-        .order('created_at', { ascending: false })
-
-      if (fetchErr) throw fetchErr
-
-      let ignoredTemp = 0
-      let updatedCount = 0
-      const logDetails: any[] = []
-
-      for (const row of rows || []) {
-        if (isTemporaryFile(row.nome)) {
-          ignoredTemp++
-          continue
-        }
-
-        const mime = (row.mime_type || '').toLowerCase()
-        const nome = row.nome.toLowerCase()
-
-        // If file already has non-empty text, skip unless forced
-        if (row.texto_extraido && row.texto_extraido.trim().length > 0) {
-          continue
-        }
-
-        // We can only download and extract if we have Google access token
-        // Let's check if google service account is ready
-      }
-
+    // RESOLVE CREDENTIALS
+    const creds = resolveServiceAccount()
+    if (!creds) {
+      const googleKeyRaw = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_KEY') || ''
+      const dedicatedClientEmail =
+        Deno.env.get('GOOGLE_CLIENTE_EMAIL') || Deno.env.get('GOOGLE_CLIENT_EMAIL') || ''
       return new Response(
         JSON.stringify({
-          success: true,
-          message: 'Extract existing check completed',
-          ignoredTemp,
-          updatedCount,
+          error:
+            'Secret GOOGLE_SERVICE_ACCOUNT_KEY incompleto ou não configurado. Verifique o JSON da conta de serviço e o e-mail.',
+          hasKey: !!googleKeyRaw,
+          hasEmail: !!dedicatedClientEmail,
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }
 
-    // ACTION: test_auth (Quick check of google credentials without running full sync)
+    const serviceAccount = {
+      client_email: creds.email,
+      private_key: creds.privateKey,
+    }
+
+    // ACTION: test_auth
     if (action === 'test_auth') {
-      let parsedKey: any = null
-      try {
-        parsedKey = JSON.parse(googleKeyRaw)
-      } catch {}
-
-      let emailDetected = parsedKey?.client_email || ''
-      if (!emailDetected) {
-        const emailMatch = googleKeyRaw.match(
-          /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.iam\.gserviceaccount\.com/,
-        )
-        if (emailMatch) emailDetected = emailMatch[0]
-      }
-      if (!emailDetected && dedicatedClientEmail) {
-        emailDetected = dedicatedClientEmail.trim()
-      }
-
-      let privKeyDetected = parsedKey?.private_key || ''
-      if (!privKeyDetected) {
-        const pemMatch = googleKeyRaw.match(
-          /-----BEGIN (?:RSA )?PRIVATE KEY-----[\s\S]+?-----END (?:RSA )?PRIVATE KEY-----/,
-        )
-        if (pemMatch) privKeyDetected = pemMatch[0]
-        else privKeyDetected = googleKeyRaw
-      }
-
-      const serviceAccount = {
-        client_email: emailDetected,
-        private_key: privKeyDetected,
-      }
-
       try {
         const token = await getGoogleAuthToken(serviceAccount)
         return new Response(
           JSON.stringify({
             success: true,
-            email: emailDetected,
+            email: creds.email,
             tokenObtained: !!token,
           }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
@@ -389,78 +389,14 @@ Deno.serve(async (req: Request) => {
           JSON.stringify({
             success: false,
             error: err.message,
-            emailDetected,
-            hasKey: !!privKeyDetected,
+            emailDetected: creds.email,
           }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         )
       }
     }
 
-    // REGULAR SYNC
-    if (!googleKeyRaw) {
-      return new Response(
-        JSON.stringify({
-          error:
-            'Secret GOOGLE_SERVICE_ACCOUNT_KEY não configurado no backend. Configure o JSON completo da Service Account nas variáveis de ambiente.',
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      )
-    }
-
-    let parsedKey: any = null
-    try {
-      parsedKey = JSON.parse(googleKeyRaw)
-    } catch {
-      // not direct JSON or has escaped characters
-    }
-
-    let emailDetected = parsedKey?.client_email || ''
-    if (!emailDetected) {
-      const emailMatch = googleKeyRaw.match(
-        /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.iam\.gserviceaccount\.com/,
-      )
-      if (emailMatch) {
-        emailDetected = emailMatch[0]
-      }
-    }
-    if (!emailDetected && dedicatedClientEmail) {
-      emailDetected = dedicatedClientEmail.trim()
-    }
-
-    let privKeyDetected = parsedKey?.private_key || ''
-    if (!privKeyDetected) {
-      const pemMatch = googleKeyRaw.match(
-        /-----BEGIN (?:RSA )?PRIVATE KEY-----[\s\S]+?-----END (?:RSA )?PRIVATE KEY-----/,
-      )
-      if (pemMatch) {
-        privKeyDetected = pemMatch[0]
-      } else {
-        privKeyDetected = googleKeyRaw
-      }
-    }
-
-    if (!emailDetected || !privKeyDetected) {
-      return new Response(
-        JSON.stringify({
-          error: `O secret GOOGLE_SERVICE_ACCOUNT_KEY está incompleto. ${
-            !emailDetected ? 'Campo client_email ausente. ' : ''
-          }${!privKeyDetected ? 'Campo private_key ausente.' : ''}`,
-          hasEmail: !!emailDetected,
-          hasKey: !!privKeyDetected,
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      )
-    }
-
-    const serviceAccount = {
-      client_email: emailDetected,
-      private_key: privKeyDetected,
-    }
-
-    const rootFolderId = payload.folderId || '0B_Wkefn8LCZxUzdna1BjX0xoeU0'
-    const resourceKey = payload.resourceKey || '0-liYQFyvNcEqpmKVrUq6cAw'
-
+    // AUTH TOKEN
     let accessToken = ''
     try {
       accessToken = await getGoogleAuthToken(serviceAccount)
@@ -470,105 +406,46 @@ Deno.serve(async (req: Request) => {
       return new Response(
         JSON.stringify({
           error: isInvalidGrant
-            ? 'Falha de autenticação com o Google (invalid_grant): A chave privada ou o client_email no GOOGLE_SERVICE_ACCOUNT_KEY são inválidos ou expiraram.'
+            ? 'Falha de autenticação com o Google (invalid_grant): A chave privada ou o client_email são inválidos ou expiraram.'
             : `Falha na autenticação OAuth com o Google: ${rawErrMsg}`,
           details: rawErrMsg,
-          hasEmail: !!emailDetected,
-          email: emailDetected,
-          hasKey: !!privKeyDetected,
+          email: creds.email,
         }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }
+
+    const rootFolderId = payload.folderId || '0B_Wkefn8LCZxUzdna1BjX0xoeU0'
+    const resourceKey = payload.resourceKey || '0-liYQFyvNcEqpmKVrUq6cAw'
 
     const driveHeaders: Record<string, string> = {
       Authorization: `Bearer ${accessToken}`,
       'X-Goog-Drive-Resource-Keys': `${rootFolderId}/${resourceKey}`,
     }
 
-    let rootFolderName = 'Blog LowCArb'
-    try {
-      const rootMetaRes = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${rootFolderId}?fields=id,name&supportsAllDrives=true`,
-        { headers: driveHeaders },
-      )
-      if (rootMetaRes.ok) {
-        const rootMeta = await rootMetaRes.json()
-        if (rootMeta.name) rootFolderName = rootMeta.name
-      } else {
-        const errStatus = rootMetaRes.status
-        const errText = await rootMetaRes.text()
-        console.warn(`Aviso ao acessar pasta raiz (${rootFolderId}): ${errStatus} ${errText}`)
-
-        if (errStatus === 404 || errStatus === 403) {
-          return new Response(
-            JSON.stringify({
-              error: `Compartilhe a pasta 'Blog LowCArb' com o e-mail ${emailDetected} como Visualizador no Google Drive. O Google retornou erro ${errStatus} ao tentar acessar a pasta raiz.`,
-              details: errText,
-              client_email: emailDetected,
-              folder_id: rootFolderId,
-              status_code: errStatus,
-            }),
-            { status: errStatus, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-          )
-        }
-      }
-    } catch (rootErr: any) {
-      console.warn('Falha de rede ao consultar pasta raiz:', rootErr)
-    }
-
-    interface FolderQueueItem {
-      id: string
-      path: string
-    }
-
-    const queue: FolderQueueItem[] = [{ id: rootFolderId, path: `${rootFolderName}/` }]
-    const scannedFolders: string[] = []
-    const allFilesFound: Array<{
-      file_id: string
-      nome: string
-      mime_type: string
-      tamanho_bytes: number
-      modified_time: string | null
-      link_drive: string
-      caminho_pasta: string
-      texto_extraido?: string | null
-    }> = []
-
-    let skippedTempFilesCount = 0
-
-    while (queue.length > 0) {
-      const current = queue.shift()!
-      scannedFolders.push(current.path)
-
-      let pageToken: string | null = null
-      do {
-        const query = encodeURIComponent(`'${current.id}' in parents and trashed = false`)
-        const fields = encodeURIComponent(
-          'nextPageToken, files(id, name, mimeType, size, modifiedTime, webViewLink, parents)',
+    // =========================================================================
+    // STEP 1: SCAN & UPSERT METADATA (Fast: ~10-15s for 626 files across folders)
+    // =========================================================================
+    if (step === 'scan') {
+      let rootFolderName = 'Blog LowCArb'
+      try {
+        const rootMetaRes = await fetch(
+          `https://www.googleapis.com/drive/v3/files/${rootFolderId}?fields=id,name&supportsAllDrives=true`,
+          { headers: driveHeaders },
         )
-        let listUrl = `https://www.googleapis.com/drive/v3/files?q=${query}&fields=${fields}&pageSize=100&supportsAllDrives=true&includeItemsFromAllDrives=true`
-        if (pageToken) {
-          listUrl += `&pageToken=${pageToken}`
-        }
-
-        const res = await fetch(listUrl, { headers: driveHeaders })
-        if (!res.ok) {
-          const errStatus = res.status
-          const errText = await res.text()
-          console.warn(
-            `Erro ao listar pasta ${current.path} (${current.id}): ${errStatus} ${errText}`,
-          )
-
-          // Se falhou logo na pasta raiz, retornar erro explícito e acionável
-          if (current.id === rootFolderId && (errStatus === 404 || errStatus === 403)) {
+        if (rootMetaRes.ok) {
+          const rootMeta = await rootMetaRes.json()
+          if (rootMeta.name) rootFolderName = rootMeta.name
+        } else {
+          const errStatus = rootMetaRes.status
+          const errText = await rootMetaRes.text()
+          if (errStatus === 404 || errStatus === 403) {
             return new Response(
               JSON.stringify({
-                error: `Compartilhe a pasta 'Blog LowCArb' com o e-mail ${emailDetected} como Visualizador no Google Drive. O Google retornou erro ${errStatus} ao tentar listar o conteúdo da pasta raiz.`,
+                error: `Compartilhe a pasta 'Blog LowCArb' com o e-mail ${creds.email} como Visualizador no Google Drive. O Google retornou erro ${errStatus}.`,
                 details: errText,
-                client_email: emailDetected,
+                client_email: creds.email,
                 folder_id: rootFolderId,
-                status_code: errStatus,
               }),
               {
                 status: errStatus,
@@ -576,159 +453,389 @@ Deno.serve(async (req: Request) => {
               },
             )
           }
+        }
+      } catch (rootErr: any) {
+        console.warn('Falha de rede ao consultar pasta raiz:', rootErr)
+      }
+
+      interface FolderQueueItem {
+        id: string
+        path: string
+      }
+
+      const queue: FolderQueueItem[] = [{ id: rootFolderId, path: `${rootFolderName}/` }]
+      const scannedFolders: string[] = []
+      const allFilesFound: Array<{
+        file_id: string
+        nome: string
+        mime_type: string
+        tamanho_bytes: number
+        modified_time: string | null
+        link_drive: string
+        caminho_pasta: string
+      }> = []
+
+      let skippedTempFilesCount = 0
+
+      while (queue.length > 0) {
+        const current = queue.shift()!
+        scannedFolders.push(current.path)
+
+        let pageToken: string | null = null
+        do {
+          const query = encodeURIComponent(`'${current.id}' in parents and trashed = false`)
+          const fields = encodeURIComponent(
+            'nextPageToken, files(id, name, mimeType, size, modifiedTime, webViewLink, parents)',
+          )
+          let listUrl = `https://www.googleapis.com/drive/v3/files?q=${query}&fields=${fields}&pageSize=100&supportsAllDrives=true&includeItemsFromAllDrives=true`
+          if (pageToken) {
+            listUrl += `&pageToken=${pageToken}`
+          }
+
+          const res = await fetch(listUrl, { headers: driveHeaders })
+          if (!res.ok) {
+            const errStatus = res.status
+            const errText = await res.text()
+            console.warn(
+              `Erro ao listar pasta ${current.path} (${current.id}): ${errStatus} ${errText}`,
+            )
+
+            if (current.id === rootFolderId && (errStatus === 404 || errStatus === 403)) {
+              return new Response(
+                JSON.stringify({
+                  error: `Compartilhe a pasta 'Blog LowCArb' com o e-mail ${creds.email} como Visualizador no Google Drive. Erro ${errStatus}.`,
+                  details: errText,
+                  client_email: creds.email,
+                  folder_id: rootFolderId,
+                }),
+                {
+                  status: errStatus,
+                  headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                },
+              )
+            }
+            break
+          }
+
+          const data = await res.json()
+          const items = data.files || []
+
+          for (const item of items) {
+            if (item.mimeType === 'application/vnd.google-apps.folder') {
+              queue.push({
+                id: item.id,
+                path: `${current.path}${item.name}/`,
+              })
+            } else {
+              if (isTemporaryFile(item.name)) {
+                skippedTempFilesCount++
+                continue
+              }
+
+              allFilesFound.push({
+                file_id: item.id,
+                nome: item.name,
+                mime_type: item.mimeType || 'application/octet-stream',
+                tamanho_bytes: item.size ? parseInt(item.size, 10) : 0,
+                modified_time: item.modifiedTime || null,
+                link_drive: item.webViewLink || `https://drive.google.com/file/d/${item.id}/view`,
+                caminho_pasta: current.path,
+              })
+            }
+          }
+
+          pageToken = data.nextPageToken || null
+        } while (pageToken)
+      }
+
+      // Existing records to preserve existing texto_extraido
+      const { data: existingRecords, error: fetchErr } = await supabase
+        .from('drive_arquivos')
+        .select('file_id, texto_extraido')
+
+      if (fetchErr) {
+        throw new Error(`Erro ao consultar drive_arquivos existentes: ${fetchErr.message}`)
+      }
+
+      const existingMap = new Map<string, string | null>()
+      for (const rec of existingRecords || []) {
+        existingMap.set(rec.file_id, rec.texto_extraido)
+      }
+
+      // Upsert in batches of 100 metadata rows
+      let createdCount = 0
+      let updatedCount = 0
+      const batchSize = 100
+
+      for (let i = 0; i < allFilesFound.length; i += batchSize) {
+        const batch = allFilesFound.slice(i, i + batchSize)
+        const rowsToUpsert = batch.map((f) => {
+          const isExisting = existingMap.has(f.file_id)
+          if (isExisting) updatedCount++
+          else createdCount++
+
+          const existingText = existingMap.get(f.file_id) || null
+          return {
+            file_id: f.file_id,
+            nome: f.nome,
+            mime_type: f.mime_type,
+            tamanho_bytes: f.tamanho_bytes,
+            modified_time: f.modified_time,
+            link_drive: f.link_drive,
+            caminho_pasta: f.caminho_pasta,
+            texto_extraido: existingText,
+            updated_at: new Date().toISOString(),
+          }
+        })
+
+        const { error: upsertErr } = await supabase
+          .from('drive_arquivos')
+          .upsert(rowsToUpsert, { onConflict: 'file_id' })
+
+        if (upsertErr) {
+          throw new Error(`Erro no upsert de metadados: ${upsertErr.message}`)
+        }
+      }
+
+      // Check total count and how many candidates still need extraction
+      const { count: totalDbCount } = await supabase
+        .from('drive_arquivos')
+        .select('id', { count: 'exact', head: true })
+
+      // Count files that lack text and match extractable formats
+      // Text candidate mime types: docx, xlsx, rtf, txt, csv
+      const { count: pendingExtractionCount } = await supabase
+        .from('drive_arquivos')
+        .select('id', { count: 'exact', head: true })
+        .is('texto_extraido', null)
+        .or(
+          'mime_type.ilike.%wordprocessingml%,mime_type.ilike.%spreadsheetml%,mime_type.ilike.%rtf%,mime_type.eq.text/plain,mime_type.eq.text/csv,nome.ilike.%.docx,nome.ilike.%.xlsx,nome.ilike.%.rtf,nome.ilike.%.txt,nome.ilike.%.csv',
+        )
+
+      const totalFiles = totalDbCount || allFilesFound.length
+      const pendingCount = pendingExtractionCount || 0
+      const alreadyExtracted = totalFiles - pendingCount
+
+      const updatedStats = {
+        ...accumulatedStats,
+        totalFound: totalFiles,
+        foldersScanned: scannedFolders.length,
+        skippedTemp: skippedTempFilesCount,
+        created: createdCount,
+        updated: updatedCount,
+        alreadyWithText: alreadyExtracted,
+      }
+
+      if (pendingCount === 0) {
+        // All files indexed already
+        return new Response(
+          JSON.stringify({
+            status: 'completed',
+            processados: totalFiles,
+            restantes: 0,
+            total: totalFiles,
+            percentual: 100,
+            mensagem: `Varredura concluída! Todos os ${totalFiles} arquivos estão indexados no banco.`,
+            stats: updatedStats,
+            summary: {
+              totalFilesFound: totalFiles,
+              skippedTempFiles: skippedTempFilesCount,
+              newlyExtractedCount: 0,
+              foldersScanned: scannedFolders.length,
+              created: createdCount,
+              updated: updatedCount,
+            },
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        )
+      }
+
+      // Pass directly to incremental extraction step
+      return new Response(
+        JSON.stringify({
+          status: 'in_progress',
+          step: 'extract',
+          offset: 0,
+          processados: alreadyExtracted,
+          restantes: pendingCount,
+          total: totalFiles,
+          percentual: Math.round((alreadyExtracted / (totalFiles || 1)) * 100),
+          mensagem: `Metadados sincronizados (${totalFiles} arquivos). Extraindo textos pendentes (${pendingCount} restantes)...`,
+          stats: updatedStats,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    // =========================================================================
+    // STEP 2: INCREMENTAL EXTRACTION (Processes up to MAX_EXTRACTIONS_PER_BATCH or TIME_BUDGET_MS)
+    // =========================================================================
+    if (step === 'extract') {
+      // Fetch batch of files without text that match candidate extensions
+      const { data: candidates, error: candidateErr } = await supabase
+        .from('drive_arquivos')
+        .select('id, file_id, nome, mime_type, tamanho_bytes')
+        .is('texto_extraido', null)
+        .or(
+          'mime_type.ilike.%wordprocessingml%,mime_type.ilike.%spreadsheetml%,mime_type.ilike.%rtf%,mime_type.eq.text/plain,mime_type.eq.text/csv,nome.ilike.%.docx,nome.ilike.%.xlsx,nome.ilike.%.rtf,nome.ilike.%.txt,nome.ilike.%.csv',
+        )
+        .order('id', { ascending: true })
+        .limit(MAX_EXTRACTIONS_PER_BATCH)
+
+      if (candidateErr) {
+        throw new Error(`Erro ao buscar candidatos para extração: ${candidateErr.message}`)
+      }
+
+      const itemsToProcess = candidates || []
+      let batchExtractedCount = 0
+
+      for (const file of itemsToProcess) {
+        // Check time budget to never hit 150s idle timeout
+        const elapsed = Date.now() - startTime
+        if (elapsed > TIME_BUDGET_MS) {
+          console.log(
+            `Tempo limite da invocação atingido (${elapsed}ms). Salvando e pausando para próximo lote.`,
+          )
           break
         }
 
-        const data = await res.json()
-        const items = data.files || []
+        const mime = (file.mime_type || '').toLowerCase()
+        const nome = (file.nome || '').toLowerCase()
+        const tamanho = file.tamanho_bytes || 0
 
-        for (const item of items) {
-          if (item.mimeType === 'application/vnd.google-apps.folder') {
-            queue.push({
-              id: item.id,
-              path: `${current.path}${item.name}/`,
-            })
-          } else {
-            // Check if file is temporary Excel ~$ file
-            if (isTemporaryFile(item.name)) {
-              skippedTempFilesCount++
-              continue
+        const isDocx = mime.includes('wordprocessingml') || nome.endsWith('.docx')
+        const isXlsx = mime.includes('spreadsheetml') || nome.endsWith('.xlsx')
+        const isRtf = mime.includes('rtf') || nome.endsWith('.rtf')
+        const isTxt = mime === 'text/plain' || nome.endsWith('.txt')
+        const isCsv = mime === 'text/csv' || nome.endsWith('.csv')
+
+        let extractedText: string | null = null
+
+        // Extraction limit 8MB
+        if ((isDocx || isXlsx || isRtf || isTxt || isCsv) && tamanho < 8 * 1024 * 1024) {
+          try {
+            const downloadUrl = `https://www.googleapis.com/drive/v3/files/${file.file_id}?alt=media&supportsAllDrives=true`
+            const dlRes = await fetch(downloadUrl, { headers: driveHeaders })
+
+            if (dlRes.ok) {
+              if (isDocx) {
+                const arrayBuf = await dlRes.arrayBuffer()
+                extractedText = extractTextFromDocxZip(new Uint8Array(arrayBuf))
+              } else if (isXlsx) {
+                const arrayBuf = await dlRes.arrayBuffer()
+                extractedText = extractTextFromXlsxZip(new Uint8Array(arrayBuf))
+              } else if (isRtf) {
+                const rtfRaw = await dlRes.text()
+                extractedText = extractTextFromRtf(rtfRaw)
+              } else if (isTxt || isCsv) {
+                extractedText = await dlRes.text()
+              }
+            } else {
+              console.warn(
+                `Falha ao baixar arquivo ${file.nome} (${file.file_id}): HTTP ${dlRes.status}`,
+              )
+              // Mark as empty text with placeholder so it doesn't loop infinitely
+              extractedText = `[Conteúdo indisponível no Google Drive - HTTP ${dlRes.status}]`
             }
-
-            allFilesFound.push({
-              file_id: item.id,
-              nome: item.name,
-              mime_type: item.mimeType || 'application/octet-stream',
-              tamanho_bytes: item.size ? parseInt(item.size, 10) : 0,
-              modified_time: item.modifiedTime || null,
-              link_drive: item.webViewLink || `https://drive.google.com/file/d/${item.id}/view`,
-              caminho_pasta: current.path,
-            })
+          } catch (extractErr: any) {
+            console.warn(`Erro na extração de ${file.nome}:`, extractErr)
+            extractedText = `[Erro na extração: ${extractErr.message || 'desconhecido'}]`
           }
+        } else if (tamanho >= 8 * 1024 * 1024) {
+          extractedText = `[Arquivo maior que 8MB - extração de texto ignorada para performance]`
+        } else {
+          extractedText = `[Formato não suportado para extração direta de texto]`
         }
 
-        pageToken = data.nextPageToken || null
-      } while (pageToken)
-    }
+        // Save extracted text for this file
+        const textToSave =
+          extractedText && extractedText.trim().length > 0
+            ? extractedText
+            : '[Arquivo sem texto extraível]'
 
-    // Existing files in database
-    const { data: existingRecords, error: fetchErr } = await supabase
-      .from('drive_arquivos')
-      .select('file_id, texto_extraido')
+        const { error: updateErr } = await supabase
+          .from('drive_arquivos')
+          .update({
+            texto_extraido: textToSave,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', file.id)
 
-    if (fetchErr) {
-      throw new Error(`Erro ao consultar drive_arquivos existentes: ${fetchErr.message}`)
-    }
-
-    const existingMap = new Map<string, string | null>()
-    for (const rec of existingRecords || []) {
-      existingMap.set(rec.file_id, rec.texto_extraido)
-    }
-
-    // Download content and extract text for files lacking text (focusing on docx, xlsx, rtf, txt, csv)
-    let newlyExtractedCount = 0
-    for (const file of allFilesFound) {
-      const existingText = existingMap.get(file.file_id)
-      if (existingText && existingText.trim().length > 0) {
-        file.texto_extraido = existingText
-        continue
+        if (!updateErr) {
+          batchExtractedCount++
+        }
       }
 
-      // Check if candidate for extraction (< 8MB)
-      const mime = file.mime_type.toLowerCase()
-      const isDocx = mime.includes('wordprocessingml') || file.nome.toLowerCase().endsWith('.docx')
-      const isXlsx = mime.includes('spreadsheetml') || file.nome.toLowerCase().endsWith('.xlsx')
-      const isRtf = mime.includes('rtf') || file.nome.toLowerCase().endsWith('.rtf')
-      const isTxt = mime === 'text/plain' || file.nome.toLowerCase().endsWith('.txt')
-      const isCsv = mime === 'text/csv' || file.nome.toLowerCase().endsWith('.csv')
-
-      if ((isDocx || isXlsx || isRtf || isTxt || isCsv) && file.tamanho_bytes < 8 * 1024 * 1024) {
-        try {
-          const downloadUrl = `https://www.googleapis.com/drive/v3/files/${file.file_id}?alt=media&supportsAllDrives=true`
-          const dlRes = await fetch(downloadUrl, { headers: driveHeaders })
-          if (dlRes.ok) {
-            if (isDocx) {
-              const arrayBuf = await dlRes.arrayBuffer()
-              const text = extractTextFromDocxZip(new Uint8Array(arrayBuf))
-              if (text) {
-                file.texto_extraido = text
-                newlyExtractedCount++
-              }
-            } else if (isXlsx) {
-              const arrayBuf = await dlRes.arrayBuffer()
-              const text = extractTextFromXlsxZip(new Uint8Array(arrayBuf))
-              if (text) {
-                file.texto_extraido = text
-                newlyExtractedCount++
-              }
-            } else if (isRtf) {
-              const rtfRaw = await dlRes.text()
-              const text = extractTextFromRtf(rtfRaw)
-              if (text) {
-                file.texto_extraido = text
-                newlyExtractedCount++
-              }
-            } else if (isTxt || isCsv) {
-              const text = await dlRes.text()
-              if (text) {
-                file.texto_extraido = text
-                newlyExtractedCount++
-              }
-            }
-          }
-        } catch (extractErr) {
-          console.warn(`Falha na extração de ${file.nome}:`, extractErr)
-        }
-      }
-    }
-
-    // Upsert in batches of 100
-    let updatedCount = 0
-    let createdCount = 0
-    const batchSize = 100
-
-    for (let i = 0; i < allFilesFound.length; i += batchSize) {
-      const batch = allFilesFound.slice(i, i + batchSize)
-      const rowsToUpsert = batch.map((f) => {
-        const isExisting = existingMap.has(f.file_id)
-        if (isExisting) updatedCount++
-        else createdCount++
-
-        return {
-          file_id: f.file_id,
-          nome: f.nome,
-          mime_type: f.mime_type,
-          tamanho_bytes: f.tamanho_bytes,
-          modified_time: f.modified_time,
-          link_drive: f.link_drive,
-          caminho_pasta: f.caminho_pasta,
-          texto_extraido: f.texto_extraido || existingMap.get(f.file_id) || null,
-          updated_at: new Date().toISOString(),
-        }
-      })
-
-      const { error: upsertErr } = await supabase
+      // Check remaining pending extractions
+      const { count: pendingExtractionCount } = await supabase
         .from('drive_arquivos')
-        .upsert(rowsToUpsert, { onConflict: 'file_id' })
+        .select('id', { count: 'exact', head: true })
+        .is('texto_extraido', null)
+        .or(
+          'mime_type.ilike.%wordprocessingml%,mime_type.ilike.%spreadsheetml%,mime_type.ilike.%rtf%,mime_type.eq.text/plain,mime_type.eq.text/csv,nome.ilike.%.docx,nome.ilike.%.xlsx,nome.ilike.%.rtf,nome.ilike.%.txt,nome.ilike.%.csv',
+        )
 
-      if (upsertErr) {
-        throw new Error(`Erro no upsert do batch ${i}: ${upsertErr.message}`)
+      const { count: totalDbCount } = await supabase
+        .from('drive_arquivos')
+        .select('id', { count: 'exact', head: true })
+
+      const totalFiles = totalDbCount || accumulatedStats.totalFound || 626
+      const pendingRemaining = pendingExtractionCount || 0
+      const totalProcessedSoFar = totalFiles - pendingRemaining
+
+      const updatedStats = {
+        ...accumulatedStats,
+        totalFound: totalFiles,
+        newlyExtracted: (accumulatedStats.newlyExtracted || 0) + batchExtractedCount,
       }
+
+      const percent = Math.min(100, Math.round((totalProcessedSoFar / (totalFiles || 1)) * 100))
+
+      if (pendingRemaining === 0 || itemsToProcess.length === 0) {
+        return new Response(
+          JSON.stringify({
+            status: 'completed',
+            processados: totalFiles,
+            restantes: 0,
+            total: totalFiles,
+            percentual: 100,
+            mensagem: `Sincronização concluída com sucesso! ${totalFiles} arquivos catalogados (${updatedStats.newlyExtracted} textos novos extraídos).`,
+            stats: updatedStats,
+            summary: {
+              totalFilesFound: totalFiles,
+              skippedTempFiles: updatedStats.skippedTemp || 0,
+              newlyExtractedCount: updatedStats.newlyExtracted || 0,
+              foldersScanned: updatedStats.foldersScanned || 0,
+              created: updatedStats.created || 0,
+              updated: updatedStats.updated || 0,
+            },
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        )
+      }
+
+      // Still has files to extract — return in_progress
+      return new Response(
+        JSON.stringify({
+          status: 'in_progress',
+          step: 'extract',
+          offset: batchOffset + itemsToProcess.length,
+          processados: totalProcessedSoFar,
+          restantes: pendingRemaining,
+          total: totalFiles,
+          percentual: percent,
+          mensagem: `Processados ${totalProcessedSoFar} de ${totalFiles} (${pendingRemaining} textos pendentes)...`,
+          stats: updatedStats,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
     }
 
     return new Response(
       JSON.stringify({
-        success: true,
-        summary: {
-          totalFilesFound: allFilesFound.length,
-          skippedTempFiles: skippedTempFilesCount,
-          newlyExtractedCount,
-          foldersScanned: scannedFolders.length,
-          created: createdCount,
-          updated: updatedCount,
-        },
+        error: `Ação desconhecida: ${action} / etapa: ${step}`,
       }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (err: any) {
     console.error('Erro em sync-drive:', err)

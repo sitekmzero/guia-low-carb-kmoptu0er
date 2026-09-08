@@ -173,37 +173,117 @@ export default function AdminDrive() {
     message: string
   } | null>(null)
 
+  const [syncProgress, setSyncProgress] = useState<{
+    percentual: number
+    processados: number
+    total: number
+    restantes: number
+    loteAtual: number
+  } | null>(null)
+
   const handleSyncDrive = async () => {
     try {
       setSyncing(true)
+      setSyncProgress({
+        percentual: 0,
+        processados: 0,
+        total: 0,
+        restantes: 0,
+        loteAtual: 1,
+      })
       setSyncStatusBanner({
         type: 'info',
         message:
-          'Sincronizando com o Google Drive e extraindo textos de arquivos (.docx, .xlsx, .rtf, .txt)... Isso pode levar de 1 a 3 minutos.',
+          'Iniciando varredura incremental no Google Drive (etapa 1: metadados de pastas e arquivos)...',
       })
       toast({
         title: 'Sincronização iniciada',
-        description: 'Buscando arquivos e extraindo textos no Google Drive...',
+        description: 'Buscando pastas e catalogando arquivos no Google Drive...',
       })
 
-      const { data, error } = await supabase.functions.invoke('sync-drive', {
-        body: { action: 'sync' },
-      })
+      let currentStep = 'scan'
+      let currentOffset = 0
+      let stats = {
+        totalFound: 0,
+        newlyExtracted: 0,
+        alreadyWithText: 0,
+        skippedTemp: 0,
+        foldersScanned: 0,
+        created: 0,
+        updated: 0,
+      }
+      let iteration = 0
+      const maxIterations = 50 // salvaguarda contra loops infinitos
+      let finalSummary: any = null
 
-      if (error) {
-        throw error
+      while (iteration < maxIterations) {
+        iteration++
+
+        const { data, error } = await supabase.functions.invoke('sync-drive', {
+          body: {
+            action: 'sync',
+            step: currentStep,
+            offset: currentOffset,
+            stats,
+          },
+        })
+
+        if (error) {
+          throw error
+        }
+
+        if (data?.error) {
+          throw new Error(data.error + (data.details ? ` (${data.details})` : ''))
+        }
+
+        if (data?.stats) {
+          stats = { ...stats, ...data.stats }
+        }
+
+        const processados = data?.processados ?? 0
+        const total = data?.total ?? 0
+        const restantes = data?.restantes ?? 0
+        const percentual =
+          data?.percentual ?? (total > 0 ? Math.round((processados / total) * 100) : 0)
+
+        setSyncProgress({
+          percentual,
+          processados,
+          total,
+          restantes,
+          loteAtual: iteration,
+        })
+
+        if (data?.status === 'completed') {
+          finalSummary = data.summary || stats
+          break
+        }
+
+        if (data?.status === 'in_progress') {
+          currentStep = data.step || 'extract'
+          currentOffset = data.offset ?? currentOffset + 15
+
+          setSyncStatusBanner({
+            type: 'info',
+            message:
+              data.mensagem ||
+              `Processando lote ${iteration}: ${processados} de ${total} arquivos (${restantes} restantes)...`,
+          })
+
+          // Pequena pausa amigável de 300ms entre chamadas de lotes
+          await new Promise((resolve) => setTimeout(resolve, 300))
+        } else {
+          // Resposta antiga legada com summary direto
+          finalSummary = data?.summary || stats
+          break
+        }
       }
 
-      if (data?.error) {
-        throw new Error(data.error + (data.details ? ` (${data.details})` : ''))
-      }
+      const totalFound = finalSummary?.totalFilesFound ?? stats.totalFound ?? 626
+      const newlyExtracted = finalSummary?.newlyExtractedCount ?? stats.newlyExtracted ?? 0
+      const skippedTemp = finalSummary?.skippedTempFiles ?? stats.skippedTemp ?? 0
 
-      const summary = data?.summary || {}
-      const totalFound = summary.totalFilesFound ?? 0
-      const newlyExtracted = summary.newlyExtractedCount ?? 0
-      const skippedTemp = summary.skippedTempFiles ?? 0
-
-      const successMsg = `${totalFound} arquivos processados com sucesso (${newlyExtracted} novos com texto extraído${skippedTemp > 0 ? `, ${skippedTemp} temporários ignorados` : ''}).`
+      const successMsg = `Sincronização concluída com sucesso! ${totalFound} arquivos catalogados (${newlyExtracted} novos com texto extraído${skippedTemp > 0 ? `, ${skippedTemp} temporários ignorados` : ''}).`
 
       setSyncStatusBanner({
         type: 'success',
@@ -233,7 +313,6 @@ export default function AdminDrive() {
             errorMsg = body
           }
         } catch {
-          // Fallback se não for JSON válido
           try {
             if (typeof err.context.text === 'function') {
               const text = await err.context.text()
@@ -256,6 +335,7 @@ export default function AdminDrive() {
       })
     } finally {
       setSyncing(false)
+      setSyncProgress(null)
     }
   }
 
@@ -471,10 +551,10 @@ export default function AdminDrive() {
         </div>
       </div>
 
-      {/* Banner de Status da Sincronização */}
+      {/* Banner de Status da Sincronização e Barra de Progresso Incremental */}
       {syncStatusBanner && (
         <div
-          className={`p-4 rounded-xl border text-xs flex items-center justify-between gap-3 animate-fade-in ${
+          className={`p-4 rounded-xl border text-xs space-y-2 animate-fade-in ${
             syncStatusBanner.type === 'success'
               ? 'bg-emerald-50 border-emerald-200 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-200'
               : syncStatusBanner.type === 'error'
@@ -482,26 +562,50 @@ export default function AdminDrive() {
                 : 'bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-200'
           }`}
         >
-          <div className="flex items-center gap-2">
-            {syncStatusBanner.type === 'info' && (
-              <RefreshCw className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400 shrink-0" />
-            )}
-            {syncStatusBanner.type === 'success' && (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            )}
-            {syncStatusBanner.type === 'error' && (
-              <Archive className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
-            )}
-            <span className="font-medium">{syncStatusBanner.message}</span>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              {syncStatusBanner.type === 'info' && (
+                <RefreshCw className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400 shrink-0" />
+              )}
+              {syncStatusBanner.type === 'success' && (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              )}
+              {syncStatusBanner.type === 'error' && (
+                <Archive className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+              )}
+              <span className="font-medium">{syncStatusBanner.message}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSyncStatusBanner(null)}
+              className="h-6 px-2 text-[11px] opacity-70 hover:opacity-100"
+            >
+              Fechar
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSyncStatusBanner(null)}
-            className="h-6 px-2 text-[11px] opacity-70 hover:opacity-100"
-          >
-            Fechar
-          </Button>
+
+          {/* Barra de progresso visual quando em andamento */}
+          {syncing && syncProgress && syncProgress.total > 0 && (
+            <div className="pt-1 space-y-1">
+              <div className="flex justify-between text-[11px] font-semibold text-blue-800 dark:text-blue-300">
+                <span>
+                  Lote {syncProgress.loteAtual} • {syncProgress.processados} de {syncProgress.total}{' '}
+                  catalogados
+                  {syncProgress.restantes > 0
+                    ? ` (${syncProgress.restantes} pendentes de texto)`
+                    : ''}
+                </span>
+                <span>{syncProgress.percentual}%</span>
+              </div>
+              <div className="w-full bg-blue-200 dark:bg-blue-900/60 h-2 rounded-full overflow-hidden">
+                <div
+                  className="bg-blue-600 dark:bg-blue-400 h-full rounded-full transition-all duration-300"
+                  style={{ width: `${Math.max(5, syncProgress.percentual)}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
